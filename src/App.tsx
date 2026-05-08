@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Dashboard from "./Dashboard";
-import { Lock, X, CheckCircle2 } from "lucide-react";
+import { Lock, X, CheckCircle2, Eye, EyeOff } from "lucide-react";
 
 
 // ========================================================
@@ -499,7 +499,7 @@ export default function App() {
 
       {/* Admin Login Modal */}
       {showAdminModal && (
-        <AdminLogin 
+        <AdminLoginModal 
           onClose={() => setShowAdminModal(false)} 
           onSuccess={() => {
             setIsAdmin(true);
@@ -512,9 +512,10 @@ export default function App() {
   );
 }
 
-function AdminLogin({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+function AdminLoginModal({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -527,37 +528,58 @@ function AdminLogin({ onClose, onSuccess }: { onClose: () => void; onSuccess: ()
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-        <div className="p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0f1e6e]/40 backdrop-blur-md transition-opacity animate-in fade-in duration-300">
+      <div className="bg-white rounded-[2rem] shadow-2xl shadow-[#1a2d8f]/20 w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300 border border-white/50">
+        <div className="p-8">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-bold text-[#1a2d8f]">Admin Access</h3>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-              <X size={20} />
+            <div>
+              <h3 className="text-2xl font-black text-[#1a2d8f] tracking-tight">Admin Access</h3>
+              <p className="text-xs font-bold text-[#F47920] uppercase tracking-widest mt-1">Sistem Keamanan</p>
+            </div>
+            <button 
+              onClick={onClose} 
+              className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+            >
+              <X size={18} strokeWidth={3} />
             </button>
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <div className="relative group">
+                <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors duration-300 ${password ? 'text-[#1a2d8f]' : 'text-gray-400 group-focus-within:text-[#1a2d8f]'}`} />
                 <input 
-                  type="password" 
+                  type={showPassword ? "text" : "password"}
                   autoFocus
-                  className="w-full pl-10 pr-4 py-2 border-2 border-gray-100 rounded-xl focus:border-[#F47920] outline-none transition-all"
-                  placeholder="Masukkan password..."
+                  className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:bg-white focus:border-[#F47920] outline-none transition-all font-medium text-gray-800 placeholder:font-normal"
+                  placeholder="Masukkan password rahasia..."
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(""); }}
                 />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#1a2d8f] transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
-              {error && <p className="text-red-500 text-xs mt-1 font-medium">{error}</p>}
+              {error && (
+                <div className="mt-2 flex items-center gap-1.5 text-red-500 animate-in slide-in-from-top-1">
+                  <X className="w-3.5 h-3.5" strokeWidth={3} />
+                  <p className="text-xs font-bold">{error}</p>
+                </div>
+              )}
             </div>
             <button 
               type="submit"
-              className="w-full bg-[#1a2d8f] text-white font-bold py-2.5 rounded-xl hover:bg-[#0f1e6e] transition-all"
+              className="w-full bg-gradient-to-r from-[#1a2d8f] to-[#0f1e6e] text-white font-bold py-3.5 rounded-2xl hover:shadow-lg hover:shadow-blue-900/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all relative overflow-hidden group"
             >
-              Masuk Dashboard
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                Masuk Dashboard
+              </span>
+              <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
             </button>
           </form>
         </div>
