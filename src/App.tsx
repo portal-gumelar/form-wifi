@@ -1,4 +1,7 @@
 import { useState } from "react";
+import Dashboard from "./Dashboard";
+import { Lock, X, CheckCircle2 } from "lucide-react";
+
 
 // ========================================================
 // GOOGLE APPS SCRIPT WEB APP URL
@@ -6,14 +9,14 @@ import { useState } from "react";
 // Tutorial: Lihat bagian bawah file ini
 // ========================================================
 const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec";
+  "https://script.google.com/macros/s/AKfycby6_R-6eqIRV3-thE8xnl2v2x0OKCaI2hd0_ZnWPP6htR-CLd4vV2ujhCJ9v9gjEzKjUw/exec";
 
 const PACKAGES = [
-  { label: "Hemat", speed: "Up to 20 Mbps", price: "115.000", color: "from-slate-100 to-slate-200", badge: "bg-slate-500" },
-  { label: "Standar", speed: "Up to 30 Mbps", price: "142.000", color: "from-blue-50 to-blue-100", badge: "bg-blue-500" },
-  { label: "Keluarga", speed: "Up to 50 Mbps", price: "182.000", color: "from-amber-50 to-amber-100", badge: "bg-amber-500", popular: true },
-  { label: "Ekstra Cepat", speed: "Up to 75 Mbps", price: "260.000", color: "from-orange-50 to-orange-100", badge: "bg-orange-500" },
-  { label: "Premium", speed: "Up to 100 Mbps", price: "330.000", color: "from-indigo-50 to-indigo-100", badge: "bg-indigo-700" },
+  { label: "GUYUB_1", speed: "20 Mbps", price: "115.000", color: "from-slate-100 to-slate-200", badge: "bg-slate-500" },
+  { label: "GUYUB_2", speed: "30 Mbps", price: "142.000", color: "from-blue-50 to-blue-100", badge: "bg-blue-600", popular: true },
+  { label: "GUYUB_3", speed: "50 Mbps", price: "182.000", color: "from-indigo-50 to-indigo-100", badge: "bg-indigo-600" },
+  { label: "GUYUB_4", speed: "75 Mbps", price: "260.000", color: "from-purple-50 to-purple-100", badge: "bg-purple-600" },
+  { label: "GUYUB_5", speed: "100 Mbps", price: "330.000", color: "from-amber-50 to-amber-100", badge: "bg-amber-600" },
 ];
 
 type FormData = {
@@ -51,6 +54,9 @@ export default function App() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [view, setView] = useState<"form" | "dashboard">("form");
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -106,6 +112,16 @@ export default function App() {
     return <SuccessPage onBack={() => { setSubmitted(false); setForm(initialForm); }} />;
   }
 
+  if (view === "dashboard" && isAdmin) {
+    return (
+      <Dashboard 
+        googleScriptUrl={GOOGLE_SCRIPT_URL} 
+        onLogout={() => { setIsAdmin(false); setView("form"); }} 
+        onNavigateToForm={() => setView("form")}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f1e6e] via-[#1a2d8f] to-[#0d1655] font-sans">
       {/* Hero Header */}
@@ -131,33 +147,43 @@ export default function App() {
               </div>
             </div>
 
+            {/* Promo Badge: Daftar Gratis Dominan */}
+            <div className="flex justify-center mt-8 mb-8">
+              <div className="relative group cursor-default">
+                {/* Glowing background effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-[#FDB913] to-red-600 rounded-2xl blur-md opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+                
+                {/* Main Badge Container */}
+                <div className="relative bg-gradient-to-br from-red-600 to-orange-600 px-6 py-4 sm:px-12 sm:py-6 rounded-2xl flex items-center justify-center gap-3 sm:gap-5 text-center border-2 border-yellow-300 shadow-2xl hover:scale-105 transition-transform duration-300">
+                  <span className="text-4xl sm:text-5xl animate-bounce hidden sm:block drop-shadow-lg">🔥</span>
+                  <div className="flex flex-col items-center">
+                    <h2 className="font-black text-2xl sm:text-4xl text-white tracking-widest drop-shadow-md uppercase leading-none">
+                      INTERNET RAKYAT
+                    </h2>
+                    <div className="bg-yellow-300 text-red-700 px-3 py-1 rounded-full mt-2 font-black text-sm sm:text-lg tracking-widest shadow-inner inline-block">
+                      PASANG SEKARANG — GRATIS!
+                    </div>
+                  </div>
+                  <span className="text-4xl sm:text-5xl animate-bounce drop-shadow-lg">🔥</span>
+                </div>
+              </div>
+            </div>
+
             {/* Tagline */}
             <div className="text-center">
-              <h1 className="text-white text-xl sm:text-2xl font-bold mt-2">
-                SOLUSI INTERNET MURAH BERKUALITAS
+              <h1 className="text-yellow-300 text-xl sm:text-3xl font-black mt-2 drop-shadow-md">
+                JAMINAN INTERNET MURAH & STABIL
               </h1>
-              <p className="text-white/60 text-sm mt-1">
+              <p className="text-white text-base sm:text-xl font-bold mt-1 tracking-wide">
+                100% UNLIMITED - TANPA FUP
+              </p>
+              <p className="text-white/60 text-sm mt-3">
                 Jl. Perserikatan no. 4D Rawamangun - Pulo Gadung - Jakarta Timur 13220
               </p>
-              <p className="text-white/50 text-xs mt-0.5">
+              <p className="text-white/50 text-xs mt-0.5 mb-4">
                 Telp: 021-22472319 &nbsp;|&nbsp; Fax: 021-4897612 &nbsp;|&nbsp; www.aksesarmedia.id
               </p>
             </div>
-          </div>
-
-          {/* Stats Bar */}
-          <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto mb-2">
-            {[
-              { icon: "⚡", label: "Kecepatan Tinggi", value: "Up to 100 Mbps" },
-              { icon: "💰", label: "Mulai Dari", value: "115 Ribu/Bln" },
-              { icon: "🛡️", label: "Jaringan", value: "Stabil & Handal" },
-            ].map((s) => (
-              <div key={s.label} className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center border border-white/10">
-                <div className="text-xl mb-1">{s.icon}</div>
-                <div className="text-[#FDB913] font-bold text-xs sm:text-sm">{s.value}</div>
-                <div className="text-white/60 text-[10px] sm:text-xs">{s.label}</div>
-              </div>
-            ))}
           </div>
         </div>
       </header>
@@ -168,14 +194,14 @@ export default function App() {
         {/* Package Cards */}
         <section className="mb-8">
           <div className="text-center mb-4">
-            <span className="inline-block bg-[#F47920] text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider">Pilihan Paket</span>
+            <span className="inline-block bg-[#F47920] text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider">Pilihan Paket Guyub</span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {PACKAGES.map((pkg) => (
               <div
                 key={pkg.label}
                 onClick={() => setForm((p) => ({ ...p, paket: `${pkg.label} (${pkg.speed}) - Rp ${pkg.price}/Bln` }))}
-                className={`relative cursor-pointer rounded-2xl p-4 bg-gradient-to-b ${pkg.color} border-2 transition-all duration-200 ${
+                className={`relative cursor-pointer rounded-2xl p-4 bg-gradient-to-b ${pkg.color} border-2 transition-all duration-200 flex flex-col ${
                   form.paket.startsWith(pkg.label)
                     ? "border-[#F47920] shadow-lg shadow-orange-200 scale-105"
                     : "border-transparent hover:border-orange-300 hover:scale-102"
@@ -183,21 +209,35 @@ export default function App() {
               >
                 {pkg.popular && (
                   <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-[#F47920] text-white text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
-                    TERPOPULER
+                    REKOMENDASI
                   </div>
                 )}
-                <div className={`${pkg.badge} text-white text-[10px] font-bold px-2 py-0.5 rounded-full inline-block mb-2`}>
+                <div className={`${pkg.badge} text-white text-[10px] font-bold px-2 py-0.5 rounded-full inline-block mb-2 self-start`}>
                   {pkg.label}
                 </div>
-                <div className="text-[#1a2d8f] font-black text-lg leading-none">{pkg.speed.replace("Up to ", "")}</div>
-                <div className="text-gray-500 text-[10px]">Up to</div>
-                <div className="mt-2 border-t border-gray-200 pt-2">
-                  <span className="text-[#F47920] font-black text-base">Rp {pkg.price}</span>
+                <div className="text-[#1a2d8f] font-black text-2xl leading-none">{pkg.speed}</div>
+                <div className="mt-2 border-t border-gray-200 pt-2 mb-2">
+                  <span className="text-[#F47920] font-black text-lg">Rp {pkg.price}</span>
                   <span className="text-gray-500 text-[10px]">/Bln</span>
                 </div>
+                      {/* Detail Spesifikasi */}
+                      <ul className="mt-2 space-y-1 mb-2 flex-1">
+                        <li className="flex items-center gap-1.5 text-[10px] text-slate-600 font-medium">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                          Up to {pkg.speed}
+                        </li>
+                        <li className="flex items-center gap-1.5 text-[10px] text-slate-600 font-medium">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                          Unlimited Tanpa FUP
+                        </li>
+                        <li className="flex items-center gap-1.5 text-[10px] text-slate-600 font-medium">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                          DUAL BAND 2,4G & 5G
+                        </li>
+                      </ul>
                 {form.paket.startsWith(pkg.label) && (
-                  <div className="absolute top-2 right-2 w-4 h-4 bg-[#F47920] rounded-full flex items-center justify-center">
-                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <div className="absolute top-2 right-2 w-5 h-5 bg-[#F47920] rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
@@ -211,7 +251,7 @@ export default function App() {
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
           {/* Form Header */}
           <div className="bg-gradient-to-r from-[#1a2d8f] to-[#0f1e6e] px-6 py-5">
-            <h2 className="text-white font-bold text-xl">📋 Form Pendaftaran Internet Murah</h2>
+            <h2 className="text-white font-bold text-xl">📋 Form Pendaftaran Pemasangan</h2>
             <p className="text-white/70 text-sm mt-1">Daftar sekarang dan dapatkan penawaran terbaik!</p>
           </div>
 
@@ -448,9 +488,80 @@ export default function App() {
           <p className="font-semibold text-white/70">PT. AKSES ARTHA MEDIA</p>
           <p>Jl. Perserikatan no. 4D Rawamangun - Pulo Gadung - Jakarta Timur 13220</p>
           <p>Telp: 021-22472319 | Fax: 021-4897612 | www.aksesarmedia.id</p>
-          <p className="pt-2">© {new Date().getFullYear()} ARMEDIA_NET. All rights reserved.</p>
+          <button 
+            onClick={() => setShowAdminModal(true)}
+            className="pt-2 text-white/50 text-[10px] sm:text-xs block mx-auto hover:text-white/60 transition-colors cursor-default"
+          >
+            © {new Date().getFullYear()} ARMEDIA_NET. All rights reserved.
+          </button>
         </footer>
       </main>
+
+      {/* Admin Login Modal */}
+      {showAdminModal && (
+        <AdminLogin 
+          onClose={() => setShowAdminModal(false)} 
+          onSuccess={() => {
+            setIsAdmin(true);
+            setView("dashboard");
+            setShowAdminModal(false);
+          }} 
+        />
+      )}
+    </div>
+  );
+}
+
+function AdminLogin({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Default password: admin123
+    if (password === "admin123") {
+      onSuccess();
+    } else {
+      setError("Password salah!");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold text-[#1a2d8f]">Admin Access</h3>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <X size={20} />
+            </button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input 
+                  type="password" 
+                  autoFocus
+                  className="w-full pl-10 pr-4 py-2 border-2 border-gray-100 rounded-xl focus:border-[#F47920] outline-none transition-all"
+                  placeholder="Masukkan password..."
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                />
+              </div>
+              {error && <p className="text-red-500 text-xs mt-1 font-medium">{error}</p>}
+            </div>
+            <button 
+              type="submit"
+              className="w-full bg-[#1a2d8f] text-white font-bold py-2.5 rounded-xl hover:bg-[#0f1e6e] transition-all"
+            >
+              Masuk Dashboard
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
