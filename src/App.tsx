@@ -157,11 +157,11 @@ export default function App() {
                 <div className="relative bg-gradient-to-br from-red-600 to-orange-600 px-6 py-4 sm:px-12 sm:py-6 rounded-2xl flex items-center justify-center gap-3 sm:gap-5 text-center border-2 border-yellow-300 shadow-2xl hover:scale-105 transition-transform duration-300">
                   <span className="text-4xl sm:text-5xl animate-bounce hidden sm:block drop-shadow-lg">🔥</span>
                   <div className="flex flex-col items-center">
-                    <h2 className="font-black text-2xl sm:text-4xl text-white tracking-widest drop-shadow-md uppercase leading-none">
-                      INTERNET RAKYAT
+                    <h2 className="font-black text-3xl sm:text-5xl text-yellow-300 tracking-widest drop-shadow-md uppercase leading-none">
+                      PROMO
                     </h2>
-                    <div className="bg-yellow-300 text-red-700 px-3 py-1 rounded-full mt-2 font-black text-sm sm:text-lg tracking-widest shadow-inner inline-block">
-                      PASANG SEKARANG — GRATIS!
+                    <div className="bg-white text-red-700 px-4 py-1.5 rounded-full mt-2 font-black text-sm sm:text-xl tracking-widest shadow-inner inline-block uppercase">
+                      Cukup Mbayar Wulanane
                     </div>
                   </div>
                   <span className="text-4xl sm:text-5xl animate-bounce drop-shadow-lg">🔥</span>
@@ -171,10 +171,10 @@ export default function App() {
 
             {/* Tagline */}
             <div className="text-center">
-              <h1 className="text-yellow-300 text-xl sm:text-3xl font-black mt-2 drop-shadow-md">
-                JAMINAN INTERNET MURAH & STABIL
+              <h1 className="text-white text-xl sm:text-3xl font-black mt-2 drop-shadow-md bg-red-600 inline-block px-4 py-1 rounded-full border-2 border-white">
+                GRATIS MASANG & ALATE
               </h1>
-              <p className="text-white text-base sm:text-xl font-bold mt-1 tracking-wide">
+              <p className="text-yellow-300 text-base sm:text-xl font-bold mt-3 tracking-wide">
                 100% UNLIMITED - TANPA FUP
               </p>
               <p className="text-white/60 text-sm mt-3">
