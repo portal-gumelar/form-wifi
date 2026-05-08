@@ -154,7 +154,11 @@ export default function App() {
                 <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-[#FDB913] to-red-600 rounded-2xl blur-md opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
                 
                 {/* Main Badge Container */}
-                <div className="relative bg-gradient-to-br from-red-600 to-orange-600 px-6 py-4 sm:px-12 sm:py-6 rounded-2xl flex items-center justify-center gap-3 sm:gap-5 text-center border-2 border-yellow-300 shadow-2xl hover:scale-105 transition-transform duration-300">
+                <button 
+                  type="button"
+                  onClick={() => document.getElementById('packages-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="relative bg-gradient-to-br from-red-600 to-orange-600 px-6 py-4 sm:px-12 sm:py-6 rounded-2xl flex items-center justify-center gap-3 sm:gap-5 text-center border-2 border-yellow-300 shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 w-full"
+                >
                   <span className="text-4xl sm:text-5xl animate-bounce hidden sm:block drop-shadow-lg">🔥</span>
                   <div className="flex flex-col items-center">
                     <h2 className="font-black text-3xl sm:text-5xl text-yellow-300 tracking-widest drop-shadow-md uppercase leading-none">
@@ -165,7 +169,7 @@ export default function App() {
                     </div>
                   </div>
                   <span className="text-4xl sm:text-5xl animate-bounce drop-shadow-lg">🔥</span>
-                </div>
+                </button>
               </div>
             </div>
 
@@ -192,7 +196,7 @@ export default function App() {
       <main className="max-w-5xl mx-auto px-4 pb-12">
 
         {/* Package Cards */}
-        <section className="mb-8">
+        <section id="packages-section" className="mb-8 scroll-mt-24">
           <div className="text-center mb-4">
             <span className="inline-block bg-[#F47920] text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider">Pilihan Paket Guyub</span>
           </div>
@@ -200,7 +204,12 @@ export default function App() {
             {PACKAGES.map((pkg) => (
               <div
                 key={pkg.label}
-                onClick={() => setForm((p) => ({ ...p, paket: `${pkg.label} (${pkg.speed}) - Rp ${pkg.price}/Bln` }))}
+                onClick={() => {
+                  setForm((p) => ({ ...p, paket: `${pkg.label} (${pkg.speed}) - Rp ${pkg.price}/Bln` }));
+                  setTimeout(() => {
+                    document.getElementById('registration-form')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 150);
+                }}
                 className={`relative cursor-pointer rounded-2xl p-4 bg-gradient-to-b ${pkg.color} border-2 transition-all duration-200 flex flex-col ${
                   form.paket.startsWith(pkg.label)
                     ? "border-[#F47920] shadow-lg shadow-orange-200 scale-105"
@@ -248,7 +257,7 @@ export default function App() {
         </section>
 
         {/* Registration Form */}
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <div id="registration-form" className="bg-white rounded-3xl shadow-2xl overflow-hidden scroll-mt-24">
           {/* Form Header */}
           <div className="bg-gradient-to-r from-[#1a2d8f] to-[#0f1e6e] px-6 py-5">
             <h2 className="text-white font-bold text-xl">📋 Form Pendaftaran Pemasangan</h2>
