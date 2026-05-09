@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { Section, RadioCard, InputField, LogoMark } from "../components/FormElements";
+import { EthicNotice } from "../components/Modals";
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzoakyfPcNDtceHrLRluX-4t5IrZX7AvpVTx7-r49ftIARFnxh_-qxDCWXt5itsYMCyHA/exec";
 
@@ -31,6 +32,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showEthicNotice, setShowEthicNotice] = useState(false);
 
   const progress = Math.round((["currentProvider", "namaLengkap", "alamat", "noHp", "paket", "tanggalPasang", "sumberInfo"].filter(f => form[f as keyof typeof form]).length / 7) * 100);
 
@@ -38,6 +40,10 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
     setError("");
+
+    if (name === "currentProvider" && value.includes("RT/RW NET")) {
+      setShowEthicNotice(true);
+    }
 
     const scrollTo = (id: string) => {
       setTimeout(() => {
@@ -207,9 +213,34 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
             </Section>
 
             <Section id="sec-lokasi" title="Detail Tambahan" icon="📍">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-8">
                 <InputField label="Link Google Maps (Opsional)" name="linkGoogleMaps" value={form.linkGoogleMaps} onChange={handleChange} placeholder="https://maps.app.goo.gl/..." type="url" />
-                <InputField label="Waktu Survei Yang Pas" name="waktuSurvei" value={form.waktuSurvei} onChange={handleChange} placeholder="Contoh: Pagi jam 9 / Sore jam 4" />
+                
+                <div>
+                  <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">Waktu Survei Yang Pas <span className="text-red-500">*</span></label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                      { label: "Pagi", time: "08:00 - 11:00" },
+                      { label: "Siang", time: "11:00 - 14:00" },
+                      { label: "Sore", time: "14:00 - 17:00" },
+                      { label: "Malam", time: "18:00 - 20:00" }
+                    ].map(opt => (
+                      <RadioCard 
+                        key={opt.label} 
+                        name="waktuSurvei" 
+                        value={`${opt.label} (${opt.time})`} 
+                        checked={form.waktuSurvei.startsWith(opt.label)} 
+                        onChange={handleChange} 
+                        label={
+                          <div className="text-center w-full">
+                            <div className="font-black text-slate-800 text-sm leading-none">{opt.label}</div>
+                            <div className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{opt.time}</div>
+                          </div>
+                        } 
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             </Section>
 
@@ -238,6 +269,20 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
           <button onClick={() => setShowAdminModal(true)} className="hover:text-[#F47920] transition-colors cursor-default">© {new Date().getFullYear()} ARMEDIA_NET</button>
         </footer>
       </main>
+      {showEthicNotice && (
+        <EthicNotice 
+          onAccept={() => {
+            setShowEthicNotice(false);
+            setTimeout(() => {
+              document.getElementById("sec-datadiri")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 300);
+          }} 
+          onCancel={() => {
+            setForm(prev => ({ ...prev, currentProvider: "" }));
+            setShowEthicNotice(false);
+          }} 
+        />
+      )}
     </div>
   );
 };
