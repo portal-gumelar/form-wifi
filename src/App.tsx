@@ -17,7 +17,7 @@ export default function App() {
   if (view === "dashboard" && isAdmin) {
     return (
       <Dashboard 
-        googleScriptUrl="https://script.google.com/macros/s/AKfycbzoakyfPcNDtceHrLRluX-4t5IrZX7AvpVTx7-r49ftIARFnxh_-qxDCWXt5itsYMCyHA/exec"
+        googleScriptUrl="https://script.google.com/macros/s/AKfycbysJJibkHgTnACVYXaYCwG1R4JnnQHuxe8tmvEuHWqLjJ0s0bN1DtQuc5_9uv9gOw6EEw/exec"
         onLogout={() => { setIsAdmin(false); setView("form"); }} 
         onNavigateToForm={() => setView("form")}
       />

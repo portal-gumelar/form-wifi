@@ -3,7 +3,7 @@ import { RefreshCw } from "lucide-react";
 import { Section, RadioCard, InputField, LogoMark } from "../components/FormElements";
 import { EthicNotice } from "../components/Modals";
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzoakyfPcNDtceHrLRluX-4t5IrZX7AvpVTx7-r49ftIARFnxh_-qxDCWXt5itsYMCyHA/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbysJJibkHgTnACVYXaYCwG1R4JnnQHuxe8tmvEuHWqLjJ0s0bN1DtQuc5_9uv9gOw6EEw/exec";
 
 const PACKAGES = [
   { label: "GUYUB_1", speed: "20 Mbps", price: "115.000", badge: "bg-orange-600", popular: true, bestSeller: true, features: ["Upto 20 MBPS", "Download/Upload", "Unlimited", "DUAL BAND 2,4G & 5G"] },
@@ -170,7 +170,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
           <form onSubmit={handleSubmit} className="p-8 sm:p-12 space-y-12">
             {error && <div className="bg-red-50 text-red-600 p-5 rounded-2xl text-sm font-black flex items-center gap-3 border-2 border-red-100 animate-pulse"><span>⚠️</span> {error}</div>}
             
-            <Section title="Layanan Internet Anda" icon="📡" required>
+            <Section title="APAKAH SAAT INI ANDA SUDAH LANGGANAN INTERNET?" icon="📡" required>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {["Internet Lokal (RT/RW NET)", "ISP Besar (Indihome, Biznet, dll)", "Belum Pernah Pasang"].map(opt => (
                   <RadioCard key={opt} name="currentProvider" value={opt} checked={form.currentProvider === opt} onChange={handleChange} label={<span className="text-sm font-black text-slate-700 tracking-tight">{opt}</span>} />
