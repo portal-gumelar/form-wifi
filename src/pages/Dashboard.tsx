@@ -9,6 +9,9 @@ import { KPICards } from "../components/dashboard/KPICards";
 import { AnalyticsCharts, FullAnalytics } from "../components/dashboard/AnalyticsCharts";
 import { RegistrationTable } from "../components/dashboard/RegistrationTable";
 import { PDFPreviewModal, DetailsModal, ConfirmDeleteModal } from "../components/dashboard/Modals";
+import { CustomersView } from "../components/dashboard/CustomersView";
+import { GeographicalView } from "../components/dashboard/GeographicalView";
+import { SettingsView } from "../components/dashboard/SettingsView";
 
 // Utils & Types
 import { RegistrationData } from "../types";
@@ -167,6 +170,24 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
             {activeTab === "Analytics" && (
               <motion.div key="analytics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <FullAnalytics stats={stats} isDarkMode={isDarkMode} totalCount={data.length} />
+              </motion.div>
+            )}
+
+            {activeTab === "Customers" && (
+              <motion.div key="customers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <CustomersView data={data} isDarkMode={isDarkMode} onViewDetails={setSelectedReg} onDelete={setConfirmDelete} />
+              </motion.div>
+            )}
+
+            {activeTab === "Map View" && (
+              <motion.div key="map" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <GeographicalView data={data} isDarkMode={isDarkMode} />
+              </motion.div>
+            )}
+
+            {activeTab === "Settings" && (
+              <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <SettingsView isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} googleScriptUrl={googleScriptUrl} />
               </motion.div>
             )}
           </AnimatePresence>
