@@ -1,17 +1,16 @@
 import React, { useState } from "react";
 import { RefreshCw } from "lucide-react";
-import { Section, RadioCard, InputField, LogoMark } from "../components/FormElements";
-import { EthicNotice } from "../components/Modals";
+
+// UI Components
+import { Section, RadioCard, InputField } from "../components/ui/FormElements";
+import { LogoMark } from "../components/ui/LogoMark";
+import { PackageSelection } from "../components/registration/PackageSelection";
+import { EthicNotice } from "../components/registration/EthicNotice";
+
+// Constants
+import { PACKAGES } from "../constants/packages";
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbysJJibkHgTnACVYXaYCwG1R4JnnQHuxe8tmvEuHWqLjJ0s0bN1DtQuc5_9uv9gOw6EEw/exec";
-
-const PACKAGES = [
-  { label: "GUYUB_1", speed: "20 Mbps", price: "115.000", badge: "bg-orange-600", popular: true, bestSeller: true, features: ["Upto 20 MBPS", "Download/Upload", "Unlimited", "DUAL BAND 2,4G & 5G"] },
-  { label: "GUYUB_2", speed: "30 Mbps", price: "142.000", badge: "bg-blue-600", popular: true, features: ["Upto 30 MBPS", "Download/Upload", "Unlimited", "DUAL BAND 2,4G & 5G"] },
-  { label: "GUYUB_3", speed: "50 Mbps", price: "182.000", badge: "bg-indigo-600", features: ["Upto 50 MBPS", "Download/Upload", "Unlimited", "DUAL BAND 2,4G & 5G"] },
-  { label: "GUYUB_4", speed: "75 Mbps", price: "260.000", badge: "bg-purple-600", features: ["Upto 75 MBPS", "Download/Upload", "Unlimited", "DUAL BAND 2,4G & 5G"] },
-  { label: "GUYUB_5", speed: "100 Mbps", price: "330.000", badge: "bg-amber-600", features: ["Upto 100 MBPS", "Download/Upload", "Unlimited", "DUAL BAND 2,4G & 5G"] },
-];
 
 const initialForm = {
   currentProvider: "",
@@ -55,6 +54,13 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
     else if (name === "paket") scrollTo("sec-jadwal");
     else if (name === "tanggalPasang") scrollTo("sec-lokasi");
     else if (name === "sumberInfo") scrollTo("sec-submit");
+  };
+
+  const handlePackageSelect = (pkgLabel: string, pkgSpeed: string, pkgPrice: string) => {
+    setForm(p => ({ ...p, paket: `${pkgLabel} (${pkgSpeed}) - Rp ${pkgPrice}/Bln` }));
+    setTimeout(() => {
+      document.getElementById('registration-form')?.scrollIntoView({ behavior: 'smooth' });
+    }, 150);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,36 +134,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
       </header>
 
       <main className="max-w-5xl mx-auto px-4 pb-12 relative z-10">
-        <section id="sec-paket" className="mb-12 scroll-mt-24 mt-8">
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-            {PACKAGES.map((pkg) => (
-              <div key={pkg.label} onClick={() => { setForm(p => ({ ...p, paket: `${pkg.label} (${pkg.speed}) - Rp ${pkg.price}/Bln` })); setTimeout(() => document.getElementById('registration-form')?.scrollIntoView({ behavior: 'smooth' }), 150); }} className={`relative cursor-pointer rounded-[2rem] p-5 transition-all duration-300 border-2 flex flex-col ${form.paket.startsWith(pkg.label) ? "bg-white border-[#F47920] shadow-2xl scale-105 z-10" : "bg-white/5 border-white/10 hover:bg-white/10"}`}>
-                {pkg.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">Populer</div>}
-                <div className={`${pkg.badge} text-white text-[9px] font-black px-2.5 py-1 rounded-lg mb-3 self-start uppercase tracking-wider`}>{pkg.label}</div>
-                <div className={`font-black text-3xl leading-none mb-1 ${form.paket.startsWith(pkg.label) ? "text-[#1a2d8f]" : "text-white"}`}>{pkg.speed}</div>
-                <div className="h-0.5 w-full bg-[#F47920]/20 my-3"></div>
-                
-                <ul className="space-y-2 mb-6">
-                  {pkg.features.map((feat: string, i: number) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <div className="w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"><CheckCircle size={10} className="text-white" fill="currentColor" /></div>
-                      <span className={`text-[10px] font-bold leading-tight ${form.paket.startsWith(pkg.label) ? "text-slate-600" : "text-white/80"}`}>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className={`mt-auto border-t pt-4 mb-4 ${form.paket.startsWith(pkg.label) ? "border-slate-100" : "border-white/10"}`}>
-                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Hanya</div>
-                  <div className="flex items-baseline gap-1">
-                    <div className="text-[#F47920] font-black text-2xl tracking-tighter">Rp {pkg.price}</div>
-                    <div className="text-[10px] text-slate-400 uppercase font-black">/ bln</div>
-                  </div>
-                </div>
-                <div className={`mt-auto py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-center transition-all ${form.paket.startsWith(pkg.label) ? "bg-[#1a2d8f] text-white shadow-lg" : "bg-white/10 text-white/50 border border-white/10"}`}>{form.paket.startsWith(pkg.label) ? "Dipilih" : "Pilih"}</div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <PackageSelection selectedPackage={form.paket} onSelect={handlePackageSelect} />
 
         <div id="registration-form" className="bg-white rounded-[3.5rem] shadow-2xl overflow-hidden scroll-mt-24 border border-white/20 relative">
           <div className="absolute top-0 left-0 w-full h-2 bg-slate-100"><div className="h-full bg-gradient-to-r from-[#F47920] to-orange-400 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(244,121,32,0.5)]" style={{ width: `${progress}%` }}></div></div>
@@ -286,10 +263,3 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
     </div>
   );
 };
-
-const CheckCircle = ({ size, className, fill }: any) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-    <polyline points="22 4 12 14.01 9 11.01" />
-  </svg>
-);

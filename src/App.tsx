@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { RegistrationForm } from "./pages/RegistrationForm";
 import Dashboard from "./pages/Dashboard";
-import { SuccessPage, AdminLoginModal } from "./components/Modals";
+import { SuccessPage } from "./components/ui/SuccessPage";
+import { AdminLoginModal } from "./components/ui/AdminLoginModal";
 
 export default function App() {
   const [submitted, setSubmitted] = useState(false);
