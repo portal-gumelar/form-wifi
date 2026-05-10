@@ -10,7 +10,7 @@ import { EthicNotice } from "../components/registration/EthicNotice";
 // Constants
 import { PACKAGES } from "../constants/packages";
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbysJJibkHgTnACVYXaYCwG1R4JnnQHuxe8tmvEuHWqLjJ0s0bN1DtQuc5_9uv9gOw6EEw/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgrxe5UXu5PqMj7B-sIB_gYktCVOVFZKPwGzwUWrOuAAww0UM47YuWr6MhAs847_GF_A/exec";
 
 const initialForm = {
   currentProvider: "",
@@ -92,7 +92,29 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
     payload.append("Timestamp", new Date().toLocaleString("id-ID"));
 
     try {
+      // 1. Submit to Google Sheets (Original Logic)
       await fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: payload, mode: "no-cors" });
+      
+      // 2. Link Local: Save to localStorage for immediate dashboard sync
+      const localData = JSON.parse(localStorage.getItem('adminData') || '[]');
+      const newEntry = {
+        id: localData.length + 1,
+        timestamp: new Date().toLocaleString("id-ID"),
+        provider: form.currentProvider,
+        nama: form.namaLengkap,
+        alamat: form.alamat,
+        hp: form.noHp,
+        paket: form.paket,
+        tanggal: form.tanggalPasang,
+        maps: form.bisaGoogleMaps || "Tidak",
+        link: form.linkGoogleMaps,
+        survei: form.waktuSurvei,
+        prioritas: form.prioritas === "lain" ? form.prioritasLain : form.prioritas,
+        sumber: form.sumberInfo
+      };
+      
+      localStorage.setItem('adminData', JSON.stringify([newEntry, ...localData]));
+      
       setSubmitted(true);
       window.scrollTo(0, 0);
     } catch (err) {
