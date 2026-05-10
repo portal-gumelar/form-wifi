@@ -35,24 +35,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
 
-        {/* Integration Settings */}
-        <div className={`p-8 rounded-[2.5rem] border ${isDarkMode ? 'bg-[#1e293b] border-slate-800' : 'bg-white border-slate-100 shadow-sm'}`}>
-          <h4 className="text-sm font-black uppercase tracking-widest mb-8 flex items-center gap-3">
-            <Lucide.Zap size={18} className="text-orange-500" /> Integration Hub
-          </h4>
-          <div className="space-y-4">
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Google Apps Script API</label>
-              <input 
-                type="text" 
-                readOnly 
-                value={googleScriptUrl}
-                className={`w-full p-4 rounded-xl border text-xs font-bold outline-none ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}
-              />
-            </div>
-            <p className="text-[9px] font-bold text-slate-400 uppercase leading-relaxed">Endpoint currently syncing with Google Sheets database.</p>
-          </div>
-        </div>
 
         {/* Package Management */}
         <div className={`p-8 rounded-[2.5rem] border ${isDarkMode ? 'bg-[#1e293b] border-slate-800' : 'bg-white border-slate-100 shadow-sm'} md:col-span-2`}>
