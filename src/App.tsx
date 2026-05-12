@@ -1,3 +1,4 @@
+// Last update: 2026-05-12 17:03
 import React, { useState } from "react";
 import { RegistrationForm } from "./pages/RegistrationForm";
 import { SuccessPage } from "./components/ui/SuccessPage";
