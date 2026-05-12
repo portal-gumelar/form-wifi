@@ -3,7 +3,7 @@ import { RegistrationForm } from "./pages/RegistrationForm";
 import { SuccessPage } from "./components/ui/SuccessPage";
 import Dashboard from "./pages/Dashboard";
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgrxe5UXu5PqMj7B-sIB_gYktCVOVFZKPwGzwUWrOuAAww0UM47YuWr6MhAs847_GF_A/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyo_6xHxq2Qge71soIUW_Svi5toI69lm3KmZFKS8Ac7BhuW_vl6eE4pTB9SB-QmS__lZg/exec";
 
 export default function App() {
   const [view, setView] = useState<"form" | "admin">("form");
