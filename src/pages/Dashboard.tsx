@@ -37,13 +37,44 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
 
   const fetchData = async () => {
     try {
-      const response = await fetch(googleScriptUrl);
-      const json = await response.json();
-      if (Array.isArray(json)) {
-        setData(json);
+      setLoading(true);
+      
+      // 1. Try to load Link Local (cached) data
+      let combinedData: RegistrationData[] = [];
+      try {
+        const localResponse = await fetch("/data/dummy_data.json");
+        if (localResponse.ok) {
+          const localJson = await localResponse.json();
+          if (Array.isArray(localJson)) {
+            console.log("Link Local: Loaded cached data", localJson.length);
+            combinedData = localJson;
+          }
+        }
+      } catch (e) {
+        console.warn("Link Local: No cached data found.");
+      }
+
+      // 2. Fetch Live Data
+      try {
+        const response = await fetch(googleScriptUrl);
+        const json = await response.json();
+        if (Array.isArray(json)) {
+          // In a real scenario, we might want to merge or deduplicate.
+          // For now, we'll favor live data if available, or fall back to local.
+          if (json.length > 0) {
+            setData(json);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch live data, using local cache if available:", err);
+      }
+
+      if (combinedData.length > 0) {
+        setData(combinedData);
       }
     } catch (err) {
-      console.error("Failed to fetch dashboard data:", err);
+      console.error("Dashboard initialization failed:", err);
     } finally {
       setLoading(false);
     }

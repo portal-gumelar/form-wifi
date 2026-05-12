@@ -9,15 +9,17 @@ PANDUAN: KONEKSI FORM KE GOOGLE SHEETS
    Kolom A: Timestamp
    Kolom B: Provider Saat Ini
    Kolom C: Nama Lengkap
-   Kolom D: Alamat Pemasangan
-   Kolom E: No HP / WA
-   Kolom F: Paket
-   Kolom G: Tanggal Rencana Pasang
-   Kolom H: Bisa Google Maps
-   Kolom I: Link Google Maps
-   Kolom J: Waktu Survei
-   Kolom K: Prioritas
-   Kolom L: Sumber Info
+   Kolom D: Kecamatan
+   Kolom E: Desa
+   Kolom F: Alamat Pemasangan
+   Kolom G: No HP / WA
+   Kolom H: Paket
+   Kolom I: Tanggal Rencana Pasang
+   Kolom J: Bisa Google Maps
+   Kolom K: Link Google Maps
+   Kolom L: Waktu Survei
+   Kolom M: Prioritas
+   Kolom N: Sumber Info
 
 3. Buka Apps Script:
    Klik menu Extensions → Apps Script

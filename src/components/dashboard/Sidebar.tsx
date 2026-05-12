@@ -78,6 +78,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
         <button 
+          onClick={onLogout}
+          className="w-full flex items-center gap-4 p-4 rounded-2xl text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
+        >
+          <Lucide.Globe size={22} />
+          {isSidebarOpen && <span className="font-bold text-sm">Public Website</span>}
+        </button>
+        <button 
           onClick={() => setIsDarkMode(!isDarkMode)}
           className="w-full flex items-center gap-4 p-4 rounded-2xl text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
         >

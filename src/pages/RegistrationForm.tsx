@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { RefreshCw } from "lucide-react";
 
 // UI Components
-import { Section, RadioCard, InputField } from "../components/ui/FormElements";
+import { Section, RadioCard, InputField, SelectField } from "../components/ui/FormElements";
 import { LogoMark } from "../components/ui/LogoMark";
 import { PackageSelection } from "../components/registration/PackageSelection";
 import { EthicNotice } from "../components/registration/EthicNotice";
+import { AlertCircle } from "lucide-react";
 
 // Constants
 import { PACKAGES } from "../constants/packages";
@@ -15,6 +16,8 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgrxe5UXu5Pq
 const initialForm = {
   currentProvider: "",
   namaLengkap: "",
+  kecamatan: "GUMELAR",
+  desa: "",
   alamat: "",
   noHp: "",
   paket: "GUYUB_1 (20 Mbps) - Rp 115.000/Bln",
@@ -27,18 +30,30 @@ const initialForm = {
   sumberInfo: "",
 };
 
-export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; setShowAdminModal: (v: boolean) => void }> = ({ setSubmitted, setShowAdminModal }) => {
+const VILLAGES = ["GUMELAR", "CIHONJE", "TLAGA", "SAMUDRA KULON", "SAMUDRA", "PANINGKABAN", "KARANG KEMOJING", "GANCANG", "KEDUNGURANG"];
+const COVERED_VILLAGES = ["GUMELAR", "CIHONJE"];
+
+export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; desa: string }) => void; setShowAdminModal: (v: boolean) => void }> = ({ setSubmitted, setShowAdminModal }) => {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showEthicNotice, setShowEthicNotice] = useState(false);
+  const [coverageWarning, setCoverageWarning] = useState("");
 
-  const progress = Math.round((["currentProvider", "namaLengkap", "alamat", "noHp", "paket", "tanggalPasang", "sumberInfo"].filter(f => form[f as keyof typeof form]).length / 7) * 100);
+  const progress = Math.round((["currentProvider", "namaLengkap", "desa", "alamat", "noHp", "paket", "tanggalPasang", "sumberInfo"].filter(f => form[f as keyof typeof form]).length / 8) * 100);
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
     setError("");
+
+    if (name === "desa") {
+      if (value && !COVERED_VILLAGES.includes(value)) {
+        setCoverageWarning("mohon maaf desa anda belum terkafer oleh jaringan kami. mohon menunggu");
+      } else {
+        setCoverageWarning("");
+      }
+    }
 
     if (name === "currentProvider" && value.includes("RT/RW NET")) {
       setShowEthicNotice(true);
@@ -51,6 +66,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
     };
 
     if (name === "currentProvider") scrollTo("sec-datadiri");
+    else if (name === "desa") scrollTo("inp-alamat");
     else if (name === "paket") scrollTo("sec-jadwal");
     else if (name === "tanggalPasang") scrollTo("sec-lokasi");
     else if (name === "sumberInfo") scrollTo("sec-submit");
@@ -65,7 +81,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.currentProvider || !form.namaLengkap || !form.alamat || !form.noHp || !form.paket || !form.tanggalPasang || !form.sumberInfo) {
+    if (!form.currentProvider || !form.namaLengkap || !form.kecamatan || !form.desa || !form.alamat || !form.noHp || !form.paket || !form.tanggalPasang || !form.sumberInfo) {
       setError("Mohon lengkapi semua field yang wajib diisi (*).");
       return;
     }
@@ -77,6 +93,8 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
       else if (key !== "prioritasLain") {
         const apiKey = key === "currentProvider" ? "Provider Saat Ini" : 
                        key === "namaLengkap" ? "Nama Lengkap" :
+                       key === "kecamatan" ? "Kecamatan" :
+                       key === "desa" ? "Desa" :
                        key === "alamat" ? "Alamat Pemasangan" :
                        key === "noHp" ? "No HP / WA" :
                        key === "paket" ? "Paket" :
@@ -102,6 +120,8 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
         timestamp: new Date().toLocaleString("id-ID"),
         provider: form.currentProvider,
         nama: form.namaLengkap,
+        kecamatan: form.kecamatan,
+        desa: form.desa,
         alamat: form.alamat,
         hp: form.noHp,
         paket: form.paket,
@@ -115,7 +135,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
       
       localStorage.setItem('adminData', JSON.stringify([newEntry, ...localData]));
       
-      setSubmitted(true);
+      setSubmitted({ name: form.namaLengkap, desa: form.desa });
       window.scrollTo(0, 0);
     } catch (err) {
       setError("Koneksi gagal. Silakan coba lagi.");
@@ -149,6 +169,11 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
                   <span className="animate-bounce">🔥</span> PROMO <span className="animate-bounce">🔥</span>
                 </h2>
                 <div className="bg-white text-red-700 px-4 py-1.5 rounded-full mt-3 font-black text-sm sm:text-lg inline-block">CUKUP MBAYAR WULANANE</div>
+                <div className="mt-2 flex items-center justify-center gap-2 text-white font-bold text-[10px] sm:text-xs uppercase tracking-tighter italic">
+                  <span>✅ GRATIS ALAT</span>
+                  <span className="opacity-50">|</span>
+                  <span>✅ GRATIS BIAYA PASANG</span>
+                </div>
               </div>
             </button>
           </div>
@@ -181,7 +206,17 @@ export const RegistrationForm: React.FC<{ setSubmitted: (v: boolean) => void; se
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="sm:col-span-1"><InputField label="Nama Lengkap Sesuai KTP" name="namaLengkap" value={form.namaLengkap} onChange={handleChange} placeholder="Contoh: Budi Santoso" required /></div>
                 <div className="sm:col-span-1"><InputField label="Nomor WhatsApp Aktif" name="noHp" value={form.noHp} onChange={handleChange} placeholder="08123456789" required type="tel" /></div>
-                <div className="sm:col-span-2"><InputField label="Alamat Lengkap Lokasi Pasang" name="alamat" value={form.alamat} onChange={handleChange} placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan..." required textarea /></div>
+                <div className="sm:col-span-1"><SelectField label="Kecamatan" name="kecamatan" value={form.kecamatan} onChange={handleChange} options={["GUMELAR"]} required /></div>
+                <div className="sm:col-span-1">
+                  <SelectField label="Desa" name="desa" value={form.desa} onChange={handleChange} options={VILLAGES} required />
+                  {coverageWarning && (
+                    <div className="mt-3 p-4 bg-orange-50 border-2 border-orange-200 rounded-2xl flex items-start gap-3 animate-bounce">
+                      <AlertCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-[11px] font-black text-orange-700 leading-tight uppercase tracking-tight">{coverageWarning}</p>
+                    </div>
+                  )}
+                </div>
+                <div id="inp-alamat" className="sm:col-span-2"><InputField label="Alamat Lengkap (RT/RW)" name="alamat" value={form.alamat} onChange={handleChange} placeholder="Nama jalan, nomor rumah, RT/RW..." required textarea /></div>
               </div>
             </Section>
 

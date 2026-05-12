@@ -1,4 +1,4 @@
-const LOCAL_DUMMY_DATA = [
+[
   {
     "Timestamp": "8/5/2026, 10.44.19",
     "Provider Saat Ini": "Internet Lokal, RT/RW NET / Internet Teman",
@@ -125,4 +125,4 @@ const LOCAL_DUMMY_DATA = [
     "Prioritas": "",
     "Sumber Info": "Teman/Tetangga"
   }
-];
+]

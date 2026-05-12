@@ -42,10 +42,15 @@ except Exception as e:
     print("Linking to empty local data.")
     js_content = "const LOCAL_DUMMY_DATA = [];\n"
 
-# 4. Save dummy_data.js
+# 4. Save dummy_data.js and dummy_data.json
 with open(DUMMY_JS_PATH, 'w') as f:
     f.write(js_content)
 print(f"Generated: {DUMMY_JS_PATH}")
+
+DUMMY_JSON_PATH = os.path.join(DATA_DIR, 'dummy_data.json')
+with open(DUMMY_JSON_PATH, 'w') as f:
+    json.dump(data if isinstance(data, list) else [], f, indent=2)
+print(f"Generated: {DUMMY_JSON_PATH}")
 
 # 5. Inject logic into dashboard.html (if not already there)
 with open(DASHBOARD_PATH, 'r') as f:
@@ -72,7 +77,7 @@ local_logic = """
       }
 """
 
-if 'if (typeof LOCAL_DUMMY_DATA !== \'undefined\')' not in html:
+if 'LOCAL_DUMMY_DATA' not in html or 'Link Local' not in html:
     html = html.replace('async function loadFromAPI() {', local_logic)
     print("Injected local loading logic into dashboard.html")
 
