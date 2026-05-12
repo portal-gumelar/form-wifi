@@ -7,6 +7,7 @@ export interface RegistrationData {
   "Provider Saat Ini": string;
   "Sumber Info": string;
   "Link Google Maps"?: string;
+  status?: string;
 }
 
 export interface DashboardStats {

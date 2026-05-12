@@ -61,23 +61,39 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
         if (Array.isArray(json)) {
           // In a real scenario, we might want to merge or deduplicate.
           // For now, we'll favor live data if available, or fall back to local.
-          if (json.length > 0) {
-            setData(json);
-            return;
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch live data, using local cache if available:", err);
+      // 3. Load locally stored status overrides
+      const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
+      
+      const applyStatuses = (list: RegistrationData[]) => list.map(item => ({
+        ...item,
+        status: localStatuses[item.Timestamp] || item.status || "BARU"
+      }));
+
+      if (json.length > 0) {
+        setData(applyStatuses(json));
+        return;
       }
 
       if (combinedData.length > 0) {
-        setData(combinedData);
+        setData(applyStatuses(combinedData));
       }
     } catch (err) {
       console.error("Dashboard initialization failed:", err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUpdateStatus = (timestamp: string, newStatus: string) => {
+    // 1. Update state immediately
+    setData(prev => prev.map(item => 
+      item.Timestamp === timestamp ? { ...item, status: newStatus } : item
+    ));
+
+    // 2. Persist to localStorage
+    const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
+    localStatuses[timestamp] = newStatus;
+    localStorage.setItem("registration_statuses", JSON.stringify(localStatuses));
   };
 
   const handleDelete = async (timestamp: string) => {
@@ -160,6 +176,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                     isDarkMode={isDarkMode} 
                     onViewDetails={setSelectedReg} 
                     onDelete={setConfirmDelete}
+                    onUpdateStatus={handleUpdateStatus}
                     mini
                   />
                 </div>
@@ -194,6 +211,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                   isDarkMode={isDarkMode} 
                   onViewDetails={setSelectedReg} 
                   onDelete={setConfirmDelete} 
+                  onUpdateStatus={handleUpdateStatus}
                 />
               </motion.div>
             )}
@@ -206,7 +224,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
 
             {activeTab === "Customers" && (
               <motion.div key="customers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <CustomersView data={data} isDarkMode={isDarkMode} onViewDetails={setSelectedReg} onDelete={setConfirmDelete} />
+                <CustomersView data={data} isDarkMode={isDarkMode} onViewDetails={setSelectedReg} onDelete={setConfirmDelete} onUpdateStatus={handleUpdateStatus} />
               </motion.div>
             )}
 

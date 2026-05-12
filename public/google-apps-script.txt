@@ -20,6 +20,7 @@ PANDUAN: KONEKSI FORM KE GOOGLE SHEETS
    Kolom L: Waktu Survei
    Kolom M: Prioritas
    Kolom N: Sumber Info
+   Kolom O: Status
 
 3. Buka Apps Script:
    Klik menu Extensions → Apps Script

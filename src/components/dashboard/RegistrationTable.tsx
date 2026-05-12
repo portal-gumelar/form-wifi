@@ -8,8 +8,18 @@ interface RegistrationTableProps {
   isDarkMode: boolean;
   onViewDetails: (item: RegistrationData) => void;
   onDelete: (timestamp: string) => void;
+  onUpdateStatus: (timestamp: string, status: string) => void;
   mini?: boolean;
 }
+
+const STATUS_OPTIONS = [
+  { label: "Baru", value: "BARU", color: "bg-blue-50 text-blue-600 border-blue-100" },
+  { label: "Survey", value: "SURVEY", color: "bg-orange-50 text-orange-600 border-orange-100" },
+  { label: "Proses", value: "PROSES", color: "bg-purple-50 text-purple-600 border-purple-100" },
+  { label: "Aktif", value: "AKTIF", color: "bg-emerald-50 text-emerald-600 border-emerald-100" },
+  { label: "Pending", value: "PENDING", color: "bg-amber-50 text-amber-600 border-amber-100" },
+  { label: "Batal", value: "BATAL", color: "bg-red-50 text-red-600 border-red-100" },
+];
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -20,7 +30,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
 }
 
 export const RegistrationTable: React.FC<RegistrationTableProps> = ({ 
-  data, isDarkMode, onViewDetails, onDelete, mini = false 
+  data, isDarkMode, onViewDetails, onDelete, onUpdateStatus, mini = false 
 }) => {
   return (
     <div className={`rounded-[2.5rem] border overflow-hidden ${isDarkMode ? 'bg-[#1e293b] border-slate-800' : 'bg-white border-slate-100 shadow-sm'}`}>
@@ -50,8 +60,19 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                   </td>
                   <td className="px-8 py-6">
                     <p className="text-xs font-bold truncate max-w-xs">{item["Alamat Pemasangan"]}</p>
-                    <div className="flex gap-2 mt-2">
+                    <div className="flex gap-2 mt-2 items-center">
                       <span className="text-[9px] font-black px-2 py-0.5 bg-blue-50 text-blue-500 rounded-md uppercase">{String(item.Paket || "").split("(")[0]}</span>
+                      <div className="relative group/status">
+                        <select 
+                          value={item.status || "BARU"} 
+                          onChange={(e) => onUpdateStatus(item.Timestamp, e.target.value)}
+                          className={`text-[9px] font-black px-2 py-0.5 rounded-md border appearance-none cursor-pointer outline-none transition-all ${
+                            STATUS_OPTIONS.find(o => o.value === (item.status || "BARU"))?.color
+                          }`}
+                        >
+                          {STATUS_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                        </select>
+                      </div>
                     </div>
                   </td>
                   <td className="px-8 py-6">
@@ -97,7 +118,15 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                   </td>
                   <td className="px-8 py-4 text-xs font-bold">{String(item.Paket || "").split("(")[0]}</td>
                   <td className="px-8 py-4">
-                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 rounded-full text-[10px] font-black uppercase tracking-wider">Verified</span>
+                    <select 
+                      value={item.status || "BARU"} 
+                      onChange={(e) => onUpdateStatus(item.Timestamp, e.target.value)}
+                      className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border appearance-none cursor-pointer outline-none ${
+                        STATUS_OPTIONS.find(o => o.value === (item.status || "BARU"))?.color
+                      }`}
+                    >
+                      {STATUS_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                    </select>
                   </td>
                   <td className="px-8 py-4 text-center">
                     <button onClick={() => onViewDetails(item)} className="p-2 hover:text-[#1a2d8f] transition-all"><Lucide.ExternalLink size={18} /></button>

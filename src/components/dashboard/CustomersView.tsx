@@ -8,10 +8,11 @@ interface CustomersViewProps {
   isDarkMode: boolean;
   onViewDetails: (item: RegistrationData) => void;
   onDelete: (timestamp: string) => void;
+  onUpdateStatus: (timestamp: string, status: string) => void;
 }
 
 export const CustomersView: React.FC<CustomersViewProps> = ({ 
-  data, isDarkMode, onViewDetails, onDelete 
+  data, isDarkMode, onViewDetails, onDelete, onUpdateStatus 
 }) => {
   const [filterStatus, setFilterStatus] = useState("All");
 
@@ -68,6 +69,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
         isDarkMode={isDarkMode} 
         onViewDetails={onViewDetails} 
         onDelete={onDelete} 
+        onUpdateStatus={onUpdateStatus}
       />
     </div>
   );
