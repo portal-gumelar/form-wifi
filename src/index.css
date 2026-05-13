@@ -4,63 +4,40 @@
 @layer base {
   body {
     font-family: 'Inter', sans-serif;
+    @apply bg-[#f4f7fe] text-[#2b3674] antialiased;
   }
   h1, h2, h3, h4, h5, h6, .font-outfit {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Inter', sans-serif;
+    @apply font-bold;
+  }
+
+  :root {
+    --brand-primary: #4318ff;
+    --brand-secondary: #707eae;
+    --card-shadow: 0px 18px 40px rgba(112, 144, 176, 0.12);
   }
 }
 
 @layer utilities {
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
-  
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+  .bright-card {
+    @apply bg-white rounded-[20px] shadow-sm border-none transition-all duration-300;
+    box-shadow: var(--card-shadow);
   }
 
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(244, 121, 32, 0); }
-    50% { box-shadow: 0 0 20px 5px rgba(244, 121, 32, 0.3); }
+  .bright-card:hover {
+    @apply shadow-md;
   }
 
-  @keyframes slide-up {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+  .sidebar-item-active {
+    @apply bg-[#4318ff] text-white shadow-xl shadow-blue-500/20;
   }
 
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
+  .sidebar-item-inactive {
+    @apply text-[#a3aed0] hover:bg-slate-100/50 hover:text-[#2b3674];
   }
 
-  .animate-shimmer {
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    background-size: 200% 100%;
-    animation: shimmer 2s infinite;
-  }
-
-  .animate-glow-wa {
-    animation: pulse-glow 2s infinite;
-  }
-
-  .animate-slide-up {
-    animation: slide-up 0.5s ease-out forwards;
-  }
-
-  .glass {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-  }
-
-  .glass-dark {
-    background: rgba(15, 30, 110, 0.7);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  .glass-header {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
@@ -71,14 +48,11 @@
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
+    @apply bg-[#e0e5f2] rounded-full hover:bg-[#cdd4e8] transition-colors;
   }
-  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #334155;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+
+  .status-badge {
+    @apply px-3 py-1.5 rounded-xl font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2;
   }
 }
 

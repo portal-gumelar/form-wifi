@@ -126,3 +126,116 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({ timestam
     )}
   </AnimatePresence>
 );
+
+interface EditModalProps {
+  item: RegistrationData | null;
+  isDarkMode: boolean;
+  onClose: () => void;
+  onSave: (data: RegistrationData) => void;
+}
+
+export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMode, onClose, onSave }) => {
+  const [formData, setFormData] = React.useState<RegistrationData | null>(null);
+
+  React.useEffect(() => {
+    if (item) setFormData({ ...item });
+  }, [item]);
+
+  if (!item || !formData) return null;
+
+  const handleChange = (field: keyof RegistrationData, value: string) => {
+    setFormData(prev => prev ? ({ ...prev, [field]: value }) : null);
+  };
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
+          className={`${isDarkMode ? 'bg-[#1e293b] border-slate-800' : 'bg-white border-white'} rounded-[3rem] w-full max-w-2xl overflow-hidden shadow-2xl border flex flex-col max-h-[90vh]`}
+        >
+          <div className="bg-[#1a2d8f] p-8 text-white flex justify-between items-center shrink-0">
+            <div className="flex items-center gap-4">
+              <Lucide.Edit3 size={24} />
+              <h2 className="text-xl font-black italic uppercase">Edit Pelanggan</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => {
+                  const phone = String(formData["No HP / WA"] || "").replace(/\D/g, "");
+                  const waPhone = phone.startsWith("0") ? "62" + phone.slice(1) : phone;
+                  window.open(`https://wa.me/${waPhone}`, "_blank");
+                }}
+                className="p-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
+              >
+                <Lucide.MessageCircle size={18} /> Chat WA
+              </button>
+              <button onClick={onClose} className="p-2.5 hover:bg-white/10 rounded-xl transition-all"><Lucide.X size={20} /></button>
+            </div>
+          </div>
+
+          <div className="p-8 overflow-y-auto space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
+                <input 
+                  type="text" 
+                  value={formData["Nama Lengkap"]} 
+                  onChange={e => handleChange("Nama Lengkap", e.target.value)}
+                  className={`w-full p-3 rounded-xl border text-sm font-bold ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">No HP / WA</label>
+                <input 
+                  type="text" 
+                  value={formData["No HP / WA"]} 
+                  onChange={e => handleChange("No HP / WA", e.target.value)}
+                  className={`w-full p-3 rounded-xl border text-sm font-bold ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}
+                />
+              </div>
+              <div className="sm:col-span-2 space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Alamat Pemasangan</label>
+                <textarea 
+                  rows={2}
+                  value={formData["Alamat Pemasangan"]} 
+                  onChange={e => handleChange("Alamat Pemasangan", e.target.value)}
+                  className={`w-full p-3 rounded-xl border text-sm font-bold ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Paket Internet</label>
+                <input 
+                  type="text" 
+                  value={formData.Paket} 
+                  onChange={e => handleChange("Paket", e.target.value)}
+                  className={`w-full p-3 rounded-xl border text-sm font-bold ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status</label>
+                <select 
+                  value={formData.status || "BARU"} 
+                  onChange={e => handleChange("status", e.target.value)}
+                  className={`w-full p-3 rounded-xl border text-sm font-bold appearance-none ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'}`}
+                >
+                  <option value="BARU">TERDAFTAR</option>
+                  <option value="SURVEY">SURVEY</option>
+                  <option value="PROSES">PROSES PASANG</option>
+                  <option value="AKTIF">AKTIF</option>
+                  <option value="BELUM_AKTIF">BELUM AKTIF</option>
+                  <option value="PENDING">PENDING</option>
+                  <option value="BATAL">BATAL</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-8 border-t border-slate-100 dark:border-slate-800 flex gap-4 shrink-0">
+            <button onClick={onClose} className="flex-1 py-4 text-slate-500 font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">Batal</button>
+            <button onClick={() => onSave(formData)} className="flex-1 py-4 bg-[#1a2d8f] text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20">Simpan Perubahan</button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+};

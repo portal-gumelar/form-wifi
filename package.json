@@ -1,7 +1,8 @@
 {
-  "name": "react-vite-tailwind",
+  "name": "armedia-net-registration",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Customer Registration Portal & Admin Dashboard for Armedia Net",
   "type": "module",
   "scripts": {
     "dev": "vite",

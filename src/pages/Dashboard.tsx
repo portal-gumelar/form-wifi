@@ -8,7 +8,7 @@ import { Header } from "../components/dashboard/Header";
 import { KPICards } from "../components/dashboard/KPICards";
 import { AnalyticsCharts, FullAnalytics } from "../components/dashboard/AnalyticsCharts";
 import { RegistrationTable } from "../components/dashboard/RegistrationTable";
-import { PDFPreviewModal, DetailsModal, ConfirmDeleteModal } from "../components/dashboard/Modals";
+import { PDFPreviewModal, DetailsModal, ConfirmDeleteModal, EditRegistrationModal } from "../components/dashboard/Modals";
 import { CustomersView } from "../components/dashboard/CustomersView";
 import { GeographicalView } from "../components/dashboard/GeographicalView";
 import { SettingsView } from "../components/dashboard/SettingsView";
@@ -30,6 +30,8 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [editingReg, setEditingReg] = useState<RegistrationData | null>(null);
+  const [isAddingNew, setIsAddingNew] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -59,23 +61,33 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
         const response = await fetch(googleScriptUrl);
         const json = await response.json();
         if (Array.isArray(json)) {
-          // In a real scenario, we might want to merge or deduplicate.
-          // For now, we'll favor live data if available, or fall back to local.
-      // 3. Load locally stored status overrides
-      const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
-      
-      const applyStatuses = (list: RegistrationData[]) => list.map(item => ({
-        ...item,
-        status: localStatuses[item.Timestamp] || item.status || "BARU"
-      }));
+          // 3. Load locally stored status overrides
+          const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
+          
+          const applyStatuses = (list: RegistrationData[]) => list.map(item => ({
+            ...item,
+            status: localStatuses[item.Timestamp] || item.status || "BARU"
+          }));
 
-      if (json.length > 0) {
-        setData(applyStatuses(json));
-        return;
-      }
+          if (json.length > 0) {
+            setData(applyStatuses(json));
+            return;
+          }
 
-      if (combinedData.length > 0) {
-        setData(applyStatuses(combinedData));
+          if (combinedData.length > 0) {
+            setData(applyStatuses(combinedData));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch live data, using local cache if available:", err);
+        // Fallback to local if fetch failed
+        if (combinedData.length > 0) {
+          const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
+          setData(combinedData.map(item => ({
+            ...item,
+            status: localStatuses[item.Timestamp] || item.status || "BARU"
+          })));
+        }
       }
     } catch (err) {
       console.error("Dashboard initialization failed:", err);
@@ -104,10 +116,60 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
         mode: "no-cors",
         body: new URLSearchParams({ action: "delete", timestamp })
       });
-      setTimeout(fetchData, 1000);
+      // Update local state immediately for better UX
+      setData(prev => prev.filter(item => item.Timestamp !== timestamp));
+      setTimeout(fetchData, 2000); // Background refresh
     } catch (err) {
       console.error("Delete failed:", err);
     }
+  };
+
+  const handleSaveEdit = async (updatedItem: RegistrationData) => {
+    setEditingReg(null);
+    setIsAddingNew(false);
+    
+    // Update local state immediately
+    setData(prev => {
+      const exists = prev.find(item => item.Timestamp === updatedItem.Timestamp);
+      if (exists) {
+        return prev.map(item => item.Timestamp === updatedItem.Timestamp ? updatedItem : item);
+      } else {
+        return [updatedItem, ...prev];
+      }
+    });
+
+    try {
+      const params = new URLSearchParams();
+      params.append("action", updatedItem.Timestamp && data.find(d => d.Timestamp === updatedItem.Timestamp) ? "update" : "add");
+      Object.entries(updatedItem).forEach(([key, val]) => {
+        params.append(key, String(val));
+      });
+
+      await fetch(googleScriptUrl, {
+        method: "POST",
+        mode: "no-cors",
+        body: params
+      });
+      
+      setTimeout(fetchData, 2000);
+    } catch (err) {
+      console.error("Save failed:", err);
+    }
+  };
+
+  const handleAddNew = () => {
+    const newEntry: RegistrationData = {
+      Timestamp: new Date().toLocaleString("id-ID"),
+      "Nama Lengkap": "",
+      "No HP / WA": "",
+      "Alamat Pemasangan": "",
+      Paket: "GUYUB_1 (20 Mbps) - Rp 115.000/Bln",
+      status: "BARU",
+      "Kecamatan": "GUMELAR",
+      "Desa": "GUMELAR"
+    };
+    setEditingReg(newEntry);
+    setIsAddingNew(true);
   };
 
   const stats = useMemo(() => calculateStats(data), [data]);
@@ -135,7 +197,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
   );
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-[#0f172a] text-white' : 'bg-[#f8fafc] text-[#0f172a]'} font-sans flex transition-colors duration-300`}>
+    <div className="min-h-screen bg-[#f4f7fe] flex transition-all duration-300">
       
       <Sidebar 
         isSidebarOpen={isSidebarOpen}
@@ -162,33 +224,36 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
           <AnimatePresence mode="wait">
             {activeTab === "Dashboard" && (
               <motion.div key="dashboard" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
-                <KPICards totalRegistrants={data.length} isDarkMode={isDarkMode} />
-                <AnalyticsCharts stats={stats} isDarkMode={isDarkMode} totalCount={data.length} />
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-black italic tracking-tight">Recent Activity</h3>
-                    <button onClick={() => setActiveTab("Registrations")} className="text-sm font-black text-[#1a2d8f] dark:text-blue-400 flex items-center gap-1 hover:underline">
-                      View All Records <Lucide.ChevronRight size={16} />
-                    </button>
+                <KPICards totalRegistrants={data.length} statusCounts={stats.statusCounts} isDarkMode={isDarkMode} />
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between px-2">
+                      <h3 className="text-lg font-bold text-[#2b3674]">Recent Activity</h3>
+                      <button onClick={() => setActiveTab("Registrations")} className="text-xs font-bold text-[#4318ff] hover:underline">
+                        View All
+                      </button>
+                    </div>
+                    <RegistrationTable 
+                      data={filteredData.slice(0, 5)} 
+                      isDarkMode={isDarkMode} 
+                      onViewDetails={setSelectedReg} 
+                      onDelete={setConfirmDelete}
+                      onUpdateStatus={handleUpdateStatus}
+                      mini
+                    />
                   </div>
-                  <RegistrationTable 
-                    data={filteredData.slice(0, 5)} 
-                    isDarkMode={isDarkMode} 
-                    onViewDetails={setSelectedReg} 
-                    onDelete={setConfirmDelete}
-                    onUpdateStatus={handleUpdateStatus}
-                    mini
-                  />
+                  <AnalyticsCharts stats={stats} isDarkMode={isDarkMode} totalCount={data.length} />
                 </div>
               </motion.div>
             )}
 
             {activeTab === "Registrations" && (
               <motion.div key="registrations" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }} className="space-y-6">
-                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div className="flex flex-col md:flex-row gap-4 items-center justify-between px-2">
                   <div className="flex gap-4 w-full md:w-auto">
                     <select 
-                      className={`flex-1 md:w-64 p-4 rounded-2xl border font-bold text-xs outline-none ${isDarkMode ? 'bg-[#1e293b] border-slate-800' : 'bg-white border-slate-200'}`}
+                      className="flex-1 md:w-64 p-3 rounded-xl bg-white border border-[#e0e5f2] font-bold text-xs outline-none text-[#2b3674]"
                       value={filterPaket}
                       onChange={(e) => setFilterPaket(e.target.value)}
                     >
@@ -196,20 +261,22 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                       {stats?.packageData.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
                     </select>
                     <div className="flex gap-2">
-                      <button onClick={() => exportToExcel(filteredData)} className="flex items-center gap-2 px-6 py-4 bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-500/20 text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all">
-                        <Lucide.FileSpreadsheet size={18} /> Excel
+                      <button onClick={() => exportToExcel(filteredData)} className="p-3 bg-[#e6fff5] text-[#01b574] rounded-xl font-bold text-xs hover:bg-[#01b574] hover:text-white transition-all">
+                        <Lucide.FileSpreadsheet size={18} />
                       </button>
-                      <button onClick={() => setPdfPreviewUrl(generatePDFBlobUrl(filteredData))} className="flex items-center gap-2 px-6 py-4 bg-red-600 text-white rounded-2xl shadow-lg shadow-red-500/20 text-xs font-black uppercase tracking-widest hover:bg-red-700 transition-all">
-                        <Lucide.FileText size={18} /> PDF Preview
+                      <button onClick={() => setPdfPreviewUrl(generatePDFBlobUrl(filteredData))} className="p-3 bg-[#fff5f5] text-[#ee5d50] rounded-xl font-bold text-xs hover:bg-[#ee5d50] hover:text-white transition-all">
+                        <Lucide.FileText size={18} />
                       </button>
                     </div>
                   </div>
-                  <div className="text-sm font-bold text-slate-400">Showing {filteredData.length} records</div>
+                  <button onClick={handleAddNew} className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-[#4318ff] text-white rounded-xl shadow-lg shadow-blue-500/20 text-xs font-bold uppercase tracking-widest hover:bg-[#3311cc] transition-all">
+                    <Lucide.PlusCircle size={20} /> Add New Order
+                  </button>
                 </div>
                 <RegistrationTable 
                   data={filteredData} 
                   isDarkMode={isDarkMode} 
-                  onViewDetails={setSelectedReg} 
+                  onViewDetails={setEditingReg} 
                   onDelete={setConfirmDelete} 
                   onUpdateStatus={handleUpdateStatus}
                 />
@@ -261,6 +328,13 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
         isDarkMode={isDarkMode} 
         onClose={() => setConfirmDelete(null)} 
         onConfirm={handleDelete} 
+      />
+
+      <EditRegistrationModal 
+        item={editingReg}
+        isDarkMode={isDarkMode}
+        onClose={() => setEditingReg(null)}
+        onSave={handleSaveEdit}
       />
 
     </div>

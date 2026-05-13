@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Globe, ArrowRight } from "lucide-react";
 
 // UI Components
 import { Section, RadioCard, InputField, SelectField } from "../components/ui/FormElements";
@@ -11,7 +11,7 @@ import { AlertCircle } from "lucide-react";
 // Constants
 import { PACKAGES } from "../constants/packages";
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyo_6xHxq2Qge71soIUW_Svi5toI69lm3KmZFKS8Ac7BhuW_vl6eE4pTB9SB-QmS__lZg/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz07kam_EeYX6ff8CWVwI-MJ1D_QLvuWlBY-Fy-GUJiv1Ktyg_wULaL0E-Y1mDXWFlRfQ/exec";
 
 const initialForm = {
   currentProvider: "",
@@ -153,29 +153,39 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
       <header className="relative z-10 p-4 pt-8">
         <div className="max-w-5xl mx-auto flex flex-col items-center text-center">
-          <div className="flex items-center gap-3">
+          <a href="https://armedia.id/" className="flex items-center gap-3 group transition-transform hover:scale-105 active:scale-95">
             <LogoMark />
             <div className="text-left">
-              <div className="text-[#FDB913] font-black text-2xl sm:text-4xl tracking-tight leading-none">ARMEDIA<span className="text-white">_NET</span></div>
+              <div className="text-[#FDB913] font-black text-2xl sm:text-4xl tracking-tight leading-none group-hover:text-white transition-colors">ARMEDIA<span className="text-white">_NET</span></div>
               <div className="text-white/70 text-[10px] sm:text-xs tracking-widest uppercase mt-1">PT. Akses Artha Media</div>
             </div>
-          </div>
+          </a>
           
-          <div className="mt-8 w-full max-w-md">
+          <div className="mt-8 w-full max-w-md space-y-4">
             <button onClick={() => document.getElementById('sec-paket')?.scrollIntoView({ behavior: 'smooth' })} className="w-full relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-[#FDB913] to-red-600 rounded-[2rem] blur opacity-75 animate-pulse"></div>
               <div className="relative bg-gradient-to-br from-red-600 to-orange-600 p-6 rounded-[2rem] border-2 border-yellow-300 shadow-2xl">
                 <h2 className="font-black text-3xl sm:text-4xl text-yellow-300 leading-none flex items-center justify-center gap-3">
                   <span className="animate-bounce">🔥</span> PROMO <span className="animate-bounce">🔥</span>
                 </h2>
-                <div className="bg-white text-red-700 px-4 py-1.5 rounded-full mt-3 font-black text-sm sm:text-lg inline-block">CUKUP MBAYAR WULANANE</div>
-                <div className="mt-2 flex items-center justify-center gap-2 text-white font-bold text-[10px] sm:text-xs uppercase tracking-tighter italic">
+                <div className="bg-white text-red-700 px-4 py-1.5 rounded-full mt-3 font-black text-sm sm:text-lg inline-block uppercase tracking-tight">CUKUP MBAYAR WULANANE</div>
+                <div className="mt-2 text-white font-black text-xl sm:text-2xl drop-shadow-lg">
+                   MBAYAR <span className="text-yellow-300">115,000</span> <br/> 
+                   <span className="text-sm sm:text-lg uppercase tracking-widest">Langsung ON / 20Mbps</span>
+                </div>
+                <div className="mt-4 flex items-center justify-center gap-2 text-white font-bold text-[10px] sm:text-xs uppercase tracking-tighter italic">
                   <span>✅ GRATIS ALAT</span>
                   <span className="opacity-50">|</span>
                   <span>✅ GRATIS BIAYA PASANG</span>
                 </div>
               </div>
             </button>
+
+            <a href="https://gumelar.armedia.id/" className="flex items-center justify-center gap-2 py-3 px-6 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-white text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all group">
+              <Globe size={14} className="group-hover:rotate-12 transition-transform" /> 
+              gumelar.armedia.id
+              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </a>
           </div>
         </div>
       </header>

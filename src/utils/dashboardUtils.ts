@@ -14,6 +14,14 @@ export const calculateStats = (data: RegistrationData[]): DashboardStats => {
   const trends: any = {};
   const providers: any = {};
   const sources: any = {};
+  const statusCounts: Record<string, number> = {
+    "BARU": 0,
+    "SURVEY": 0,
+    "PROSES PASANG": 0,
+    "AKTIF": 0,
+    "BATAL": 0,
+    "PENDING": 0
+  };
 
   data.forEach(item => {
     const pkg = String(item.Paket || "Unknown").split("(")[0].trim();
@@ -27,6 +35,9 @@ export const calculateStats = (data: RegistrationData[]): DashboardStats => {
 
     const src = item["Sumber Info"] || "Direct";
     sources[src] = (sources[src] || 0) + 1;
+
+    const status = (item.status || "BARU").toUpperCase();
+    statusCounts[status] = (statusCounts[status] || 0) + 1;
   });
 
   const packageData = Object.keys(packages).map(name => ({ name, value: packages[name] }));
@@ -34,7 +45,7 @@ export const calculateStats = (data: RegistrationData[]): DashboardStats => {
   const providerData = Object.keys(providers).map(name => ({ name, value: providers[name] }));
   const sourceData = Object.keys(sources).map(name => ({ name, value: sources[name] }));
 
-  return { packageData, trendData, providerData, sourceData };
+  return { packageData, trendData, providerData, sourceData, statusCounts };
 };
 
 export const exportToExcel = (data: RegistrationData[]) => {

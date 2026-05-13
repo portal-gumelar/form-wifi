@@ -4,46 +4,37 @@ import * as Lucide from "lucide-react";
 
 interface KPICardsProps {
   totalRegistrants: number;
+  statusCounts: Record<string, number>;
   isDarkMode: boolean;
 }
 
-export const KPICards: React.FC<KPICardsProps> = ({ totalRegistrants, isDarkMode }) => {
+export const KPICards: React.FC<KPICardsProps> = ({ totalRegistrants, statusCounts, isDarkMode }) => {
   const kpiData = [
-    { label: "Total Registrants", value: totalRegistrants, icon: Lucide.Users, trend: "+12.5%", color: "blue" },
-    { label: "Active Services", value: Math.floor(totalRegistrants * 0.8), icon: Lucide.Activity, trend: "+5.2%", color: "emerald" },
-    { label: "Conversion Rate", value: "68%", icon: Lucide.TrendingUp, trend: "+2.1%", color: "orange" },
-    { label: "Completion Time", value: "24.8h", icon: Lucide.Calendar, trend: "-1.4%", color: "slate" }
+    { label: "Total Pelanggan", value: totalRegistrants, icon: Lucide.Users, color: "text-[#4318ff] bg-[#f4f7fe]" },
+    { label: "Pelanggan Aktif", value: statusCounts["AKTIF"] || 0, icon: Lucide.UserCheck, color: "text-[#01b574] bg-[#e6fff5]" },
+    { label: "Proses Pasang", value: statusCounts["PROSES PASANG"] || 0, icon: Lucide.Zap, color: "text-[#ffb547] bg-[#fff9e6]" },
+    { label: "Perlu Survey", value: statusCounts["SURVEY"] || 0, icon: Lucide.Search, color: "text-[#4318ff] bg-[#f4f7fe]" },
+    { label: "Pending", value: statusCounts["PENDING"] || 0, icon: Lucide.Clock, color: "text-[#707eae] bg-[#f4f7fe]" },
+    { label: "Batal", value: statusCounts["BATAL"] || 0, icon: Lucide.XCircle, color: "text-[#ee5d50] bg-[#fff5f5]" },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
       {kpiData.map((kpi, i) => (
         <motion.div 
           key={kpi.label}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.1 }}
-          className={`p-6 rounded-[2rem] border transition-all hover:shadow-2xl ${
-            isDarkMode ? 'bg-[#1e293b] border-slate-800' : 'bg-white border-slate-100 shadow-sm'
-          }`}
+          transition={{ delay: i * 0.05 }}
+          className="bright-card p-5 flex items-center gap-4 group cursor-default"
         >
-          <div className="flex justify-between items-start mb-4">
-            <div className={`p-3 rounded-2xl ${
-              kpi.color === 'blue' ? 'bg-blue-50 text-blue-500 dark:bg-blue-500/10' :
-              kpi.color === 'emerald' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10' :
-              kpi.color === 'orange' ? 'bg-orange-50 text-orange-500 dark:bg-orange-500/10' :
-              'bg-slate-50 text-slate-500 dark:bg-slate-500/10'
-            }`}>
-              <kpi.icon size={24} />
-            </div>
-            <span className={`text-xs font-black px-2 py-1 rounded-lg ${
-              kpi.trend.startsWith('+') ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10' : 'bg-red-50 text-red-600 dark:bg-red-500/10'
-            }`}>
-              {kpi.trend}
-            </span>
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${kpi.color}`}>
+            <kpi.icon size={20} />
           </div>
-          <h3 className="text-3xl font-black tracking-tight mb-1">{kpi.value}</h3>
-          <p className="text-sm font-bold text-slate-400">{kpi.label}</p>
+          <div className="flex flex-col min-w-0">
+            <p className="text-xs font-medium text-[#a3aed0] truncate">{kpi.label}</p>
+            <h3 className="text-xl font-bold text-[#2b3674] leading-tight">{kpi.value}</h3>
+          </div>
         </motion.div>
       ))}
     </div>

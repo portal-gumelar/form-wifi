@@ -15,4 +15,5 @@ export interface DashboardStats {
   trendData: { date: string; count: number }[];
   providerData: { name: string; value: number }[];
   sourceData: { name: string; value: number }[];
+  statusCounts: Record<string, number>;
 }
