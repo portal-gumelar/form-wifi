@@ -34,6 +34,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       { id: "Analytics", icon: Lucide.BarChart3, label: "Analytics" },
       { id: "Map View", icon: Lucide.Map, label: "Map View" },
       { id: "Settings", icon: Lucide.Settings, label: "Settings" },
+    ]},
+    { section: "EXTERNAL", items: [
+      { id: "PublicSite", icon: Lucide.Globe, label: "Public Website", url: "https://gumelar.armedia.id/" },
     ]}
   ];
 
@@ -66,7 +69,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id)}
+                    onClick={() => {
+                      if ('url' in item) {
+                        window.open(item.url as string, "_blank");
+                      } else {
+                        setActiveTab(item.id);
+                      }
+                    }}
                     className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all relative group font-bold text-sm ${
                       isActive 
                       ? 'sidebar-item-active' 
