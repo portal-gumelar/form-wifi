@@ -55,32 +55,46 @@ export const exportToExcel = (data: RegistrationData[]) => {
   XLSX.writeFile(workbook, `Armedia_Registrations_${new Date().toLocaleDateString()}.xlsx`);
 };
 
+const LOGO_URL = "https://ik.imagekit.io/Gumelar/LogO/logo%20pt.png?updatedAt=1778213993513";
+const BRAND_COLOR = [67, 24, 255];
+
 export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
   const doc = new jsPDF("l", "mm", "a4");
-  const title = "Armedia Net - Registration Report";
-  doc.setFontSize(20);
-  doc.text(title, 14, 22);
+  
+  // Header with Logo
+  doc.addImage(LOGO_URL, "PNG", 14, 10, 15, 15);
+  doc.setFontSize(22);
+  doc.setTextColor(67, 24, 255);
+  doc.setFont("helvetica", "bold");
+  doc.text("ARMEDIA NET", 32, 20);
+  
   doc.setFontSize(10);
-  doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+  doc.setTextColor(112, 126, 174);
+  doc.setFont("helvetica", "normal");
+  doc.text("Laporan Registrasi Pelanggan Baru", 32, 26);
+  
+  doc.text(`Dicetak pada: ${new Date().toLocaleString("id-ID")}`, 280, 20, { align: "right" });
 
-  const headers = [["No.", "ID", "Name", "WhatsApp", "Package", "Location", "Timestamp"]];
+  const headers = [["No.", "Customer ID", "Nama Lengkap", "WhatsApp", "Paket Layanan", "Kecamatan / Desa", "Tanggal Daftar"]];
   const rows = data.map((item, idx) => [
     idx + 1,
     getCustomerNo(item.Timestamp),
     item["Nama Lengkap"],
     item["No HP / WA"],
     String(item.Paket || "").split("(")[0],
-    item["Alamat Pemasangan"],
-    item.Timestamp
+    `${item.Kecamatan || "-"} / ${item.Desa || "-"}`,
+    item.Timestamp.split(",")[0]
   ]);
 
   autoTable(doc, {
     startY: 40,
     head: headers,
     body: rows,
-    theme: "striped",
-    headStyles: { fillColor: [26, 45, 143] },
-    styles: { fontSize: 8, font: "helvetica" }
+    theme: "grid",
+    headStyles: { fillColor: BRAND_COLOR, textColor: [255, 255, 255], fontStyle: "bold" },
+    styles: { fontSize: 8, font: "helvetica", cellPadding: 4 },
+    alternateRowStyles: { fillColor: [244, 247, 254] },
+    margin: { top: 40 }
   });
 
   return URL.createObjectURL(doc.output("blob"));
@@ -88,30 +102,41 @@ export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
 
 export const downloadPDF = (data: RegistrationData[]) => {
   const doc = new jsPDF("l", "mm", "a4");
-  const title = "Armedia Net - Registration Report";
-  doc.setFontSize(20);
-  doc.text(title, 14, 22);
+  
+  // Header with Logo
+  doc.addImage(LOGO_URL, "PNG", 14, 10, 15, 15);
+  doc.setFontSize(22);
+  doc.setTextColor(67, 24, 255);
+  doc.setFont("helvetica", "bold");
+  doc.text("ARMEDIA NET", 32, 20);
+  
   doc.setFontSize(10);
-  doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+  doc.setTextColor(112, 126, 174);
+  doc.setFont("helvetica", "normal");
+  doc.text("Laporan Registrasi Pelanggan Baru", 32, 26);
+  
+  doc.text(`Dicetak pada: ${new Date().toLocaleString("id-ID")}`, 280, 20, { align: "right" });
 
-  const headers = [["No.", "ID", "Name", "WhatsApp", "Package", "Location", "Timestamp"]];
+  const headers = [["No.", "Customer ID", "Nama Lengkap", "WhatsApp", "Paket Layanan", "Kecamatan / Desa", "Tanggal Daftar"]];
   const rows = data.map((item, idx) => [
     idx + 1,
     getCustomerNo(item.Timestamp),
     item["Nama Lengkap"],
     item["No HP / WA"],
     String(item.Paket || "").split("(")[0],
-    item["Alamat Pemasangan"],
-    item.Timestamp
+    `${item.Kecamatan || "-"} / ${item.Desa || "-"}`,
+    item.Timestamp.split(",")[0]
   ]);
 
   autoTable(doc, {
     startY: 40,
     head: headers,
     body: rows,
-    theme: "striped",
-    headStyles: { fillColor: [26, 45, 143] },
-    styles: { fontSize: 8, font: "helvetica" }
+    theme: "grid",
+    headStyles: { fillColor: BRAND_COLOR, textColor: [255, 255, 255], fontStyle: "bold" },
+    styles: { fontSize: 8, font: "helvetica", cellPadding: 4 },
+    alternateRowStyles: { fillColor: [244, 247, 254] },
+    margin: { top: 40 }
   });
 
   doc.save(`Armedia_Report_${new Date().toLocaleDateString()}.pdf`);
