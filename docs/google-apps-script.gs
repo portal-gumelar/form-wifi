@@ -1,6 +1,26 @@
 const sheetName = 'Sheet1'
 const scriptProp = PropertiesService.getScriptProperties()
 
+function doGet(e) {
+  const doc = SpreadsheetApp.openById(scriptProp.getProperty('key'))
+  const sheet = doc.getSheetByName(sheetName)
+  const rows = sheet.getDataRange().getValues()
+  const headers = rows[0]
+  const data = []
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = {}
+    for (let j = 0; j < headers.length; j++) {
+      row[headers[j]] = rows[i][j]
+    }
+    data.push(row)
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON)
+}
+
 function initialSetup() {
   const activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet()
   if (!activeSpreadsheet) {

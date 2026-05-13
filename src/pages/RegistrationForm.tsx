@@ -11,7 +11,7 @@ import { AlertCircle } from "lucide-react";
 // Constants
 import { PACKAGES } from "../constants/packages";
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz07kam_EeYX6ff8CWVwI-MJ1D_QLvuWlBY-Fy-GUJiv1Ktyg_wULaL0E-Y1mDXWFlRfQ/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbZ8Jm1XKxXgVLcxPtsgG0kdnXDXPT2p7oYU4jmV05rybs8sfVWzvARxCZHt7LXlNRCpg/exec";
 
 const initialForm = {
   currentProvider: "",

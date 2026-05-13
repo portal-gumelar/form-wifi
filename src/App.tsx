@@ -5,7 +5,7 @@ import { SuccessPage } from "./components/ui/SuccessPage";
 import { LoginPage } from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz07kam_EeYX6ff8CWVwI-MJ1D_QLvuWlBY-Fy-GUJiv1Ktyg_wULaL0E-Y1mDXWFlRfQ/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzZ8Jm1XKxXgVLcxPtsgG0kdnXDXPT2p7oYU4jmV05rybs8sfVWzvARxCZHt7LXlNRCpg/exec";
 
 export default function App() {
   const [view, setView] = useState<"form" | "login" | "admin">(
