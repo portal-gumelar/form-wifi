@@ -6,6 +6,7 @@ import { Section, RadioCard, InputField, SelectField } from "../components/ui/Fo
 import { LogoMark } from "../components/ui/LogoMark";
 import { PackageSelection } from "../components/registration/PackageSelection";
 import { EthicNotice } from "../components/registration/EthicNotice";
+import { SubscriberNotice } from "../components/registration/SubscriberNotice";
 import { AlertCircle } from "lucide-react";
 
 // Constants
@@ -30,7 +31,7 @@ const initialForm = {
   sumberInfo: "",
 };
 
-const VILLAGES = ["GUMELAR", "CIHONJE", "TLAGA", "SAMUDRA KULON", "SAMUDRA", "PANINGKABAN", "KARANG KEMOJING", "GANCANG", "KEDUNGURANG"];
+const VILLAGES = ["GUMELAR", "CIHONJE", "TLAGA", "SAMUDRA", "SAMUDRA KULON", "CILANGKAP", "PANINGKABAN"];
 const COVERED_VILLAGES = ["GUMELAR", "CIHONJE"];
 
 export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; desa: string }) => void; setShowAdminModal: (v: boolean) => void }> = ({ setSubmitted, setShowAdminModal }) => {
@@ -66,7 +67,6 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     };
 
     if (name === "currentProvider") scrollTo("sec-datadiri");
-    else if (name === "desa") scrollTo("inp-alamat");
     else if (name === "paket") scrollTo("sec-jadwal");
     else if (name === "tanggalPasang") scrollTo("sec-lokasi");
     else if (name === "sumberInfo") scrollTo("sec-submit");
@@ -79,14 +79,20 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     }, 150);
   };
 
+  const [showAgreement, setShowAgreement] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.currentProvider || !form.namaLengkap || !form.kecamatan || !form.desa || !form.alamat || !form.noHp || !form.paket || !form.tanggalPasang || !form.sumberInfo) {
       setError("Mohon lengkapi semua field yang wajib diisi (*).");
       return;
     }
+    setShowAgreement(true);
+  };
 
+  const processSubmission = async () => {
     setLoading(true);
+    setShowAgreement(false);
     const payload = new URLSearchParams();
     Object.entries(form).forEach(([key, val]) => {
       if (key === "prioritas" && val === "lain") payload.append("Prioritas", form.prioritasLain);
@@ -153,13 +159,13 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
       <header className="relative z-10 p-4 pt-8">
         <div className="max-w-5xl mx-auto flex flex-col items-center text-center">
-          <a href="https://armedia.id/" className="flex items-center gap-3 group transition-transform hover:scale-105 active:scale-95">
+          <div className="flex items-center gap-3 group transition-transform hover:scale-105 active:scale-95 cursor-default">
             <LogoMark />
             <div className="text-left">
               <div className="text-[#FDB913] font-black text-2xl sm:text-4xl tracking-tight leading-none group-hover:text-white transition-colors">ARMEDIA<span className="text-white">_NET</span></div>
               <div className="text-white/70 text-[10px] sm:text-xs tracking-widest uppercase mt-1">PT. Akses Artha Media</div>
             </div>
-          </a>
+          </div>
           
           <div className="mt-8 w-full max-w-md space-y-4">
             <button onClick={() => document.getElementById('sec-paket')?.scrollIntoView({ behavior: 'smooth' })} className="w-full relative group">
@@ -181,11 +187,6 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
               </div>
             </button>
 
-            <a href="https://gumelar.armedia.id/" className="flex items-center justify-center gap-2 py-3 px-6 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-white text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all group">
-              <Globe size={14} className="group-hover:rotate-12 transition-transform" /> 
-              gumelar.armedia.id
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </a>
           </div>
         </div>
       </header>
@@ -216,13 +217,75 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="sm:col-span-1"><InputField label="Nama Lengkap Sesuai KTP" name="namaLengkap" value={form.namaLengkap} onChange={handleChange} placeholder="Contoh: Budi Santoso" required /></div>
                 <div className="sm:col-span-1"><InputField label="Nomor WhatsApp Aktif" name="noHp" value={form.noHp} onChange={handleChange} placeholder="08123456789" required type="tel" /></div>
-                <div className="sm:col-span-1"><SelectField label="Kecamatan" name="kecamatan" value={form.kecamatan} onChange={handleChange} options={["GUMELAR"]} required /></div>
-                <div className="sm:col-span-1">
-                  <SelectField label="Desa" name="desa" value={form.desa} onChange={handleChange} options={VILLAGES} required />
+                <div className="sm:col-span-2">
+                  <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-4 ml-1">Pilih Desa Domisili <span className="text-red-500">*</span></label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {VILLAGES.map((v) => {
+                      const isCovered = COVERED_VILLAGES.includes(v);
+                      const isSelected = form.desa === v;
+                      
+                      const villageColors: Record<string, string> = {
+                        "GUMELAR": "bg-amber-500",
+                        "CIHONJE": "bg-emerald-500",
+                        "TLAGA": "bg-blue-500",
+                        "SAMUDRA": "bg-indigo-500",
+                        "SAMUDRA KULON": "bg-purple-500",
+                        "CILANGKAP": "bg-sky-500",
+                        "PANINGKABAN": "bg-rose-500",
+                      };
+
+                      const bgColor = villageColors[v] || "bg-slate-500";
+
+                      return (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => {
+                            if (!form.namaLengkap || !form.noHp) {
+                              setError("Wajib isi Nama dan Nomor WhatsApp terlebih dahulu!");
+                              document.getElementById("sec-datadiri")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                              return;
+                            }
+                            handleChange({ target: { name: 'desa', value: v } });
+                          }}
+                          className={`relative group overflow-hidden rounded-[2.5rem] transition-all duration-500 ${
+                            isSelected 
+                            ? `${bgColor} scale-[1.05] z-10 shadow-[0_25px_60px_rgba(0,0,0,0.25)] animate-pulse-subtle` 
+                            : 'bg-white hover:bg-slate-50 border-2 border-slate-100 hover:scale-[1.02] active:scale-95'
+                          }`}
+                        >
+                          <div className={`relative p-8 flex flex-col items-center justify-center text-center gap-2 transition-all`}>
+                            <div className={`font-black text-xl uppercase tracking-tighter transition-colors ${isSelected ? 'text-white' : 'text-slate-400'}`}>{v}</div>
+                            <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                              isSelected 
+                              ? 'bg-black/20 text-white' 
+                              : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
+                            }`}>
+                              {isCovered ? "✓ Tersedia" : "⏳ Segera Hadir"}
+                            </div>
+                            {isSelected && (
+                              <div className="absolute top-4 right-4 w-10 h-10 bg-white text-slate-900 rounded-full flex items-center justify-center shadow-2xl border-4 border-black/10">
+                                <Lucide.Check size={24} strokeWidth={4} />
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
                   {coverageWarning && (
-                    <div className="mt-3 p-4 bg-orange-50 border-2 border-orange-200 rounded-2xl flex items-start gap-3 animate-bounce">
-                      <AlertCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-[11px] font-black text-orange-700 leading-tight uppercase tracking-tight">{coverageWarning}</p>
+                    <div className="mt-6 p-6 bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-100 rounded-[2.5rem] flex items-start gap-5 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+                      <div className="w-12 h-12 rounded-2xl bg-orange-500 text-white flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-200">
+                        <AlertCircle className="w-7 h-7" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-orange-800 uppercase tracking-tight">Wilayah Prioritas Ekspansi</p>
+                        <p className="text-[11px] font-bold text-orange-700/80 leading-relaxed mt-1">
+                          Jaringan Armedia Net belum aktif di <span className="font-black text-orange-900 underline decoration-orange-300 decoration-2 underline-offset-2">{form.desa}</span>. 
+                          Tapi jangan khawatir! Silakan <span className="font-black text-orange-900">LANJUTKAN</span> pendaftaran Anda agar kami tahu banyak peminat di wilayah ini dan segera kami bangun jaringannya!
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -327,6 +390,10 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
           }} 
         />
       )}
+      <SubscriberNotice 
+        isOpen={showAgreement} 
+        onClose={processSubmission} 
+      />
     </div>
   );
 };

@@ -11,46 +11,48 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
-  activeTab, isDarkMode, isSidebarOpen, setIsSidebarOpen, searchTerm, setSearchTerm 
+  isSidebarOpen, setIsSidebarOpen, searchTerm, setSearchTerm
 }) => {
   return (
-    <header className="px-8 py-6 flex items-center justify-between sticky top-0 z-40 bg-[#f4f7fe]/80 backdrop-blur-md">
+    <header className="h-[80px] px-6 flex items-center justify-between sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 transition-all duration-300">
       <div className="flex items-center gap-4">
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2.5 rounded-xl text-[#2b3674] hover:bg-white hover:shadow-sm transition-all"
+          className="hidden md:flex w-10 h-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-[#10b981] transition-colors"
         >
           <Lucide.Menu size={20} />
         </button>
-        <h2 className="text-sm font-bold text-[#707eae] uppercase tracking-widest">{activeTab}</h2>
-      </div>
 
-      <div className="flex items-center gap-4 bg-white p-2 rounded-full shadow-sm border border-[#e0e5f2]">
-        <div className="relative group flex-1 min-w-[200px]">
-          <Lucide.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a3aed0]" size={16} />
+        <div className="hidden sm:flex items-center bg-slate-50 rounded-xl px-4 py-2 w-64 border border-slate-100 focus-within:border-[#10b981] focus-within:ring-2 focus-within:ring-[#10b981]/20 transition-all">
+          <Lucide.Search size={16} className="text-slate-400 mr-2" />
           <input 
-            type="text" 
-            placeholder="Search..."
-            className="w-full pl-11 pr-4 py-2 rounded-full text-xs font-medium outline-none bg-[#f4f7fe] text-[#2b3674] placeholder-[#a3aed0]"
+            type="text"
+            placeholder="Search menu (ctrl+q)"
+            className="bg-transparent border-none outline-none text-sm w-full text-slate-600 placeholder-slate-400"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
-        <div className="flex items-center gap-2 px-2 border-l border-[#e0e5f2]">
-          <button className="p-2 text-[#a3aed0] hover:text-[#2b3674] transition-colors relative">
+      </div>
+
+      <div className="flex items-center gap-3 md:gap-5 text-sm">
+        <button className="hidden sm:flex items-center gap-1 text-slate-500 hover:text-slate-700 font-medium">
+          <Lucide.Globe size={16} />
+          <span className="text-xs">English</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <button className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-[#10b981] flex items-center justify-center transition-colors relative">
             <Lucide.Bell size={18} />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
           </button>
           
-          <div className="flex items-center gap-3 pl-2 border-l border-[#e0e5f2]">
-            <div className="text-right hidden sm:block">
-              <p className="text-xs font-bold text-[#2b3674]">Admin Hub</p>
-              <p className="text-[10px] text-[#a3aed0] font-medium">Administrator</p>
-            </div>
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-[#4318ff] flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-blue-500/20">
-               AD
-            </div>
+          <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-md cursor-pointer hover:shadow-lg transition-all p-1.5">
+            <img 
+              src="https://ik.imagekit.io/Gumelar/LogO/logo%20pt.png?updatedAt=1778213993513" 
+              alt="Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
         </div>
       </div>

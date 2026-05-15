@@ -16,4 +16,6 @@ export interface DashboardStats {
   providerData: { name: string; value: number }[];
   sourceData: { name: string; value: number }[];
   statusCounts: Record<string, number>;
+  revenueProjection: number;
+  regionalData: { name: string; value: number }[];
 }

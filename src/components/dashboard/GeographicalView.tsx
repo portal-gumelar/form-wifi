@@ -113,17 +113,6 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
               </div>
             </div>
           </div>
-
-          <div className="bright-card p-6 bg-[#4318ff] text-white">
-             <Lucide.Zap size={32} className="mb-4 opacity-50" />
-             <h4 className="text-lg font-bold leading-tight mb-2">Siap Ekspansi?</h4>
-             <p className="text-xs font-medium text-blue-100/70 mb-6 leading-relaxed">
-               Gunakan peta ini untuk menentukan titik penempatan ODP baru di wilayah padat pendaftar.
-             </p>
-             <button className="w-full py-3 bg-white text-[#4318ff] rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-50 transition-all">
-               Unduh Laporan Geo
-             </button>
-          </div>
         </div>
       </div>
     </div>

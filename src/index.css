@@ -1,43 +1,38 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @layer base {
   body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     @apply bg-[#f4f7fe] text-[#2b3674] antialiased;
   }
-  h1, h2, h3, h4, h5, h6, .font-outfit {
-    font-family: 'Inter', sans-serif;
-    @apply font-bold;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight text-[#1b2559];
   }
 
   :root {
-    --brand-primary: #4318ff;
-    --brand-secondary: #707eae;
-    --card-shadow: 0px 18px 40px rgba(112, 144, 176, 0.12);
+    --kolabo-teal: #10b981;
+    --kolabo-teal-hover: #059669;
+    --kolabo-teal-light: #d1fae5;
+    --kolabo-bg: #f4f7fe;
+    --kolabo-text: #2b3674;
+    --kolabo-text-muted: #a3aed0;
+    --kolabo-card: #ffffff;
+    --kolabo-sidebar: #ffffff;
   }
 }
 
 @layer utilities {
-  .bright-card {
-    @apply bg-white rounded-[20px] shadow-sm border-none transition-all duration-300;
-    box-shadow: var(--card-shadow);
-  }
-
-  .bright-card:hover {
-    @apply shadow-md;
+  .kolabo-card {
+    @apply bg-white rounded-[20px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 w-full transition-all duration-300;
   }
 
   .sidebar-item-active {
-    @apply bg-[#4318ff] text-white shadow-xl shadow-blue-500/20;
+    @apply bg-[#f4f7fe] text-[#10b981] font-bold rounded-xl;
   }
 
   .sidebar-item-inactive {
-    @apply text-[#a3aed0] hover:bg-slate-100/50 hover:text-[#2b3674];
-  }
-
-  .glass-header {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
+    @apply text-[#a3aed0] hover:bg-[#f4f7fe] hover:text-[#2b3674] font-medium rounded-xl transition-colors;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
@@ -48,11 +43,20 @@
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-[#e0e5f2] rounded-full hover:bg-[#cdd4e8] transition-colors;
+    @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
   }
 
   .status-badge {
-    @apply px-3 py-1.5 rounded-xl font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2;
+    @apply px-3 py-1.5 rounded-full font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1;
+  }
+
+  @keyframes pulse-subtle {
+    0%, 100% { opacity: 1; transform: scale(1.05); }
+    50% { opacity: 0.9; transform: scale(1.03); }
+  }
+
+  .animate-pulse-subtle {
+    animation: pulse-subtle 3s ease-in-out infinite;
   }
 }
 

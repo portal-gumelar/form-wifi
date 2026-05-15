@@ -14,6 +14,8 @@ export const calculateStats = (data: RegistrationData[]): DashboardStats => {
   const trends: any = {};
   const providers: any = {};
   const sources: any = {};
+  const regions: any = {};
+  let totalRevenue = 0;
   const statusCounts: Record<string, number> = {
     "BARU": 0,
     "SURVEY": 0,
@@ -24,8 +26,18 @@ export const calculateStats = (data: RegistrationData[]): DashboardStats => {
   };
 
   data.forEach(item => {
-    const pkg = String(item.Paket || "Unknown").split("(")[0].trim();
+    // Package & Revenue
+    const pkgRaw = String(item.Paket || "Unknown");
+    const pkg = pkgRaw.split("(")[0].trim();
     packages[pkg] = (packages[pkg] || 0) + 1;
+    
+    // Extract price (e.g., "Rp 115.000")
+    if (item.status === "AKTIF") {
+      const priceMatch = pkgRaw.match(/Rp\s*([\d.]+)/);
+      if (priceMatch) {
+        totalRevenue += parseInt(priceMatch[1].replace(/\./g, ""));
+      }
+    }
 
     const dateStr = item.Timestamp ? item.Timestamp.split(",")[0] : "N/A";
     trends[dateStr] = (trends[dateStr] || 0) + 1;
@@ -35,6 +47,9 @@ export const calculateStats = (data: RegistrationData[]): DashboardStats => {
 
     const src = item["Sumber Info"] || "Direct";
     sources[src] = (sources[src] || 0) + 1;
+    
+    const region = item.Desa || "Lainnya";
+    regions[region] = (regions[region] || 0) + 1;
 
     const status = (item.status || "BARU").toUpperCase();
     statusCounts[status] = (statusCounts[status] || 0) + 1;
@@ -44,8 +59,9 @@ export const calculateStats = (data: RegistrationData[]): DashboardStats => {
   const trendData = Object.keys(trends).map(date => ({ date, count: trends[date] })).slice(-7);
   const providerData = Object.keys(providers).map(name => ({ name, value: providers[name] }));
   const sourceData = Object.keys(sources).map(name => ({ name, value: sources[name] }));
+  const regionalData = Object.keys(regions).map(name => ({ name, value: regions[name] })).sort((a,b) => b.value - a.value).slice(0, 5);
 
-  return { packageData, trendData, providerData, sourceData, statusCounts };
+  return { packageData, trendData, providerData, sourceData, statusCounts, revenueProjection: totalRevenue, regionalData };
 };
 
 export const exportToExcel = (data: RegistrationData[]) => {

@@ -8,8 +8,9 @@ import Dashboard from "./pages/Dashboard";
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzZ8Jm1XKxXgVLcxPtsgG0kdnXDXPT2p7oYU4jmV05rybs8sfVWzvARxCZHt7LXlNRCpg/exec";
 
 export default function App() {
+  const isDashboardPath = window.location.pathname.includes("/dashboard");
   const [view, setView] = useState<"form" | "login" | "admin">(
-    localStorage.getItem("isLoggedIn") === "true" ? "admin" : "form"
+    isDashboardPath && localStorage.getItem("isLoggedIn") === "true" ? "admin" : "form"
   );
   const [submitted, setSubmitted] = useState(false);
   const [lastReg, setLastReg] = useState({ name: "", desa: "" });

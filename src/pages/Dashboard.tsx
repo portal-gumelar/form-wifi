@@ -11,13 +11,87 @@ import { RegistrationTable } from "../components/dashboard/RegistrationTable";
 import { PDFPreviewModal, DetailsModal, ConfirmDeleteModal, EditRegistrationModal } from "../components/dashboard/Modals";
 import { CustomersView } from "../components/dashboard/CustomersView";
 import { GeographicalView } from "../components/dashboard/GeographicalView";
-import { SettingsView } from "../components/dashboard/SettingsView";
 
 // Utils & Types
-import { RegistrationData } from "../types";
+import { RegistrationData, DashboardStats } from "../types";
 import { 
   calculateStats, exportToExcel, generatePDFBlobUrl, downloadPDF 
 } from "../utils/dashboardUtils";
+
+const CustomPaketDropdown = ({ value, onChange, options }: { value: string, onChange: (v: string) => void, options: { name: string }[] }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const getPaketStyle = (name: string) => {
+    const lower = name.toLowerCase();
+    if (lower.includes('30.mbps')) return { color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', icon: Lucide.Zap };
+    if (lower.includes('guyub')) return { color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', icon: Lucide.Users };
+    if (lower.includes('20.mbps')) return { color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', icon: Lucide.Activity };
+    if (lower.includes('50.mbps')) return { color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', icon: Lucide.Rocket };
+    return { color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-100', icon: Lucide.Box };
+  };
+
+  const selectedStyle = value ? getPaketStyle(value) : { color: 'text-[#2b3674]', bg: 'bg-white', border: 'border-[#e0e5f2]', icon: Lucide.Filter };
+
+  return (
+    <div className="relative w-full md:w-64" ref={containerRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between p-3 rounded-xl border ${selectedStyle.border} ${selectedStyle.bg} transition-all duration-200 shadow-sm`}
+      >
+        <div className="flex items-center gap-2">
+          <selectedStyle.icon size={16} className={selectedStyle.color} />
+          <span className={`text-xs font-black ${selectedStyle.color}`}>
+            {value || "All Packages"}
+          </span>
+        </div>
+        <Lucide.ChevronDown size={16} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''} ${selectedStyle.color}`} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 p-2 z-[100]"
+          >
+            <button
+              onClick={() => { onChange(""); setIsOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${!value ? 'bg-slate-50' : 'hover:bg-slate-50'}`}
+            >
+              <Lucide.LayoutGrid size={16} className="text-slate-400" />
+              <span className="text-xs font-bold text-slate-600">All Packages</span>
+            </button>
+            <div className="h-px bg-slate-50 my-1 mx-2" />
+            <div className="space-y-1 max-h-[250px] overflow-y-auto custom-scrollbar">
+              {options.map((opt) => {
+                const style = getPaketStyle(opt.name);
+                const isSelected = value === opt.name;
+                return (
+                    <button
+                      key={opt.name}
+                      onClick={() => { onChange(opt.name); setIsOpen(false); }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isSelected ? style.bg : 'hover:bg-slate-50'}`}
+                    >
+                      <style.icon size={16} className={style.color} />
+                      <span className={`text-xs font-black ${style.color}`}>
+                        {(() => {
+                          const match = opt.name.match(/(\d+)\s*Mbps/i);
+                          return match ? `${match[1]}.Mbps` : opt.name;
+                        })()}
+                      </span>
+                      {isSelected && <Lucide.Check size={14} className={`ml-auto ${style.color}`} />}
+                    </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 export default function Dashboard({ googleScriptUrl, onLogout }: any) {
   const [data, setData] = useState<RegistrationData[]>([]);
@@ -32,6 +106,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [editingReg, setEditingReg] = useState<RegistrationData | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -183,9 +258,10 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
         String(item["Alamat Pemasangan"] || "").toLowerCase().includes(s);
       
       const matchesPaket = filterPaket === "" || String(item.Paket || "").includes(filterPaket);
-      return matchesSearch && matchesPaket;
+      const matchesStatus = filterStatus === "" || item.status === filterStatus;
+      return matchesSearch && matchesPaket && matchesStatus;
     }).reverse();
-  }, [data, searchTerm, filterPaket]);
+  }, [data, searchTerm, filterPaket, filterStatus]);
 
   if (loading) return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4">
@@ -197,7 +273,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
   );
 
   return (
-    <div className="min-h-screen bg-[#f4f7fe] flex transition-all duration-300">
+    <div className="min-h-screen bg-[#f4f7fe] flex overflow-x-hidden transition-all duration-300 font-sans text-[#2b3674]">
       
       <Sidebar 
         isSidebarOpen={isSidebarOpen}
@@ -206,9 +282,10 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
         isDarkMode={isDarkMode}
         setIsDarkMode={setIsDarkMode}
         onLogout={onLogout}
+        onAddNew={handleAddNew}
       />
 
-      <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-[280px]' : 'ml-[80px]'}`}>
+      <main className={`flex-1 w-full transition-all duration-300 md:ml-[80px] lg:ml-[250px] pb-24 md:pb-8 overflow-x-hidden`}>
         
         <Header 
           activeTab={activeTab}
@@ -219,31 +296,60 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
           setSearchTerm={setSearchTerm}
         />
 
-        <div className="p-8 space-y-8 max-w-[1600px] mx-auto">
+        {/* Content Header */}
+        <section className="px-6 py-6 flex flex-col justify-center">
+          <h1 className="text-2xl font-bold text-[#1b2559]">
+            {activeTab}
+          </h1>
+          <p className="text-sm text-slate-400 mt-1">Overview & recent activity</p>
+        </section>
+
+        <section className="px-4 pb-4">
+          {/* Filter Bar */}
+          <div className="px-2 mb-6 flex items-center gap-3 overflow-x-auto custom-scrollbar pb-2">
+            {[
+              { id: "", label: "All Status", icon: Lucide.LayoutGrid },
+              { id: "BARU", label: "New", icon: Lucide.PlusCircle },
+              { id: "SURVEY", label: "Survey", icon: Lucide.Search },
+              { id: "PROSES", label: "Process", icon: Lucide.Loader2 },
+              { id: "AKTIF", label: "Active", icon: Lucide.CheckCircle2 },
+              { id: "BATAL", label: "Cancelled", icon: Lucide.XCircle },
+            ].map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setFilterStatus(f.id)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-black transition-all shrink-0 shadow-sm ${
+                  filterStatus === f.id 
+                  ? "bg-[#10b981] text-white shadow-emerald-500/20 translate-y-[-2px]" 
+                  : "bg-white text-slate-400 hover:bg-slate-50 border border-slate-100"
+                }`}
+              >
+                <f.icon size={14} className={f.id === 'PROSES' && filterStatus === f.id ? 'animate-spin' : ''} />
+                {f.label}
+              </button>
+            ))}
+          </div>
           
           <AnimatePresence mode="wait">
             {activeTab === "Dashboard" && (
               <motion.div key="dashboard" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
                 <KPICards totalRegistrants={data.length} statusCounts={stats.statusCounts} isDarkMode={isDarkMode} />
                 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between px-2">
-                      <h3 className="text-lg font-bold text-[#2b3674]">Recent Activity</h3>
-                      <button onClick={() => setActiveTab("Registrations")} className="text-xs font-bold text-[#4318ff] hover:underline">
-                        View All
-                      </button>
-                    </div>
-                    <RegistrationTable 
-                      data={filteredData.slice(0, 5)} 
-                      isDarkMode={isDarkMode} 
-                      onViewDetails={setSelectedReg} 
-                      onDelete={setConfirmDelete}
-                      onUpdateStatus={handleUpdateStatus}
-                      mini
-                    />
+                <div className="max-w-4xl mx-auto space-y-4">
+                  <div className="flex items-center justify-between px-2">
+                    <h3 className="text-lg font-bold text-[#2b3674]">Recent Activity</h3>
+                    <button onClick={() => setActiveTab("Registrations")} className="text-xs font-bold text-[#4318ff] hover:underline">
+                      View All
+                    </button>
                   </div>
-                  <AnalyticsCharts stats={stats} isDarkMode={isDarkMode} totalCount={data.length} />
+                  <RegistrationTable 
+                    data={filteredData.slice(0, 5)} 
+                    isDarkMode={isDarkMode} 
+                    onViewDetails={setSelectedReg} 
+                    onDelete={setConfirmDelete}
+                    onUpdateStatus={handleUpdateStatus}
+                    mini
+                  />
                 </div>
               </motion.div>
             )}
@@ -252,14 +358,11 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
               <motion.div key="registrations" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }} className="space-y-6">
                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between px-2">
                   <div className="flex gap-4 w-full md:w-auto">
-                    <select 
-                      className="flex-1 md:w-64 p-3 rounded-xl bg-white border border-[#e0e5f2] font-bold text-xs outline-none text-[#2b3674]"
-                      value={filterPaket}
-                      onChange={(e) => setFilterPaket(e.target.value)}
-                    >
-                      <option value="">All Packages</option>
-                      {stats?.packageData.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
-                    </select>
+                    <CustomPaketDropdown 
+                      value={filterPaket} 
+                      onChange={setFilterPaket} 
+                      options={stats?.packageData || []} 
+                    />
                     <div className="flex gap-2">
                       <button onClick={() => exportToExcel(filteredData)} className="p-3 bg-[#e6fff5] text-[#01b574] rounded-xl font-bold text-xs hover:bg-[#01b574] hover:text-white transition-all">
                         <Lucide.FileSpreadsheet size={18} />
@@ -300,15 +403,9 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                 <GeographicalView data={data} isDarkMode={isDarkMode} />
               </motion.div>
             )}
-
-            {activeTab === "Settings" && (
-              <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <SettingsView isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} googleScriptUrl={googleScriptUrl} />
-              </motion.div>
-            )}
           </AnimatePresence>
 
-        </div>
+        </section>
       </main>
 
       <PDFPreviewModal 
