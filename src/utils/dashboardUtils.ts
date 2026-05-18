@@ -17,12 +17,15 @@ export const calculateStats = (data: RegistrationData[]): DashboardStats => {
   const regions: any = {};
   let totalRevenue = 0;
   const statusCounts: Record<string, number> = {
-    "BARU": 0,
-    "SURVEY": 0,
-    "PROSES PASANG": 0,
-    "AKTIF": 0,
-    "BATAL": 0,
-    "PENDING": 0
+    "PENGAJUAN": 0,
+    "SURVEY":    0,
+    "PROSES":    0,
+    "AKTIF":     0,
+    "NON AKTIF": 0,
+    "BERHENTI BERLANGGANAN": 0,
+    // Legacy support untuk data lama
+    "BARU":      0,
+    "BATAL":     0,
   };
 
   data.forEach(item => {

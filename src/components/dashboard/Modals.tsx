@@ -226,21 +226,23 @@ const CustomPaketDropdown = ({ value, onChange, isDarkMode }: { value: string; o
 };
 
 const STATUS_MODAL_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-  BARU: { label: "TERDAFTAR", color: "text-blue-600", bg: "bg-blue-50", icon: Lucide.PlusCircle },
-  SURVEY: { label: "SURVEY LOC", color: "text-indigo-600", bg: "bg-indigo-50", icon: Lucide.Search },
-  PROSES: { label: "PROSES PASANG", color: "text-amber-600", bg: "bg-amber-50", icon: Lucide.Loader2 },
-  AKTIF: { label: "AKTIF NYALA", color: "text-emerald-600", bg: "bg-emerald-50", icon: Lucide.CheckCircle2 },
-  BELUM_AKTIF: { label: "NON-AKTIF", color: "text-slate-400", bg: "bg-slate-50", icon: Lucide.PauseCircle },
-  PENDING: { label: "PENDING JALUR", color: "text-orange-600", bg: "bg-orange-50", icon: Lucide.Clock },
-  BATAL: { label: "BATAL ORDER", color: "text-red-600", bg: "bg-red-50", icon: Lucide.XCircle },
+  PENGAJUAN:              { label: "PENGAJUAN",              color: "text-blue-600",    bg: "bg-blue-50",    icon: Lucide.PlusCircle   },
+  SURVEY:                 { label: "SURVEI LOKASI",          color: "text-indigo-600", bg: "bg-indigo-50",  icon: Lucide.Search       },
+  PROSES:                 { label: "PROSES PASANG",          color: "text-amber-600",  bg: "bg-amber-50",  icon: Lucide.Loader2      },
+  AKTIF:                  { label: "AKTIF",                  color: "text-emerald-600",bg: "bg-emerald-50",icon: Lucide.CheckCircle2 },
+  "NON AKTIF":            { label: "NON AKTIF",              color: "text-slate-500",  bg: "bg-slate-50",  icon: Lucide.PauseCircle  },
+  "BERHENTI BERLANGGANAN":{ label: "BERHENTI BERLANGGANAN",  color: "text-red-600",    bg: "bg-red-50",    icon: Lucide.XCircle      },
+  // Legacy
+  BARU:  { label: "BARU (LEGACY)",  color: "text-sky-600",  bg: "bg-sky-50",  icon: Lucide.PlusCircle },
+  BATAL: { label: "BATAL",          color: "text-red-400",  bg: "bg-red-50",  icon: Lucide.XCircle    },
 };
 
 const CustomStatusDropdown = ({ value, onChange, isDarkMode }: { value: string; onChange: (val: string) => void; isDarkMode: boolean; }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const activeKey = value || "BARU";
-  const activeConfig = STATUS_MODAL_CONFIG[activeKey] || STATUS_MODAL_CONFIG.BARU;
+  const activeKey = value || "PENGAJUAN";
+  const activeConfig = STATUS_MODAL_CONFIG[activeKey] || STATUS_MODAL_CONFIG.PENGAJUAN;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -390,7 +392,7 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status Tahapan Progres</label>
-                  <CustomStatusDropdown value={formData.status || "BARU"} onChange={(val) => handleChange("status", val)} isDarkMode={isDarkMode} />
+                  <CustomStatusDropdown value={formData.status || "PENGAJUAN"} onChange={(val) => handleChange("status", val)} isDarkMode={isDarkMode} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Rencana Tanggal Pasang</label>

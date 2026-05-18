@@ -6,13 +6,15 @@ import { LoginPage } from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 
 // REVISI SOP: Mengembalikan ke URL Database Produksi Asli Anda yang Valid
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzZ8Jm1XKxXgVLcxPtsgG0kdnXDXPT2p7oYU4jmV05rybs8sfVWzvARxCZHt7LXlNRCpg/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztG8z0ob1ULpzkYXIIbaV1PokdR_dO4qj7TSD0rnwz8qb77QlJNrUQM0DHwNwXFC_reQ/exec";
 
 export default function App() {
   const isDashboardPath = window.location.pathname.includes("/dashboard");
 
   const [view, setView] = useState<"form" | "login" | "admin">(
-    isDashboardPath && localStorage.getItem("isLoggedIn") === "true" ? "admin" : "form"
+    isDashboardPath
+      ? (localStorage.getItem("isLoggedIn") === "true" ? "admin" : "login")
+      : "form"
   );
   const [submitted, setSubmitted] = useState(false);
   const [lastReg, setLastReg] = useState({ name: "", desa: "" });

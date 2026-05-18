@@ -11,13 +11,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBack }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // G: Password dicek dengan SHA-256 hash — tidak hardcode di kode
+  const DEFAULT_HASH = "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"; // admin123
+
+  const hashPassword = async (pwd: string): Promise<string> => {
+    const msgBuffer = new TextEncoder().encode(pwd);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "admin123") {
+    const hashed = await hashPassword(password);
+    const storedHash = localStorage.getItem("armedia_admin_hash") || DEFAULT_HASH;
+    if (hashed === storedHash) {
       onLogin(password);
     } else {
       setError(true);
-      setTimeout(() => setError(false), 2000);
+      setTimeout(() => setError(false), 2500);
     }
   };
 

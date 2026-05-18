@@ -1,17 +1,16 @@
-import React, { useState } from "react";
-import { RefreshCw, Globe, ArrowRight, AlertCircle } from "lucide-react";
+// Last update: 2026-05-18 23:55 - Clean Split RegistrationForm Flow
+import React, { useState, useRef, useEffect } from "react";
+import { RefreshCw, AlertCircle, ChevronDown } from "lucide-react";
 
 // UI Components
-import { Section, RadioCard, InputField, SelectField } from "../components/ui/FormElements";
+import { Section, RadioCard, InputField } from "../components/ui/FormElements";
 import { LogoMark } from "../components/ui/LogoMark";
 import { PackageSelection } from "../components/registration/PackageSelection";
-import { EthicNotice } from "../components/registration/EthicNotice";
 import { SubscriberNotice } from "../components/registration/SubscriberNotice";
 
-// Constants
-import { PACKAGES } from "../constants/packages";
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyu3OmU4ZeHfze8KDa1X45gZr8a9V_X3T95WuOfucJyuEu40K8_s9mwO0Ehi5pooNxaZA/exec";
+
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztG8z0ob1ULpzkYXIIbaV1PokdR_dO4qj7TSD0rnwz8qb77QlJNrUQM0DHwNwXFC_reQ/exec";
 
 const initialForm = {
   currentProvider: "",
@@ -37,10 +36,24 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showEthicNotice, setShowEthicNotice] = useState(false);
   const [coverageWarning, setCoverageWarning] = useState("");
 
+  const [isVillageDropdownOpen, setIsVillageDropdownOpen] = useState(false);
+  const [isNoticeAccepted, setIsNoticeAccepted] = useState(false);
+  const [showEthicModal, setShowEthicModal]     = useState(false); // ETIKA & SILATURAHMI
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const progress = Math.round((["currentProvider", "namaLengkap", "desa", "alamat", "noHp", "paket", "tanggalPasang", "sumberInfo"].filter(f => form[f as keyof typeof form]).length / 8) * 100);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsVillageDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
@@ -55,20 +68,22 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
       }
     }
 
-    if (name === "currentProvider" && value.includes("RT/RW NET")) {
-      setShowEthicNotice(true);
-    }
-
     const scrollTo = (id: string) => {
       setTimeout(() => {
         document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 300);
     };
 
-    if (name === "currentProvider") scrollTo("sec-datadiri");
+    if (name === "currentProvider") {
+      if (value === "Internet Lokal (RT/RW NET)") {
+        setShowEthicModal(true); // tampilkan modal etika
+      } else {
+        scrollTo("sec-datadiri");
+      }
+    }
     else if (name === "paket") scrollTo("sec-jadwal");
     else if (name === "tanggalPasang") scrollTo("sec-lokasi");
-    else if (name === "sumberInfo") scrollTo("sec-submit");
+    else if (name === "sumberInfo") scrollTo("sec-notice-block");
   };
 
   const handlePackageSelect = (pkgLabel: string, pkgSpeed: string, pkgPrice: string) => {
@@ -78,20 +93,25 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     }, 150);
   };
 
-  const [showAgreement, setShowAgreement] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.currentProvider || !form.namaLengkap || !form.kecamatan || !form.desa || !form.alamat || !form.noHp || !form.paket || !form.tanggalPasang || !form.sumberInfo) {
       setError("Mohon lengkapi semua field yang wajib diisi (*).");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-    setShowAgreement(true);
+
+    if (!isNoticeAccepted) {
+      setError("Anda wajib membuka, membaca, dan menyetujui Ketentuan Biaya Pro-rata di bawah sebelum mengirim data.");
+      document.getElementById("sec-notice-block")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    await processSubmission();
   };
 
   const processSubmission = async () => {
     setLoading(true);
-    setShowAgreement(false);
     const payload = new URLSearchParams();
     Object.entries(form).forEach(([key, val]) => {
       if (key === "prioritas" && val === "lain") payload.append("Prioritas", form.prioritasLain);
@@ -113,12 +133,11 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
       }
     });
     payload.append("Timestamp", new Date().toLocaleString("id-ID"));
+    payload.append("status", "PENGAJUAN"); // SOP: setiap form masuk = PENGAJUAN
 
     try {
-      // 1. Submit to Google Sheets (Original Logic)
       await fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: payload, mode: "no-cors" });
 
-      // 2. Link Local: Save to localStorage for immediate dashboard sync
       const localData = JSON.parse(localStorage.getItem('adminData') || '[]');
       const newEntry = {
         id: localData.length + 1,
@@ -139,7 +158,6 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
       };
 
       localStorage.setItem('adminData', JSON.stringify([newEntry, ...localData]));
-
       setSubmitted({ name: form.namaLengkap, desa: form.desa });
       window.scrollTo(0, 0);
     } catch (err) {
@@ -151,13 +169,73 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
   return (
     <div className="min-h-screen bg-[#0d1655] font-sans selection:bg-[#F47920]/30 relative overflow-x-hidden flex flex-col items-center">
-      {/* Background Decorative Elements */}
+
+      {/* ── MODAL ETIKA & SILATURAHMI ────────────────────────── */}
+      {showEthicModal && (
+        <div className="fixed inset-0 z-[999] flex items-start justify-center bg-[#0d1655]/95 backdrop-blur-sm overflow-y-auto py-6 px-4">
+          <div className="w-full max-w-[92%] sm:max-w-md space-y-5 my-auto">
+            {/* Header orange */}
+            <div className="bg-[#F47920] rounded-3xl p-5 flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                <span className="text-3xl">🤝</span>
+              </div>
+              <div>
+                <p className="text-white/80 text-[10px] font-black uppercase tracking-widest">Prinsip Harmoni Armedia_Net</p>
+                <h2 className="text-white font-black text-xl leading-tight">ETIKA & SILATURAHMI</h2>
+              </div>
+            </div>
+
+            {/* Body card */}
+            <div className="bg-white rounded-3xl p-6 space-y-5 shadow-2xl">
+              <p className="text-slate-700 text-sm font-medium leading-relaxed">
+                Terima kasih atas ketertarikan Anda pada layanan kami. Kami melihat saat ini Anda telah didukung oleh{" "}
+                <strong className="text-[#0d1655] underline">layanan RT/RW Net setempat atau Layanan Internet Pertemanan.</strong>
+              </p>
+
+              <div className="border-l-4 border-[#F47920] pl-4 bg-orange-50/60 py-3 rounded-r-2xl">
+                <p className="text-slate-600 text-sm italic leading-relaxed">
+                  Sebagai penyedia layanan yang sangat menjunjung tinggi etika bisnis dan kearifan lokal, kami sangat menghormati kontribusi para pengelola RT/RW Net dalam membangun akses internet di lingkungan Anda. Oleh karena itu, demi menjaga silaturahmi dan kenyamanan bersama, kami menyarankan Anda untuk berkonsultasi terlebih dahulu dengan pengelola RT/RW Net Anda.
+                </p>
+              </div>
+
+              <p className="text-slate-700 text-sm leading-relaxed">
+                Kehadiran kami bertujuan untuk <strong className="underline">berkolaborasi dan melengkapi kebutuhan</strong>, bukan untuk merusak harmoni yang sudah terbangun dengan baik di lingkungan Anda.
+              </p>
+
+              <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black leading-relaxed">
+                Jika di kemudian hari ada kebutuhan khusus yang memerlukan sinergi dengan sistem kami, pintu kami selalu terbuka untuk diskusi yang saling menguntungkan semua pihak.
+              </p>
+            </div>
+
+            {/* Tombol aksi */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowEthicModal(false);
+                setForm(prev => ({ ...prev, currentProvider: "" })); // reset pilihan
+              }}
+              className="w-full py-4 bg-white/10 hover:bg-white/20 text-white font-black text-sm uppercase tracking-widest rounded-2xl border border-white/20 transition-all active:scale-95"
+            >
+              KEMBALI
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowEthicModal(false);
+                setTimeout(() => document.getElementById("sec-datadiri")?.scrollIntoView({ behavior: "smooth" }), 200);
+              }}
+              className="w-full py-4 bg-[#0d1655] hover:bg-[#1a2d8f] text-white font-black text-sm uppercase tracking-widest rounded-2xl shadow-xl transition-all active:scale-95"
+            >
+              SAYA MENGERTI & SETUJU
+            </button>
+          </div>
+        </div>
+      )}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-br from-[#F47920]/20 to-transparent blur-[120px]"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-tr from-[#1a2d8f]/30 to-transparent blur-[120px]"></div>
       </div>
 
-      {/* Header Section - Refactored for Mobile-First Centering */}
       <header className="relative z-10 p-4 pt-12 w-full max-w-[92%] md:max-w-4xl mx-auto flex flex-col items-center text-center">
         <div className="flex items-center justify-center gap-3 group transition-transform hover:scale-105 active:scale-95 cursor-default">
           <LogoMark />
@@ -168,7 +246,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         </div>
 
         <div className="mt-8 w-full max-w-md space-y-4">
-          <button onClick={() => document.getElementById('sec-paket')?.scrollIntoView({ behavior: 'smooth' })} className="w-full relative group">
+          <button type="button" onClick={() => document.getElementById('sec-paket')?.scrollIntoView({ behavior: 'smooth' })} className="w-full relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-[#FDB913] to-red-600 rounded-[2rem] blur opacity-75 animate-pulse"></div>
             <div className="relative bg-gradient-to-br from-red-600 to-orange-600 p-6 rounded-[2rem] border-2 border-yellow-300 shadow-2xl">
               <h2 className="font-black text-3xl sm:text-4xl text-yellow-300 leading-none flex items-center justify-center gap-3">
@@ -189,13 +267,10 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         </div>
       </header>
 
-      {/* Main Content & Form Wrapper - Modern Luxury Padding applied */}
       <main className="w-full max-w-[92%] md:max-w-4xl mx-auto pb-16 relative z-10 flex flex-col gap-10 mt-6">
         <PackageSelection selectedPackage={form.paket} onSelect={handlePackageSelect} />
 
-        {/* Card Form - Injected Subtle Glassmorphism (bg-white/95 + backdrop-blur-xl) */}
         <div id="registration-form" className="w-full bg-white/95 backdrop-blur-xl rounded-[2.5rem] md:rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden scroll-mt-24 border border-white/30 relative">
-
           <div className="absolute top-0 left-0 w-full h-2 bg-slate-100">
             <div className="h-full bg-gradient-to-r from-[#F47920] to-orange-400 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(244,121,32,0.5)]" style={{ width: `${progress}%` }}></div>
           </div>
@@ -206,8 +281,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
             <p className="text-white/70 text-xs sm:text-sm font-bold uppercase tracking-widest mt-2">Lengkapi data untuk pemasangan internet unlimited</p>
           </div>
 
-          {/* Core Form Layout - Flex Col, Spaced Legally (gap-8 md:gap-10) */}
-          <form onSubmit={handleSubmit} className="p-6 md:p-12 flex flex-col gap-8 md:gap-10">
+          <form onSubmit={handleFormSubmit} className="p-6 md:p-12 flex flex-col gap-8 md:gap-10">
             {error && (
               <div className="bg-red-50 text-red-600 p-5 rounded-2xl text-sm font-black flex items-center gap-3 border-2 border-red-100 animate-pulse">
                 <span>⚠️</span> {error}
@@ -229,66 +303,69 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                   <InputField label="Nomor WhatsApp Aktif" name="noHp" value={form.noHp} onChange={handleChange} placeholder="08123456789" required type="tel" />
                 </div>
 
-                <div className="w-full">
-                  <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-4 ml-1">Pilih Desa Domisili <span className="text-red-500">*</span></label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {VILLAGES.map((v) => {
-                      const isCovered = COVERED_VILLAGES.includes(v);
-                      const isSelected = form.desa === v;
+                <div className="w-full relative" ref={dropdownRef}>
+                  <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">
+                    Pilih Desa Domisili <span className="text-red-500">*</span>
+                  </label>
 
-                      const villageColors: Record<string, string> = {
-                        "GUMELAR": "bg-amber-500",
-                        "CIHONJE": "bg-emerald-500",
-                        "TLAGA": "bg-blue-500",
-                        "SAMUDRA": "bg-indigo-500",
-                        "SAMUDRA KULON": "bg-purple-500",
-                        "CILANGKAP": "bg-sky-500",
-                        "PANINGKABAN": "bg-rose-500",
-                      };
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!form.namaLengkap || !form.noHp) {
+                        setError("Wajib isi Nama dan Nomor WhatsApp terlebih dahulu!");
+                        document.getElementById("sec-datadiri")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        return;
+                      }
+                      setIsVillageDropdownOpen(!isVillageDropdownOpen);
+                    }}
+                    className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border-2 text-sm font-black uppercase tracking-wide transition-all text-left ${isVillageDropdownOpen ? 'border-[#F47920] bg-white ring-4 ring-orange-500/10' : 'border-slate-200 bg-slate-50 text-slate-700'
+                      }`}
+                  >
+                    <span className={form.desa ? "text-[#1a2d8f] font-black" : "text-slate-400 font-bold"}>
+                      {form.desa ? `DESA ${form.desa}` : "— SILAKAN PILIH DESA —"}
+                    </span>
+                    <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 ${isVillageDropdownOpen ? 'rotate-180 text-[#F47920]' : ''}`} />
+                  </button>
 
-                      const bgColor = villageColors[v] || "bg-slate-500";
-
-                      return (
-                        <button
-                          key={v}
-                          type="button"
-                          onClick={() => {
-                            if (!form.namaLengkap || !form.noHp) {
-                              setError("Wajib isi Nama dan Nomor WhatsApp terlebih dahulu!");
-                              document.getElementById("sec-datadiri")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                              return;
-                            }
-                            handleChange({ target: { name: 'desa', value: v } });
-                          }}
-                          className={`relative w-full group overflow-hidden rounded-[2rem] transition-all duration-500 ${isSelected
-                            ? `${bgColor} scale-[1.03] z-10 shadow-[0_15px_40px_rgba(0,0,0,0.2)] animate-pulse-subtle`
-                            : 'bg-white hover:bg-slate-50 border-2 border-slate-200 hover:scale-[1.02] active:scale-95'
-                            }`}
-                        >
-                          <div className={`relative p-6 flex flex-col items-center justify-center text-center gap-3 transition-all`}>
-                            <div className={`font-black text-lg md:text-xl uppercase tracking-tighter transition-colors ${isSelected ? 'text-white' : 'text-slate-500'}`}>{v}</div>
-                            <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isSelected
-                              ? 'bg-black/20 text-white'
-                              : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
+                  {isVillageDropdownOpen && (
+                    <div className="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-slate-100 z-50 p-1.5 max-h-[250px] overflow-y-auto custom-scrollbar">
+                      {VILLAGES.map((v) => {
+                        const isCovered = COVERED_VILLAGES.includes(v);
+                        const isSelected = form.desa === v;
+                        return (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => {
+                              handleChange({ target: { name: 'desa', value: v } });
+                              setIsVillageDropdownOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between p-3 rounded-xl transition-all mb-0.5 text-left ${isSelected ? 'bg-orange-50/80 text-[#1a2d8f]' : 'hover:bg-slate-50'
+                              }`}
+                          >
+                            <span className={`text-xs font-black tracking-tight ${isSelected ? 'text-[#F47920]' : 'text-slate-700'}`}>
+                              {v}
+                            </span>
+                            <span className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border ${isCovered ? 'bg-emerald-50 text-emerald-600 border-emerald-100/50' : 'bg-amber-50 text-amber-600 border-amber-100/50'
                               }`}>
                               {isCovered ? "✓ Tersedia" : "⏳ Segera Hadir"}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {coverageWarning && (
-                    <div className="mt-6 p-6 bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-100 rounded-[2rem] flex items-start gap-5 shadow-sm">
-                      <div className="w-12 h-12 rounded-xl bg-orange-500 text-white flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-200">
-                        <AlertCircle className="w-6 h-6 md:w-7 md:h-7" />
+                    <div className="mt-5 p-5 bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-100 rounded-[2rem] flex items-start gap-4 shadow-sm">
+                      <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+                        <AlertCircle className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-black text-orange-800 uppercase tracking-tight">Wilayah Prioritas Ekspansi</p>
-                        <p className="text-[11px] md:text-xs font-bold text-orange-700/80 leading-relaxed mt-1">
-                          Jaringan Armedia Net belum aktif di <span className="font-black text-orange-900 underline decoration-orange-300 decoration-2 underline-offset-2">{form.desa}</span>.
-                          Silakan <span className="font-black text-orange-900">LANJUTKAN</span> pendaftaran Anda agar kami tahu banyak peminat di wilayah ini.
+                        <p className="text-xs font-black text-orange-800 uppercase tracking-tight">Wilayah Prioritas Ekspansi</p>
+                        <p className="text-[11px] font-bold text-orange-700/80 leading-relaxed mt-0.5">
+                          Jaringan Armedia Net belum aktif di <span className="font-black text-orange-900 underline decoration-orange-300 decoration-2">{form.desa}</span>.
+                          Silakan <span className="font-black text-orange-900">LANJUTKAN</span> pendaftaran Anda agar kami mencatat permintaan di wilayah ini.
                         </p>
                       </div>
                     </div>
@@ -367,7 +444,14 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
               </div>
             </Section>
 
-            <div id="sec-submit" className="pt-6 md:pt-10">
+            <div id="sec-notice-block" className="scroll-mt-24">
+              <SubscriberNotice
+                isAccepted={isNoticeAccepted}
+                onAcceptChange={setIsNoticeAccepted}
+              />
+            </div>
+
+            <div id="sec-submit" className="pt-2">
               <button type="submit" disabled={loading} className="w-full relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-[#F47920] to-orange-600 rounded-[2rem] blur opacity-40 group-hover:opacity-100 transition duration-500"></div>
                 <div className="relative w-full bg-gradient-to-r from-[#F47920] to-orange-500 text-white font-black text-xl py-6 md:py-8 rounded-[2rem] shadow-2xl hover:shadow-orange-200/50 transition-all flex items-center justify-center gap-4 uppercase tracking-widest active:scale-[0.98]">
@@ -384,26 +468,6 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
           <button onClick={() => setShowAdminModal(true)} className="hover:text-[#F47920] transition-colors cursor-default">© {new Date().getFullYear()} ARMEDIA_NET</button>
         </footer>
       </main>
-
-      {showEthicNotice && (
-        <EthicNotice
-          onAccept={() => {
-            setShowEthicNotice(false);
-            setTimeout(() => {
-              document.getElementById("sec-datadiri")?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }, 300);
-          }}
-          onCancel={() => {
-            setForm(prev => ({ ...prev, currentProvider: "" }));
-            setShowEthicNotice(false);
-          }}
-        />
-      )}
-
-      <SubscriberNotice
-        isOpen={showAgreement}
-        onClose={processSubmission}
-      />
     </div>
   );
 };

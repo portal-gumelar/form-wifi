@@ -92,6 +92,23 @@ const CustomPaketDropdown = ({ value, onChange, options }: { value: string, onCh
   );
 };
 
+// --- Normalisasi Field dari Google Sheets (di luar komponen agar selalu tersedia) ---
+const normalizeRow = (row: any): RegistrationData => ({
+  Timestamp:                String(row.Timestamp || ""),
+  "Nama Lengkap":           String(row["Nama Lengkap"] || ""),
+  "No HP / WA":             String(row["No HP / WA"] || ""),
+  Paket:                    String(row.Paket || ""),
+  "Alamat Pemasangan":      String(row["Alamat Pemasangan"] || row["alamat pemasangan"] || ""),
+  "Provider Saat Ini":      String(row["Provider Saat Ini"] || ""),
+  "Sumber Info":            String(row["Sumber Info"] || ""),
+  Kecamatan:                String(row.Kecamatan || row.kecamatan || "GUMELAR"),
+  Desa:                     String(row.Desa || row.desa || ""),
+  "Tanggal Rencana Pasang": String(row["Tanggal Rencana Pasang"] || ""),
+  "Waktu Survei":           String(row["Waktu Survei"] || ""),
+  "Link Google Maps":       String(row["Link Google Maps"] || ""),
+  status:                   String(row.status || row.Status || "BARU"),
+});
+
 // --- Komponen Utama Dashboard ---
 export default function Dashboard({ googleScriptUrl, onLogout }: any) {
   const [data, setData] = useState<RegistrationData[]>([]);
@@ -107,10 +124,68 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
   const [editingReg, setEditingReg] = useState<RegistrationData | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [filterStatus, setFilterStatus] = useState("");
+  // Filter Mbps dan Desa (permintaan Pak Yusuf)
+  const [filterMbps, setFilterMbps]   = useState("");
+  const [filterDesa, setFilterDesa]   = useState("");
+  // B: Filter tanggal
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
+  // D: Notifikasi
+  const [notifications, setNotifications] = useState<{id: string; name: string; time: string}[]>([]);
+  const [showNotif, setShowNotif] = useState(false);
+  const [lastCount, setLastCount] = useState(0);
+  // H: Auto-refresh status
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // H: Auto-refresh setiap 5 menit
   useEffect(() => {
     fetchData();
+    const interval = setInterval(() => {
+      silentRefresh();
+    }, 5 * 60 * 1000); // 5 menit
+    return () => clearInterval(interval);
   }, []);
+
+  // H: Silent refresh tanpa loading screen
+  const silentRefresh = async () => {
+    if (!googleScriptUrl) return;
+    setIsRefreshing(true);
+    try {
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), 15000)
+      );
+      const response = await Promise.race([fetch(googleScriptUrl), timeout]) as Response;
+      const json = await response.json();
+      const rawData = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : null);
+      if (rawData && rawData.length > 0) {
+        const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
+        const normalized = rawData.map((item: any) => ({
+          ...normalizeRow(item),
+          status: localStatuses[item.Timestamp] || item.status || item.Status || "BARU"
+        }));
+        // D: Deteksi pendaftar baru
+        setData(prev => {
+          if (normalized.length > prev.length) {
+            const newEntries = normalized.slice(0, normalized.length - prev.length);
+            const notifs = newEntries.map((e: RegistrationData) => ({
+              id: e.Timestamp,
+              name: e["Nama Lengkap"],
+              time: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+            }));
+            setNotifications(prev => [...notifs, ...prev].slice(0, 10));
+            setLastCount(normalized.length);
+          }
+          return normalized;
+        });
+        setLastRefresh(new Date());
+      }
+    } catch (err) {
+      console.warn("Silent refresh failed:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -126,31 +201,41 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
         console.warn("Link Local: No cached data found.");
       }
 
-      try {
-        const response = await fetch(googleScriptUrl);
-        const json = await response.json();
-        if (Array.isArray(json)) {
-          const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
-          const applyStatuses = (list: RegistrationData[]) => list.map(item => ({
-            ...item,
-            status: localStatuses[item.Timestamp] || item.status || "BARU"
-          }));
+      // Guard: jika googleScriptUrl tidak tersedia, skip fetch live
+      if (googleScriptUrl) {
+        try {
+          const timeout = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Timeout")), 15000)
+          );
+          const response = await Promise.race([fetch(googleScriptUrl), timeout]) as Response;
+          const json = await response.json();
+          const rawData = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : null);
+          if (rawData) {
+            const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
+            const applyStatuses = (list: any[]) => list.map(item => ({
+              ...normalizeRow(item),
+              status: localStatuses[item.Timestamp] || item.status || item.Status || "BARU"
+            }));
 
-          if (json.length > 0) {
-            setData(applyStatuses(json));
-            return;
+            if (rawData.length > 0) {
+              setData(applyStatuses(rawData));
+              return;
+            }
+            if (combinedData.length > 0) setData(applyStatuses(combinedData));
           }
-          if (combinedData.length > 0) setData(applyStatuses(combinedData));
+        } catch (err) {
+          console.error("Failed to fetch live data:", err);
+          if (combinedData.length > 0) {
+            const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
+            setData(combinedData.map(item => ({
+              ...item,
+              status: localStatuses[item.Timestamp] || item.status || "BARU"
+            })));
+          }
         }
-      } catch (err) {
-        console.error("Failed to fetch live data", err);
-        if (combinedData.length > 0) {
-          const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
-          setData(combinedData.map(item => ({
-            ...item,
-            status: localStatuses[item.Timestamp] || item.status || "BARU"
-          })));
-        }
+      } else {
+        // Tidak ada URL — langsung pakai data lokal jika ada
+        if (combinedData.length > 0) setData(combinedData);
       }
     } catch (err) {
       console.error("Dashboard init failed", err);
@@ -158,6 +243,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
       setLoading(false);
     }
   };
+
 
   const handleUpdateStatus = async (timestamp: string, newStatus: string) => {
     // 1. Update UI Lokal secara Instan
@@ -260,12 +346,31 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
   const filteredData = useMemo(() => {
     return (data || []).filter(item => {
       const s = searchTerm.toLowerCase();
-      const matchesSearch = String(item["Nama Lengkap"] || "").toLowerCase().includes(s) || String(item["No HP / WA"] || "").includes(s) || String(item["Alamat Pemasangan"] || "").toLowerCase().includes(s);
+      const matchesSearch = String(item["Nama Lengkap"] || "").toLowerCase().includes(s)
+        || String(item["No HP / WA"] || "").includes(s)
+        || String(item["Alamat Pemasangan"] || "").toLowerCase().includes(s);
       const matchesPaket = filterPaket === "" || String(item.Paket || "").includes(filterPaket);
-      const matchesStatus = filterStatus === "" || item.status === filterStatus;
-      return matchesSearch && matchesPaket && matchesStatus;
+      const matchesStatus = filterStatus === "" || (item.status || "").toUpperCase() === filterStatus;
+      // Filter Mbps: cocokkan angka Mbps dalam nama paket
+      const matchesMbps = filterMbps === "" || String(item.Paket || "").toLowerCase().includes(filterMbps.toLowerCase());
+      // Filter Desa
+      const matchesDesa = filterDesa === "" || (item.Desa || "").toUpperCase() === filterDesa.toUpperCase();
+      // B: Filter tanggal
+      let matchesDate = true;
+      if (filterDateFrom || filterDateTo) {
+        const tsDate = item.Timestamp ? item.Timestamp.split(",")[0] : "";
+        const parts = tsDate.split("/");
+        if (parts.length === 3) {
+          const itemDate = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+          if (filterDateFrom) matchesDate = matchesDate && itemDate >= new Date(filterDateFrom);
+          if (filterDateTo)   matchesDate = matchesDate && itemDate <= new Date(filterDateTo);
+        }
+      }
+      return matchesSearch && matchesPaket && matchesStatus && matchesMbps && matchesDesa && matchesDate;
     }).reverse();
-  }, [data, searchTerm, filterPaket, filterStatus]);
+  }, [data, searchTerm, filterPaket, filterStatus, filterMbps, filterDesa, filterDateFrom, filterDateTo]);
+
+  const unreadNotifCount = notifications.length;
 
   if (loading) return (
     <div className="min-h-screen bg-[#0d1655] flex flex-col items-center justify-center p-4">
@@ -310,40 +415,180 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
               <h1 className="text-2xl md:text-3xl font-black text-[#0d1655] tracking-tight">{activeTab}</h1>
               <p className="text-xs md:text-sm text-slate-500 mt-1 font-bold">Pemantauan & Ringkasan Aktivitas</p>
             </div>
-            {/* Tombol Log Out Darurat Khusus Tampilan Layar HP */}
-            <button
-              onClick={onLogout}
-              className="md:hidden flex items-center gap-1.5 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-black uppercase tracking-wider border border-red-100 transition-all"
-            >
-              <Lucide.LogOut size={14} /> Keluar
-            </button>
+            <div className="flex items-center gap-2">
+              {/* H: Auto-refresh indicator */}
+              <button
+                onClick={silentRefresh}
+                title={`Terakhir diperbarui: ${lastRefresh.toLocaleTimeString("id-ID")}`}
+                className={`hidden md:flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all ${
+                  isRefreshing
+                    ? "bg-blue-50 border-blue-200 text-blue-600 animate-pulse"
+                    : "bg-white border-slate-200 text-slate-500 hover:border-[#0d1655] hover:text-[#0d1655]"
+                }`}
+              >
+                <Lucide.RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} />
+                {isRefreshing ? "Memperbarui..." : `${lastRefresh.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`}
+              </button>
+
+              {/* D: Notifikasi bell */}
+              <div className="relative">
+                <button
+                  onClick={() => { setShowNotif(!showNotif); setNotifications([]); }}
+                  className="relative w-10 h-10 flex items-center justify-center rounded-xl border-2 border-slate-200 bg-white hover:border-orange-300 transition-all"
+                >
+                  <Lucide.Bell size={18} className="text-slate-500" />
+                  {unreadNotifCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
+                      {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+                    </span>
+                  )}
+                </button>
+                {showNotif && (
+                  <div className="absolute right-0 top-12 w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                      <p className="text-xs font-black text-[#0d1655] uppercase tracking-wider">Pendaftar Baru</p>
+                      <button onClick={() => setShowNotif(false)} className="text-slate-400 hover:text-slate-600"><Lucide.X size={14} /></button>
+                    </div>
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-xs text-slate-400 font-bold">Tidak ada notifikasi baru</div>
+                    ) : (
+                      <div className="max-h-64 overflow-y-auto">
+                        {notifications.map((n, i) => (
+                          <div key={i} className="px-4 py-3 border-b border-slate-50 hover:bg-slate-50 flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-black text-sm shrink-0">
+                              {n.name.charAt(0)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-black text-slate-800 truncate">{n.name}</p>
+                              <p className="text-[10px] text-slate-400 font-bold">{n.time}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Tombol Keluar HP */}
+              <button
+                onClick={onLogout}
+                className="md:hidden flex items-center gap-1.5 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-black uppercase tracking-wider border border-red-100 transition-all"
+              >
+                <Lucide.LogOut size={14} /> Keluar
+              </button>
+            </div>
           </div>
         </section>
 
         <section className="px-4 md:px-8 pb-8 space-y-6">
-          {/* Filter Status Bar - Horizontal Scroll on Mobile */}
+          {/* Filter Status Bar - Status SOP Armedia (Pak Yusuf) */}
           <div className="flex items-center gap-3 overflow-x-auto custom-scrollbar pb-3 snap-x">
             {[
-              { id: "", label: "Semua", icon: Lucide.LayoutGrid },
-              { id: "BARU", label: "Baru", icon: Lucide.PlusCircle },
-              { id: "SURVEY", label: "Survei", icon: Lucide.Search },
-              { id: "PROSES", label: "Proses", icon: Lucide.Loader2 },
-              { id: "AKTIF", label: "Aktif", icon: Lucide.CheckCircle2 },
-              { id: "BATAL", label: "Batal", icon: Lucide.XCircle },
+              { id: "",                       label: "Semua",                  icon: Lucide.LayoutGrid,   color: "" },
+              { id: "PENGAJUAN",              label: "Pengajuan",              icon: Lucide.PlusCircle,   color: "text-blue-600" },
+              { id: "SURVEY",                 label: "Survei",                 icon: Lucide.Search,       color: "text-orange-500" },
+              { id: "PROSES",                 label: "Proses Pasang",          icon: Lucide.Loader2,      color: "text-yellow-600" },
+              { id: "AKTIF",                  label: "Aktif",                  icon: Lucide.CheckCircle2, color: "text-emerald-600" },
+              { id: "NON AKTIF",              label: "Non Aktif",              icon: Lucide.PauseCircle,  color: "text-slate-500" },
+              { id: "BERHENTI BERLANGGANAN",  label: "Berhenti Berlangganan",  icon: Lucide.XCircle,      color: "text-red-500" },
             ].map((f) => (
               <button
                 key={f.id}
                 onClick={() => setFilterStatus(f.id)}
-                className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-xs md:text-sm font-black transition-all shrink-0 snap-start border-2 ${filterStatus === f.id
-                  ? "bg-[#0d1655] text-white border-[#0d1655] shadow-lg shadow-blue-900/20"
-                  : "bg-white text-slate-500 hover:bg-slate-50 border-slate-200"
-                  }`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black transition-all shrink-0 snap-start border-2 whitespace-nowrap ${
+                  filterStatus === f.id
+                    ? "bg-[#0d1655] text-white border-[#0d1655] shadow-lg shadow-blue-900/20"
+                    : "bg-white text-slate-500 hover:bg-slate-50 border-slate-200"
+                }`}
               >
-                <f.icon size={16} className={f.id === 'PROSES' && filterStatus === f.id ? 'animate-spin text-[#F47920]' : ''} />
+                <f.icon size={14} className={filterStatus === f.id ? "" : f.color} />
                 {f.label}
+                {filterStatus === f.id && (
+                  <span className="bg-white/20 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md">
+                    {filteredData.length}
+                  </span>
+                )}
               </button>
             ))}
           </div>
+
+          {/* Filter Mbps & Desa - permintaan Pak Yusuf */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Filter Mbps */}
+            <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
+              <Lucide.Zap size={14} className="text-[#F47920] shrink-0" />
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Mbps:</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {["", "20", "30", "50", "100"].map(mbps => (
+                  <button
+                    key={mbps}
+                    onClick={() => setFilterMbps(mbps)}
+                    className={`px-3 py-1 rounded-xl text-[10px] font-black transition-all border ${
+                      filterMbps === mbps
+                        ? "bg-[#F47920] text-white border-[#F47920]"
+                        : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#F47920]"
+                    }`}
+                  >
+                    {mbps === "" ? "Semua" : `${mbps} Mbps`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Filter Desa */}
+            <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
+              <Lucide.MapPin size={14} className="text-[#0d1655] shrink-0" />
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Desa:</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {[
+                  "",
+                  "GUMELAR", "CIHONJE", "TLAGA", "SAMUDRA",
+                  "SAMUDRA KULON", "CILANGKAP", "PANINGKABAN"
+                ].map(desa => (
+                  <button
+                    key={desa}
+                    onClick={() => setFilterDesa(desa)}
+                    className={`px-3 py-1 rounded-xl text-[10px] font-black transition-all border ${
+                      filterDesa === desa
+                        ? "bg-[#0d1655] text-white border-[#0d1655]"
+                        : desa === "" ? "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#0d1655]" : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#0d1655]"
+                    }`}
+                  >
+                    {desa === "" ? "Semua Desa" : desa}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* B: Filter Tanggal */}
+          {(activeTab === "Kelola Pesanan" || activeTab === "Data Pelanggan") && (
+            <div className="flex flex-wrap items-center gap-3 bg-white border border-slate-100 rounded-2xl px-4 py-3 shadow-sm">
+              <div className="flex items-center gap-2 text-xs font-black text-slate-500 uppercase tracking-wider shrink-0">
+                <Lucide.Calendar size={14} className="text-[#F47920]" />
+                Filter Tanggal:
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)}
+                  className="text-xs font-bold border-2 border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-[#F47920] transition-all bg-slate-50" />
+                <span className="text-slate-400 font-bold text-xs">s/d</span>
+                <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)}
+                  className="text-xs font-bold border-2 border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-[#F47920] transition-all bg-slate-50" />
+                {(filterDateFrom || filterDateTo) && (
+                  <>
+                    <button onClick={() => { setFilterDateFrom(""); setFilterDateTo(""); }}
+                      className="text-[10px] font-black text-red-500 flex items-center gap-1 px-2 py-1 rounded-lg border border-red-100 bg-red-50 transition-all">
+                      <Lucide.X size={10} /> Reset
+                    </button>
+                    <span className="text-[10px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                      {filteredData.length} data
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           <AnimatePresence mode="wait">
             {/* Dashboard Tab */}
