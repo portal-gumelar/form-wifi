@@ -3,6 +3,10 @@ dist/
 dist-ssr/
 *.local
 
+# Production & Preview Deployments Cache (REVISI SOP)
+.vercel/
+.netlify/
+
 # Dependencies
 node_modules/
 
@@ -15,8 +19,9 @@ node_modules/
 *.njsproj
 *.sln
 *.sw?
+.cursor/
 
-# Environment variables
+# Environment variables (Security Barricade)
 .env
 .env.local
 .env.development.local
@@ -32,7 +37,7 @@ pnpm-debug.log*
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
+*.py.class
 venv/
 .venv/
 env/

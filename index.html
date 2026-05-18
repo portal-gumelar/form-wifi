@@ -1,16 +1,50 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARMEDIA NET - Daftar Internet Murah Berkualitas | PT. Akses Artha Media</title>
-    <meta name="description" content="Daftar sekarang untuk mendapatkan penawaran terbaik layanan internet berkecepatan tinggi dengan harga terjangkau dari ARMEDIA NET - PT. Akses Artha Media" />
-    <link rel="icon" type="image/png" href="https://ik.imagekit.io/Gumelar/LogO/logo%20pt.png?updatedAt=1778213993513" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<html lang="id" class="h-full overflow-x-hidden scroll-smooth">
+
+<head>
+  <meta charset="UTF-8" />
+
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+  <title>ARMEDIA NET - Daftar Internet Murah Berkualitas | PT. Akses Artha Media</title>
+  <meta name="description"
+    content="Daftar sekarang untuk mendapatkan penawaran terbaik layanan internet berkecepatan tinggi dengan harga terjangkau dari ARMEDIA NET - PT. Akses Artha Media" />
+
+  <meta name="theme-color" content="#0d1655" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <link rel="icon" type="image/png" href="https://ik.imagekit.io/Gumelar/LogO/logo%20pt.png?updatedAt=1778213993513" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Mengamankan elemen peta leaflet agar ramah terhadap scroll jempol di HP */
+    .leaflet-container {
+      touch-action: pan-y !important;
+    }
+  </style>
+</head>
+
+<body class="bg-[#0d1655] antialiased min-h-full flex flex-col">
+
+  <div id="root" class="w-full flex-1 flex flex-col"></div>
+
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

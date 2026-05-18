@@ -7,16 +7,14 @@ interface GeographicalViewProps {
   isDarkMode: boolean;
 }
 
-declare const L: any; // Leaflet global from CDN
+declare const L: any;
 
 export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDarkMode }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<any>(null);
 
-  // Helper to extract coordinates from Google Maps URL
   const extractCoords = (url: string) => {
     if (!url) return null;
-    // Patterns: ?q=lat,lng or /@lat,lng or q=lat%2Clng
     const regex = /q=([-+]?\d*\.?\d+)%2C([-+]?\d*\.?\d+)|q=([-+]?\d*\.?\d+),([-+]?\d*\.?\d+)|@([-+]?\d*\.?\d+),([-+]?\d*\.?\d+)/;
     const match = url.match(regex);
     if (match) {
@@ -42,23 +40,21 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
       }).addTo(leafletMap.current);
     }
 
-    // Clear existing markers
     leafletMap.current.eachLayer((layer: any) => {
       if (layer instanceof L.Marker) {
         leafletMap.current.removeLayer(layer);
       }
     });
 
-    // Add markers
     const bounds = L.latLngBounds([]);
     geoData.forEach(point => {
       if (point.coords) {
         const marker = L.marker(point.coords).addTo(leafletMap.current);
         marker.bindPopup(`
-          <div style="font-family: Inter, sans-serif;">
-            <p style="font-weight: 800; color: #2b3674; margin-bottom: 4px;">${point["Nama Lengkap"]}</p>
-            <p style="font-size: 10px; color: #707eae; margin-bottom: 8px;">${point.Paket}</p>
-            <a href="${point["Link Google Maps"]}" target="_blank" style="font-size: 10px; font-weight: 700; color: #4318ff; text-decoration: none;">Buka di Google Maps</a>
+          <div style="font-family: Inter, sans-serif; padding: 2px;">
+            <p style="font-weight: 900; color: #0d1655; margin: 0 0 4px 0; font-size: 13px;">${point["Nama Lengkap"]}</p>
+            <p style="font-size: 10px; color: #F47920; font-weight: 800; margin: 0 0 8px 0;">${point.Paket}</p>
+            <a href="${point["Link Google Maps"]}" target="_blank" style="font-size: 10px; font-weight: 900; color: #3b82f6; text-decoration: underline;">Buka Google Maps</a>
           </div>
         `);
         bounds.extend(point.coords);
@@ -66,51 +62,43 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
     });
 
     if (geoData.length > 0) {
-      leafletMap.current.fitBounds(bounds, { padding: [50, 50] });
+      leafletMap.current.fitBounds(bounds, { padding: [30, 30] });
     }
-
-    return () => {
-      // Cleanup not strictly necessary here but good practice
-    };
-  }, [data]);
+  }, [data, geoData]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between px-2">
+    <div className="space-y-6 w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
         <div>
-          <h3 className="text-xl font-bold text-[#2b3674]">Sebaran Pelanggan</h3>
-          <p className="text-xs font-medium text-[#a3aed0]">Peta distribusi registrasi Armedia Net</p>
+          <h3 className="text-xl font-black text-[#0d1655] tracking-tight">Sebaran Lokasi Pelanggan</h3>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">Pemetaan Geografis Registrasi</p>
         </div>
-        <div className="bright-card px-6 py-3 flex items-center gap-3">
-          <Lucide.MapPin size={20} className="text-[#4318ff]" />
-          <span className="text-sm font-bold text-[#2b3674]">{geoData.length} Lokasi Terdeteksi</span>
+        <div className="bg-white border border-slate-100 rounded-2xl px-5 py-3 flex items-center gap-3 self-start shadow-sm">
+          <Lucide.MapPin size={18} className="text-[#F47920]" />
+          <span className="text-xs sm:text-sm font-black text-[#0d1655]">{geoData.length} Titik Valid Koordinat</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3 h-[600px] bright-card overflow-hidden relative z-10">
-          <div ref={mapRef} className="w-full h-full" />
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Kontainer Peta: touch-action menjamin scroll HP aman tidak tersangkut di dalam peta */}
+        <div className="lg:col-span-3 h-[380px] sm:h-[500px] bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm relative z-10" style={{ touchAction: 'pan-y' }}>
+          <div ref={mapRef} className="w-full h-full z-10" />
         </div>
 
-        <div className="space-y-6">
-          <div className="bright-card p-6">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#a3aed0] mb-6">Informasi Wilayah</h4>
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-[#e6fff5] text-[#01b574] flex items-center justify-center">
-                   <Lucide.ShieldCheck size={24} />
-                </div>
-                <div>
-                   <p className="text-xl font-bold text-[#2b3674]">{Math.round((geoData.length / (data.length || 1)) * 100)}%</p>
-                   <p className="text-[10px] font-medium text-[#a3aed0] uppercase tracking-tighter">Data Lokasi Valid</p>
-                </div>
+        <div className="w-full">
+          <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm space-y-4">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-50 pb-2">Informasi Wilayah</h4>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <Lucide.ShieldCheck size={20} />
               </div>
-              
-              <div className="p-4 rounded-2xl bg-[#f4f7fe] border border-[#e0e5f2]">
-                <p className="text-[10px] font-bold text-[#707eae] leading-relaxed">
-                  Pin biru menunjukkan lokasi pelanggan yang sudah menyertakan koordinat GPS. Klik pin untuk melihat detail.
-                </p>
+              <div>
+                <p className="text-lg font-black text-[#0d1655]">{Math.round((geoData.length / (data.length || 1)) * 100)}%</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Akurasi GPS Pelanggan</p>
               </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-50/60 border border-slate-100 text-[11px] font-bold text-slate-500 leading-relaxed">
+              Marker biru mewakili rumah pendaftar yang melampirkan tautan navigasi. Gunakan untuk rute survei tim teknisi lapangan.
             </div>
           </div>
         </div>

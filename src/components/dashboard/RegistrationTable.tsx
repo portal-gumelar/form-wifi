@@ -14,13 +14,13 @@ interface RegistrationTableProps {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-  BARU: { label: "New", color: "text-blue-600", bg: "bg-blue-50", icon: Lucide.PlusCircle },
-  SURVEY: { label: "Survey", color: "text-indigo-600", bg: "bg-indigo-50", icon: Lucide.Search },
-  PROSES: { label: "Process", color: "text-amber-600", bg: "bg-amber-50", icon: Lucide.Loader2 },
-  AKTIF: { label: "Active", color: "text-emerald-600", bg: "bg-emerald-50", icon: Lucide.CheckCircle2 },
-  BELUM_AKTIF: { label: "Inactive", color: "text-slate-400", bg: "bg-slate-50", icon: Lucide.PauseCircle },
-  PENDING: { label: "Pending", color: "text-orange-600", bg: "bg-orange-50", icon: Lucide.Clock },
-  BATAL: { label: "Cancelled", color: "text-red-600", bg: "bg-red-50", icon: Lucide.XCircle },
+  BARU: { label: "TERDAFTAR", color: "text-blue-600", bg: "bg-blue-50", icon: Lucide.PlusCircle },
+  SURVEY: { label: "SURVEY", color: "text-indigo-600", bg: "bg-indigo-50", icon: Lucide.Search },
+  PROSES: { label: "PROSES", color: "text-amber-600", bg: "bg-amber-50", icon: Lucide.Loader2 },
+  AKTIF: { label: "AKTIF", color: "text-emerald-600", bg: "bg-emerald-50", icon: Lucide.CheckCircle2 },
+  BELUM_AKTIF: { label: "NON-AKTIF", color: "text-slate-400", bg: "bg-slate-50", icon: Lucide.PauseCircle },
+  PENDING: { label: "PENDING", color: "text-orange-600", bg: "bg-orange-50", icon: Lucide.Clock },
+  BATAL: { label: "BATAL", color: "text-red-600", bg: "bg-red-50", icon: Lucide.XCircle },
 };
 
 const StatusDropdown = ({ 
@@ -48,23 +48,24 @@ const StatusDropdown = ({
     <div className="relative inline-block" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 ${activeConfig.bg} ${activeConfig.color} border border-transparent hover:border-current/20 shadow-sm`}
+        className={`px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-2 ${activeConfig.bg} ${activeConfig.color} border-transparent hover:border-current/10 shadow-sm`}
       >
         <activeConfig.icon size={12} className={currentStatus === 'PROSES' ? 'animate-spin' : ''} />
-        {activeConfig.label}
+        <span className="truncate max-w-[70px] sm:max-w-none">{activeConfig.label}</span>
         <Lucide.ChevronDown size={10} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div 
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            initial={{ opacity: 0, y: 5, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute left-1/2 -translate-x-1/2 mt-2 w-48 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-slate-100 z-[100] p-2 overflow-hidden"
+            exit={{ opacity: 0, y: 5, scale: 0.95 }}
+            // Perbaikan Kursi: 'right-0' menjamin kotak menu dropdown tidak pernah keluar dari batas kanan layar HP
+            className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-[0_15px_35px_rgba(0,0,0,0.15)] border border-slate-100 z-[110] p-1.5"
           >
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-2 mb-1 border-b border-slate-50">Change Status</div>
-            <div className="grid grid-cols-1 gap-1">
+            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2.5 py-1.5 mb-1 border-b border-slate-100">Pilih Status</div>
+            <div className="space-y-0.5 max-h-[180px] overflow-y-auto custom-scrollbar">
               {Object.entries(STATUS_CONFIG).map(([key, config]) => (
                 <button
                   key={key}
@@ -72,14 +73,14 @@ const StatusDropdown = ({
                     onSelect(key);
                     setIsOpen(false);
                   }}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left group ${
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition-all text-left group ${
                     currentStatus === key 
-                    ? `${config.bg} ${config.color}` 
-                    : 'hover:bg-slate-50 text-slate-600'
+                    ? `${config.bg} ${config.color} font-black` 
+                    : 'hover:bg-slate-50 text-slate-600 font-medium'
                   }`}
                 >
-                  <config.icon size={14} className={currentStatus === key ? config.color : 'text-slate-300 group-hover:text-slate-400'} />
-                  <span className="text-xs font-bold">{config.label}</span>
+                  <config.icon size={13} className={currentStatus === key ? config.color : 'text-slate-300 group-hover:text-slate-500'} />
+                  <span className="text-xs">{config.label}</span>
                   {currentStatus === key && <Lucide.Check size={12} className="ml-auto" />}
                 </button>
               ))}
@@ -120,80 +121,81 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
 
   const getSortIcon = (key: string) => {
     if (!sortConfig || sortConfig.key !== key) return <Lucide.ChevronsUpDown size={12} className="text-slate-300" />;
-    return sortConfig.direction === 'asc' ? <Lucide.ArrowUp size={12} className="text-[#10b981]" /> : <Lucide.ArrowDown size={12} className="text-[#10b981]" />;
+    return sortConfig.direction === 'asc' ? <Lucide.ArrowUp size={12} className="text-[#F47920]" /> : <Lucide.ArrowDown size={12} className="text-[#F47920]" />;
   };
 
   return (
-    <div className="kolabo-card overflow-hidden">
-      <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-        <h3 className="text-lg font-bold text-[#1b2559] flex items-center gap-2">
-          <Lucide.LayoutList size={20} className="text-[#10b981]" /> 
-          {mini ? "Recent Activity" : "Order Management"}
-        </h3>
-        {!mini && (
-          <div className="flex gap-2">
-            <button className="px-4 py-2 bg-slate-50 text-slate-600 rounded-xl text-xs font-bold border border-slate-100 hover:bg-slate-100 transition-colors">Columns</button>
-            <button className="px-4 py-2 bg-[#10b981] text-white rounded-xl text-xs font-bold hover:bg-[#059669] transition-colors">Export CSV</button>
+    // Penggantian kolabo-card ke struktur kemas yang solid & aman dari kebocoran layout
+    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden w-full">
+      <div className="p-4 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-white sticky left-0">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100">
+            <Lucide.LayoutList size={16} className="text-[#0d1655]" />
           </div>
-        )}
+          <h3 className="text-sm sm:text-base font-black text-[#0d1655] tracking-tight">
+            {mini ? "Aktivitas Terbaru" : "Manajemen Pesanan"}
+          </h3>
+        </div>
       </div>
-      <div className="overflow-x-auto custom-scrollbar">
-        <table className="w-full text-left border-collapse table-auto text-sm">
+      
+      {/* Container ini menjamin tabel dapat digeser secara internal di HP tanpa merusak halaman utama */}
+      <div className="w-full overflow-x-auto custom-scrollbar">
+        <table className="w-full text-left border-collapse table-auto text-xs sm:text-sm">
           <thead>
-            <tr className="border-b border-slate-50">
+            <tr className="border-b border-slate-100 bg-slate-50/50">
               <th 
-                className="px-6 py-4 font-black text-[#1b2559] uppercase text-xs tracking-widest cursor-pointer hover:text-[#10b981] transition-colors"
+                className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest cursor-pointer hover:text-[#F47920] transition-colors"
                 onClick={() => requestSort('Nama Lengkap')}
               >
-                <div className="flex items-center gap-2 whitespace-nowrap">Customer {getSortIcon('Nama Lengkap')}</div>
+                <div className="flex items-center gap-1.5 whitespace-nowrap">Pelanggan {getSortIcon('Nama Lengkap')}</div>
               </th>
               {!mini && (
                 <th 
-                  className="px-6 py-4 font-black text-[#1b2559] uppercase text-xs tracking-widest cursor-pointer hover:text-[#10b981] transition-colors"
+                  className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest cursor-pointer hover:text-[#F47920] transition-colors"
                   onClick={() => requestSort('Alamat Pemasangan')}
                 >
-                  <div className="flex items-center gap-2 whitespace-nowrap">Address {getSortIcon('Alamat Pemasangan')}</div>
+                  <div className="flex items-center gap-1.5 whitespace-nowrap">Alamat Wilayah {getSortIcon('Alamat Pemasangan')}</div>
                 </th>
               )}
               <th 
-                className="px-6 py-4 font-black text-[#1b2559] uppercase text-xs tracking-widest text-center cursor-pointer hover:text-[#10b981] transition-colors"
+                className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest text-center cursor-pointer hover:text-[#F47920] transition-colors"
                 onClick={() => requestSort('status')}
               >
-                <div className="flex items-center justify-center gap-2 whitespace-nowrap">Status {getSortIcon('status')}</div>
+                <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">Status Progres {getSortIcon('status')}</div>
               </th>
-              {!mini && <th className="px-6 py-4 font-black text-[#1b2559] uppercase text-xs tracking-widest whitespace-nowrap">Progress</th>}
-              <th className="px-6 py-4 font-black text-[#1b2559] uppercase text-xs tracking-widest text-right whitespace-nowrap">Actions</th>
+              {!mini && <th className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest whitespace-nowrap text-center">Progress</th>}
+              <th className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest text-right whitespace-nowrap">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-50">
+          <tbody className="divide-y divide-slate-100">
             {sortedData.map((item, idx) => (
-              <tr key={idx} className="hover:bg-slate-50/50 transition-colors group">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-[#10b981]">
+              <tr key={idx} className="hover:bg-slate-50/40 transition-colors group">
+                <td className="px-4 sm:px-6 py-3.5">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-100 flex items-center justify-center font-black text-[#0d1655] text-xs sm:text-sm shrink-0 border border-slate-200">
                       {item["Nama Lengkap"]?.charAt(0) || "U"}
                     </div>
-                    <div className="flex flex-col">
-                      <p className="font-bold text-[#1b2559]">{item["Nama Lengkap"]}</p>
-                      <p className="text-[11px] text-slate-400 font-medium">ID: #{getCustomerNo(item.Timestamp).split('-')[1]}</p>
+                    <div className="flex flex-col min-w-0">
+                      <p className="font-bold text-slate-800 text-xs sm:text-sm truncate max-w-[120px] sm:max-w-[180px]">{item["Nama Lengkap"]}</p>
+                      <p className="text-[10px] text-slate-400 font-bold">ID: #{getCustomerNo(item.Timestamp).split('-')[1] || "00"}</p>
                     </div>
                   </div>
                 </td>
                 {!mini && (
-                  <td className="px-6 py-4">
+                  <td className="px-4 sm:px-6 py-3.5">
                     {(() => {
                       const address = item["Alamat Pemasangan"] || "";
                       const lowerAddr = address.toLowerCase();
-                      let colorConfig = { color: "text-blue-400", bg: "bg-blue-50/30" };
+                      let colorConfig = { color: "text-blue-600", bg: "bg-blue-50 border-blue-100" };
                       
                       const keywords: Record<string, { color: string, bg: string }> = {
-                        "gumelar": { color: "text-amber-600", bg: "bg-amber-50" },
-                        "cihonje": { color: "text-emerald-600", bg: "bg-emerald-50" },
-                        "tlaga": { color: "text-blue-600", bg: "bg-blue-50" },
-                        "samudra kulon": { color: "text-purple-600", bg: "bg-purple-50" },
-                        "samudra": { color: "text-indigo-600", bg: "bg-indigo-50" },
-                        "cilangkap": { color: "text-sky-600", bg: "bg-sky-50" },
-                        "paningkaban": { color: "text-rose-600", bg: "bg-rose-50" },
+                        "gumelar": { color: "text-amber-700", bg: "bg-amber-50 border-amber-100" },
+                        "cihonje": { color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-100" },
+                        "tlaga": { color: "text-blue-700", bg: "bg-blue-50 border-blue-100" },
+                        "samudra kulon": { color: "text-purple-700", bg: "bg-purple-50 border-purple-100" },
+                        "samudra": { color: "text-indigo-700", bg: "bg-indigo-50 border-indigo-100" },
+                        "cilangkap": { color: "text-sky-700", bg: "bg-sky-50 border-sky-100" },
+                        "paningkaban": { color: "text-rose-700", bg: "bg-rose-50 border-rose-100" },
                       };
 
                       for (const key in keywords) {
@@ -204,8 +206,8 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                       }
 
                       return (
-                        <div className={`inline-block px-3 py-1 rounded-lg ${colorConfig.bg}`}>
-                          <p className={`text-xs truncate max-w-[200px] font-black ${colorConfig.color}`}>
+                        <div className={`inline-block px-2.5 py-1 rounded-lg border ${colorConfig.bg} max-w-[160px] sm:max-w-[240px] truncate`}>
+                          <p className={`text-[11px] font-black truncate ${colorConfig.color}`}>
                             {address}
                           </p>
                         </div>
@@ -213,27 +215,27 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                     })()}
                   </td>
                 )}
-                <td className="px-6 py-4 text-center">
+                <td className="px-4 sm:px-6 py-3.5 text-center">
                   <StatusDropdown 
                     currentStatus={item.status || "BARU"} 
                     onSelect={(newStatus) => onUpdateStatus(item.Timestamp, newStatus)} 
                   />
                 </td>
                 {!mini && (
-                  <td className="px-6 py-4">
-                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                       <div className="bg-[#10b981] h-full transition-all duration-1000 ease-out" style={{ width: item.status === 'AKTIF' ? '100%' : item.status === 'SURVEY' ? '60%' : '30%' }}></div>
+                  <td className="px-4 sm:px-6 py-3.5 text-center">
+                    <div className="w-16 sm:w-20 bg-slate-100 h-1.5 rounded-full overflow-hidden inline-block">
+                       <div className="bg-[#F47920] h-full transition-all duration-1000 ease-out" style={{ width: item.status === 'AKTIF' ? '100%' : item.status === 'PROSES' ? '70%' : item.status === 'SURVEY' ? '40%' : '15%' }}></div>
                     </div>
                   </td>
                 )}
-                <td className="px-6 py-4 text-right">
-                  <div className="flex items-center gap-2 justify-end">
+                <td className="px-4 sm:px-6 py-3.5 text-right">
+                  <div className="flex items-center gap-1.5 sm:gap-2 justify-end">
                     <button 
                       onClick={() => onViewDetails(item)} 
                       title="Edit Data"
-                      className="p-2.5 rounded-xl text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all shadow-sm border border-blue-100"
+                      className="p-2 rounded-xl text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all border border-blue-100"
                     >
-                      <Lucide.Edit3 size={16} strokeWidth={2.5} />
+                      <Lucide.Edit3 size={14} strokeWidth={2.5} />
                     </button>
                     <button 
                       onClick={() => {
@@ -242,16 +244,16 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                         window.open(`https://wa.me/${waPhone}`, "_blank");
                       }} 
                       title="Chat WhatsApp"
-                      className="p-2.5 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all shadow-sm border border-emerald-100"
+                      className="p-2 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all border border-emerald-100"
                     >
-                      <Lucide.MessageCircle size={16} strokeWidth={2.5} />
+                      <Lucide.MessageCircle size={14} strokeWidth={2.5} />
                     </button>
                     <button 
                       onClick={() => onDelete(item.Timestamp)} 
                       title="Hapus Data"
-                      className="p-2.5 rounded-xl text-rose-600 bg-rose-50 hover:bg-rose-100 transition-all shadow-sm border border-rose-100"
+                      className="p-2 rounded-xl text-rose-600 bg-rose-50 hover:bg-rose-100 transition-all border border-rose-100"
                     >
-                      <Lucide.Trash2 size={16} strokeWidth={2.5} />
+                      <Lucide.Trash2 size={14} strokeWidth={2.5} />
                     </button>
                   </div>
                 </td>

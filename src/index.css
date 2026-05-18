@@ -2,61 +2,125 @@
 @import "tailwindcss";
 
 @layer base {
-  body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    @apply bg-[#f4f7fe] text-[#2b3674] antialiased;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-bold tracking-tight text-[#1b2559];
+  :root {
+    /* REVISI SOP: Sinkronisasi Total Palet Warna Modern Luxury Armedia Net */
+    --armedia-blue-dark: #0d1655;
+    --armedia-blue-mid: #1a2d8f;
+    --armedia-orange: #F47920;
+    --armedia-gold: #FDB913;
+
+    --armedia-bg: #f8fafc;
+    --armedia-card: #ffffff;
+    --armedia-text-main: #1e293b;
+    --armedia-text-muted: #64748b;
   }
 
-  :root {
-    --kolabo-teal: #10b981;
-    --kolabo-teal-hover: #059669;
-    --kolabo-teal-light: #d1fae5;
-    --kolabo-bg: #f4f7fe;
-    --kolabo-text: #2b3674;
-    --kolabo-text-muted: #a3aed0;
-    --kolabo-card: #ffffff;
-    --kolabo-sidebar: #ffffff;
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    background-color: var(--armedia-bg);
+    color: var(--armedia-text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+
+    /* Menghilangkan kotak sorot abu-abu default browser HP saat elemen disentuh */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--armedia-blue-dark);
+    font-weight: 800;
+    tracking-content: -0.025em;
   }
 }
 
 @layer utilities {
-  .kolabo-card {
-    @apply bg-white rounded-[20px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 w-full transition-all duration-300;
+
+  /* REVISI SOP: Desain Kartu Adaptif yang Fleksibel di HP & PC */
+  .armedia-card {
+    background-color: var(--armedia-card);
+    border-radius: 1.5rem;
+    /* 24px - Ramah layar HP */
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 20px -2px rgba(13, 22, 85, 0.03), 0 2px 12px -4px rgba(13, 22, 85, 0.02);
+    width: 100%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* REVISI SOP: Navigasi Sidebar Sinkron dengan Warna Brand Baru */
   .sidebar-item-active {
-    @apply bg-[#f4f7fe] text-[#10b981] font-bold rounded-xl;
+    background-color: var(--armedia-orange);
+    color: #ffffff !important;
+    font-weight: 800;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 20px -5px rgba(244, 121, 32, 0.3);
   }
 
   .sidebar-item-inactive {
-    @apply text-[#a3aed0] hover:bg-[#f4f7fe] hover:text-[#2b3674] font-medium rounded-xl transition-colors;
+    color: b3c1df;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease-in-out;
   }
 
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  .sidebar-item-inactive:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
   }
+
+  /* Kustomisasi Scrollbar Halus (Elegant Mini Scroll) */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
+    background-color: #cbd5e1;
+    border-radius: 9999px;
   }
 
-  .status-badge {
-    @apply px-3 py-1.5 rounded-full font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1;
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
   }
 
+  /* Dukungan iOS Notch Safe Space (Auto Padding Area Poni HP) */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 16px);
+  }
+
+  /* Animasi Denyut Halus untuk Penanda Wilayah Aktif */
   @keyframes pulse-subtle {
-    0%, 100% { opacity: 1; transform: scale(1.05); }
-    50% { opacity: 0.9; transform: scale(1.03); }
+
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1.02);
+    }
+
+    50% {
+      opacity: 0.93;
+      transform: scale(1);
+    }
   }
 
   .animate-pulse-subtle {
-    animation: pulse-subtle 3s ease-in-out infinite;
+    animation: pulse-subtle 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   }
 }
-

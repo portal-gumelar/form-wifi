@@ -11,46 +11,47 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
-  isSidebarOpen, setIsSidebarOpen, searchTerm, setSearchTerm
+  isSidebarOpen, setIsSidebarOpen, searchTerm, setSearchTerm, activeTab
 }) => {
   return (
-    <header className="h-[80px] px-6 flex items-center justify-between sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 transition-all duration-300">
-      <div className="flex items-center gap-4">
+    <header className="h-[75px] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 w-full shrink-0">
+      <div className="flex items-center gap-3">
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="hidden md:flex w-10 h-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-[#10b981] transition-colors"
+          className="hidden md:flex w-10 h-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-[#F47920] border border-slate-100 transition-colors"
         >
-          <Lucide.Menu size={20} />
+          <Lucide.Menu size={18} />
         </button>
 
-        <div className="hidden sm:flex items-center bg-slate-50 rounded-xl px-4 py-2 w-64 border border-slate-100 focus-within:border-[#10b981] focus-within:ring-2 focus-within:ring-[#10b981]/20 transition-all">
-          <Lucide.Search size={16} className="text-slate-400 mr-2" />
+        {/* Input pencarian global - Dinonaktifkan di HP agar tidak mempersempit space header */}
+        <div className="hidden sm:flex items-center bg-slate-50 rounded-xl px-3.5 py-2 w-60 border border-slate-100 focus-within:border-[#F47920] focus-within:ring-4 focus-within:ring-orange-500/10 transition-all">
+          <Lucide.Search size={14} className="text-slate-400 mr-2 shrink-0" />
           <input 
             type="text"
-            placeholder="Search menu (ctrl+q)"
-            className="bg-transparent border-none outline-none text-sm w-full text-slate-600 placeholder-slate-400"
+            placeholder="Cari data pelanggan..."
+            className="bg-transparent border-none outline-none text-xs w-full text-slate-700 font-bold placeholder:text-slate-400"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        
+        {/* Teks penunjuk tab khusus mobile */}
+        <span className="sm:hidden font-black text-[#0d1655] text-sm uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">
+          ⚙️ {activeTab.slice(0, 12)}
+        </span>
       </div>
 
-      <div className="flex items-center gap-3 md:gap-5 text-sm">
-        <button className="hidden sm:flex items-center gap-1 text-slate-500 hover:text-slate-700 font-medium">
-          <Lucide.Globe size={16} />
-          <span className="text-xs">English</span>
-        </button>
-
+      <div className="flex items-center gap-3 text-sm">
         <div className="flex items-center gap-2">
-          <button className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-[#10b981] flex items-center justify-center transition-colors relative">
-            <Lucide.Bell size={18} />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
+          <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-400 border border-slate-100 flex items-center justify-center relative shadow-sm">
+            <Lucide.Bell size={16} />
+            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+          </div>
           
-          <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-md cursor-pointer hover:shadow-lg transition-all p-1.5">
+          <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm p-1">
             <img 
               src="https://ik.imagekit.io/Gumelar/LogO/logo%20pt.png?updatedAt=1778213993513" 
-              alt="Logo" 
+              alt="Logo PT" 
               className="w-full h-full object-contain"
             />
           </div>

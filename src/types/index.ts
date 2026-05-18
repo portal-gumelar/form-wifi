@@ -6,6 +6,14 @@ export interface RegistrationData {
   "Alamat Pemasangan": string;
   "Provider Saat Ini": string;
   "Sumber Info": string;
+
+  // REVISI SOP: Menyinkronkan properti wilayah untuk eliminasi error dasbor
+  Kecamatan: string;
+  Desa: string;
+
+  // REVISI SOP: Properti opsional untuk manajemen penjadwalan instalasi tim teknis
+  "Tanggal Rencana Pasang"?: string;
+  "Waktu Survei"?: string;
   "Link Google Maps"?: string;
   status?: string;
 }
