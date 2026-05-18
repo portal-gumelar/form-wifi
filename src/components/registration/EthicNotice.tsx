@@ -1,86 +1,106 @@
+// Last update: 2026-05-18 22:45 - Fix Motion JSX Closing Tag Mismatch
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Lucide from "lucide-react";
 
 interface EthicNoticeProps {
-  onAccept: () => void;
-  onCancel: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export const EthicNotice: React.FC<EthicNoticeProps> = ({ onAccept, onCancel }) => {
+export const EthicNotice: React.FC<EthicNoticeProps> = ({ isOpen, onClose }) => {
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[500] flex items-center justify-center p-3 sm:p-4 bg-[#0d1655]/85 backdrop-blur-md">
-
-        {/* Kontainer Utama - Dikunci max-h-[85vh] agar mutlak tidak memotong layar HP */}
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-white rounded-[2rem] w-full max-w-xl max-h-[85vh] sm:max-h-[90vh] overflow-hidden shadow-[0_24px_50px_-12px_rgba(0,0,0,0.4)] border border-white/20 flex flex-col"
-        >
-
-          {/* HEADER SECTION - Konsisten Menggunakan Oranye Armedia */}
-          <div className="bg-gradient-to-r from-[#F47920] to-orange-500 p-5 sm:p-6 text-white relative flex-shrink-0 shadow-md">
-            <div className="flex items-center gap-4">
-              <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0 border border-white/10">
-                <Lucide.Handshake size={22} className="text-[#FDB913]" />
-              </div>
-              <div className="text-left">
-                <h2 className="text-base sm:text-xl font-black tracking-tight uppercase leading-tight">Etika & Silaturahmi</h2>
-                <p className="text-orange-100 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] mt-0.5">Prinsip Harmoni ARMEDIA_NET</p>
+      {isOpen && (
+        <div className="fixed inset-0 z-[500] flex items-center justify-center p-3 sm:p-4 bg-[#0d1655]/90 backdrop-blur-2xl">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden shadow-[0_24px_50px_-12px_rgba(0,0,0,0.4)] border border-white/20"
+          >
+            {/* HEADER SECTION - Gradien Warna-Warni Pro */}
+            <div className="bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-500 p-6 sm:p-8 text-white relative shrink-0 border-b border-white/10 shadow-md">
+              <div className="flex items-center gap-5 sm:gap-6">
+                <div className="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center shrink-0 backdrop-blur-sm border border-white/20 shadow-inner">
+                  <Lucide.ShieldAlert size={28} className="text-[#0d1655]" />
+                </div>
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black italic uppercase leading-none tracking-tight">WAJIB BACA!</h2>
+                  <p className="text-orange-950 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] mt-2">Ketentuan Etika Berlangganan ARMEDIA</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* CONTENT SECTION - Menggunakan Auto-Padding Elastis & Aman Scroll Jempol */}
-          <div className="p-5 sm:p-8 overflow-y-auto flex-grow space-y-5 custom-scrollbar bg-white text-slate-600">
-            <div className="space-y-4 text-xs sm:text-sm font-bold leading-relaxed text-slate-600">
-              <p className="text-justify">
-                Terima kasih atas ketertarikan Anda pada layanan kami. Kami melihat saat ini Anda telah didukung oleh
-                <span className="text-[#0d1655] font-black underline decoration-[#F47920] decoration-2 underline-offset-2"> layanan RT/RW Net setempat atau Layanan Internet Pertemanan.</span>
-              </p>
+            {/* CONTENT AREA - Scrollable Internal Box */}
+            <div className="p-6 sm:p-10 overflow-y-auto custom-scrollbar space-y-8 sm:space-y-10 flex-1 bg-white">
 
-              {/* Blockquote Quote Area */}
-              <div className="relative p-4 sm:p-6 bg-slate-50 rounded-2xl border-l-4 border-[#F47920] shadow-inner">
-                <span className="absolute top-1 left-2 text-3xl sm:text-4xl text-[#F47920]/20 font-serif leading-none">“</span>
-                <p className="text-justify italic text-slate-500 leading-relaxed relative z-10 pl-2 text-[11px] sm:text-xs font-bold">
-                  Sebagai penyedia layanan yang sangat menjunjung tinggi etika bisnis dan kearifan lokal, kami sangat menghormati kontribusi para pengelola RT/RW Net dalam membangun akses internet di lingkungan Anda. Oleh karena itu, demi menjaga silaturahmi dan kenyamanan bersama, kami menyarankan Anda untuk berkonsultasi terlebih dahulu dengan pengelola RT/RW Net Anda.
-                </p>
+              {/* Section 1: Etika - Oranye */}
+              <div className="space-y-5">
+                <div className="flex items-center gap-3 text-orange-600">
+                  <Lucide.Heart size={18} className="text-red-500" />
+                  <h3 className="font-black uppercase tracking-wider text-xs sm:text-sm">Etika & Moralitas</h3>
+                </div>
+                <div className="bg-orange-50 p-6 sm:p-8 rounded-3xl border-l-8 border-l-orange-500 space-y-4 text-slate-600 text-xs sm:text-sm leading-relaxed font-bold shadow-inner">
+                  <p>Di <span className="font-black text-slate-900">ARMEDIA</span>, kami sangat menjunjung tinggi Etika, Sopan Santun, dan Moralitas.</p>
+                  <p>Kami ingin memastikan kehadiran internet di rumah Anda tidak mengganggu kenyamanan tetangga.</p>
+                  <div className="bg-white p-4.5 sm:p-5 rounded-2xl border border-slate-100 italic text-slate-800 font-bold leading-relaxed shadow-sm">
+                    "Jika penarikan kabel tim teknis kami harus melintas di atas rumah atau lahan tetangga, mohon bantuannya untuk <span className="font-black text-orange-600">meminta izin kepada tetangga/kerabat tersebut</span> sebelum proses pengerjaan dimulai."
+                  </div>
+                  <p>Bantu tim teknis kami bekerja dengan tenang dan lancar, sehingga internet Anda pun terpasang dengan nyaman!</p>
+                  <p className="text-[10px] sm:text-xs font-black text-orange-600 uppercase tracking-widest mt-3">Terimakasih atas Kerjasamanya - ARMEDIA</p>
+                </div>
               </div>
 
-              <p className="text-justify">
-                Kehadiran kami bertujuan untuk <span className="font-black text-[#0d1655] bg-orange-50 px-1.5 py-0.5 rounded">berkolaborasi dan melengkapi kebutuhan</span>,
-                bukan untuk merusak harmoni yang sudah terbangun dengan baik di lingkungan Anda.
-              </p>
+              {/* Section 2: Sopan Santun - Biru */}
+              <div className="space-y-5">
+                <div className="flex items-center gap-3 text-blue-600">
+                  <Lucide.Zap size={18} className="text-yellow-400" />
+                  <h3 className="font-black uppercase tracking-wider text-xs sm:text-sm">Sopan Santun</h3>
+                </div>
+                <div className="bg-blue-50 p-6 sm:p-8 rounded-3xl border-l-8 border-l-blue-500 space-y-4 text-slate-600 text-xs sm:text-sm leading-relaxed font-bold shadow-inner">
+                  <p>Hormati tim teknis ARMEDIA saat melakukan instalasi dan pemeliharaan.</p>
+                  <p>Kami bekerja untuk memberikan layanan internet terbaik bagi Anda.</p>
+                  <div className="bg-white p-4.5 sm:p-5 rounded-2xl border border-slate-100 italic text-slate-800 font-bold leading-relaxed shadow-sm">
+                    "Jika ada keluhan atau masalah, sampaikan dengan <span className="font-black text-blue-600">bahasa yang baik dan santun</span> agar tim kami dapat bekerja dengan maksimal."
+                  </div>
+                  <p>Kerjasama yang baik antara pelanggan dan tim ARMEDIA akan menciptakan hubungan yang harmonis!</p>
+                  <p className="text-[10px] sm:text-xs font-black text-blue-600 uppercase tracking-widest mt-3">Terimakasih atas Kerjasamanya - ARMEDIA</p>
+                </div>
+              </div>
 
-              <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed pt-4 border-t border-slate-100">
-                Jika di kemudian hari ada kebutuhan khusus yang memerlukan sinergi dengan sistem kami,
-                pintu kami selalu terbuka untuk diskusi yang saling menguntungkan semua pihak.
-              </p>
+              {/* Section 3: Morallitas - Hijau */}
+              <div className="space-y-5">
+                <div className="flex items-center gap-3 text-emerald-600">
+                  <Lucide.Book size={18} className="text-emerald-400" />
+                  <h3 className="font-black uppercase tracking-wider text-xs sm:text-sm">Morallitas</h3>
+                </div>
+                <div className="bg-emerald-50 p-6 sm:p-8 rounded-3xl border-l-8 border-l-emerald-500 space-y-4 text-slate-600 text-xs sm:text-sm leading-relaxed font-bold shadow-inner">
+                  <p>Junjung tinggi nilai-nilai <span className="font-black text-slate-900">Morallitas</span> dalam penggunaan internet Anda.</p>
+                  <p>Kami ingin internet ARMEDIA menjadi internet yang bermanfaat dan mendidik bagi Anda dan keluarga.</p>
+                  <div className="bg-white p-4.5 sm:p-5 rounded-2xl border border-slate-100 italic text-slate-800 font-bold leading-relaxed shadow-sm">
+                    "Pastikan konten yang Anda akses dan bagikan adalah <span className="font-black text-emerald-600">konten yang baik dan tidak melanggar norma-norma</span> yang berlaku."
+                  </div>
+                  <p>Dengan begitu, kita bersama-sama menciptakan lingkungan digital yang baik!</p>
+                  <p className="text-[10px] sm:text-xs font-black text-emerald-600 uppercase tracking-widest mt-3">Terimakasih atas Kerjasamanya - ARMEDIA</p>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* FOOTER SECTION - Perbaikan Kontras Tombol Batal & Penyelarasan Tombol Utama */}
-          <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row gap-3 shrink-0">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="w-full sm:flex-1 py-3.5 bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 font-black rounded-xl text-[10px] uppercase tracking-widest transition-all text-center shadow-sm"
-            >
-              Kembali
-            </button>
-            <button
-              type="button"
-              onClick={onAccept}
-              className="w-full sm:flex-[2] py-3.5 bg-gradient-to-r from-[#0d1655] to-[#1a2d8f] hover:from-blue-900 hover:to-blue-800 text-white font-black rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-blue-950/20 flex justify-center items-center gap-2 transition-all active:scale-[0.99]"
-            >
-              <Lucide.CheckCircle size={14} className="text-[#FDB913]" /> Saya Mengerti & Setuju
-            </button>
-          </div>
+            {/* FOOTER SECTION - Locked Position */}
+            <div className="p-5 sm:p-6 bg-slate-50 border-t border-slate-100 shrink-0 z-10 shadow-sm pb-safe">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full py-4.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black rounded-2xl shadow-lg shadow-orange-500/30 transition-all active:scale-[0.99] uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-2.5"
+              >
+                <Lucide.CheckCircle size={18} className="text-white" /> Saya Mengerti & Setuju
+              </button>
+            </div>
 
-        </motion.div>
-      </div>
+          </motion.div> {/* FIXED: Menggunakan penutup </motion.div> yang benar */}
+        </div>
+      )}
     </AnimatePresence>
   );
 };

@@ -1,12 +1,12 @@
-// Last update: 2026-05-18 22:10
+// Last update: 2026-05-18 22:40 - Restored Original Production Database URL
 import React, { useState, useEffect } from "react";
 import { RegistrationForm } from "./pages/RegistrationForm";
 import { SuccessPage } from "./components/ui/SuccessPage";
 import { LoginPage } from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 
-// REVISI SOP: Menggunakan URL Akurat Hasil Deployment Terbaru Anda (...pooNxaZA)
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyu3OmU4ZeHfze8KDa1X45gZr8a9V_X3T95WuOfucJyuEu40K8_s9mwO0Ehi5pooNxaZA/exec";
+// REVISI SOP: Mengembalikan ke URL Database Produksi Asli Anda yang Valid
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzZ8Jm1XKxXgVLcxPtsgG0kdnXDXPT2p7oYU4jmV05rybs8sfVWzvARxCZHt7LXlNRCpg/exec";
 
 export default function App() {
   const isDashboardPath = window.location.pathname.includes("/dashboard");
@@ -17,7 +17,7 @@ export default function App() {
   const [submitted, setSubmitted] = useState(false);
   const [lastReg, setLastReg] = useState({ name: "", desa: "" });
 
-  // REVISI SOP: Sinkronisasi URL Browser secara dinamis berdasarkan state aktif aplikasi
+  // Sinkronisasi URL Browser secara dinamis berdasarkan state aktif aplikasi
   useEffect(() => {
     if (view === "admin") {
       if (!window.location.pathname.includes("/dashboard")) {
