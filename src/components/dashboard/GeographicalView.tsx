@@ -51,10 +51,16 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
       if (point.coords) {
         const marker = L.marker(point.coords).addTo(leafletMap.current);
         marker.bindPopup(`
-          <div style="font-family: Inter, sans-serif; padding: 2px;">
-            <p style="font-weight: 900; color: #0d1655; margin: 0 0 4px 0; font-size: 13px;">${point["Nama Lengkap"]}</p>
-            <p style="font-size: 10px; color: #F47920; font-weight: 800; margin: 0 0 8px 0;">${point.Paket}</p>
-            <a href="${point["Link Google Maps"]}" target="_blank" style="font-size: 10px; font-weight: 900; color: #3b82f6; text-decoration: underline;">Buka Google Maps</a>
+          <div style="font-family: 'Inter', sans-serif; padding: 4px; min-width: 170px;">
+            <p style="font-weight: 950; color: #0d1655; margin: 0 0 2px 0; font-size: 13px; text-transform: uppercase; letter-spacing: -0.5px;">${point["Nama Lengkap"]}</p>
+            <p style="font-size: 9px; color: #94a3b8; font-weight: 700; margin: 0 0 6px 0;">ID: AMN-${point.Timestamp.replace(/\D/g, "").slice(-5)}</p>
+            <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 8px;">
+              <span style="background-color: #eff6ff; color: #1d4ed8; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">${point.status || 'PENGAJUAN'}</span>
+              <span style="background-color: #f0fdf4; color: #16a34a; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">${String(point.Paket).split(' ')[0]}</span>
+            </div>
+            <a href="${point["Link Google Maps"]}" target="_blank" style="display: block; text-align: center; background-color: #F47920; color: white; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 10px rgba(244, 121, 32, 0.15);">
+              📍 Buka Rute GPS
+            </a>
           </div>
         `);
         bounds.extend(point.coords);

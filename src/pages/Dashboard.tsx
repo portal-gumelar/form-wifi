@@ -352,6 +352,9 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
   };
 
   const stats = useMemo(() => calculateStats(data), [data]);
+  const pendingCount = useMemo(() => {
+    return (data || []).filter(item => (item.status || "").toUpperCase() === "PENGAJUAN").length;
+  }, [data]);
   const filteredData = useMemo(() => {
     return (data || []).filter(item => {
       const s = searchTerm.toLowerCase();
@@ -403,6 +406,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
           setIsDarkMode={setIsDarkMode}
           onLogout={onLogout}
           onAddNew={handleAddNew}
+          pendingCount={pendingCount}
         />
       </div>
 

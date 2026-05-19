@@ -96,6 +96,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
   data, onViewDetails, onDelete, onUpdateStatus, mini = false 
 }) => {
   const [sortConfig, setSortConfig] = useState<{ key: keyof RegistrationData | 'status'; direction: 'asc' | 'desc' } | null>(null);
+  const [selectedWaCustomer, setSelectedWaCustomer] = useState<RegistrationData | null>(null);
 
   const sortedData = React.useMemo(() => {
     let sortableItems = [...data];
@@ -245,13 +246,9 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                       <Lucide.Edit3 size={14} strokeWidth={2.5} />
                     </button>
                     <button 
-                      onClick={() => {
-                        const phone = String(item["No HP / WA"] || "").replace(/\D/g, "");
-                        const waPhone = phone.startsWith("0") ? "62" + phone.slice(1) : phone;
-                        window.open(`https://wa.me/${waPhone}`, "_blank");
-                      }} 
-                      title="Chat WhatsApp"
-                      className="p-2 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all border border-emerald-100"
+                      onClick={() => setSelectedWaCustomer(item)} 
+                      title="Chat WhatsApp (Template)"
+                      className="p-2 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all border border-emerald-100 active:scale-95"
                     >
                       <Lucide.MessageCircle size={14} strokeWidth={2.5} />
                     </button>
@@ -269,6 +266,92 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
           </tbody>
         </table>
       </div>
+
+      {/* WhatsApp Template Launcher Modal */}
+      <AnimatePresence>
+        {selectedWaCustomer && (
+          <div className="fixed inset-0 bg-[#0d1655]/45 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-3xl w-full max-w-lg overflow-hidden border border-slate-100 shadow-2xl relative"
+            >
+              {/* Header */}
+              <div className="px-6 py-5 bg-[#0d1655] text-white flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400">
+                    <Lucide.MessageCircle size={20} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-xs uppercase tracking-widest text-white">WhatsApp Template</h3>
+                    <p className="text-[10px] text-slate-300 font-bold mt-0.5">Kirim pesan cepat ke {selectedWaCustomer["Nama Lengkap"]}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setSelectedWaCustomer(null)}
+                  className="p-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all"
+                >
+                  <Lucide.X size={16} />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <div className="p-4 bg-slate-50 border border-slate-200/60 rounded-2xl flex items-start gap-3">
+                  <Lucide.Info size={16} className="text-[#F47920] mt-0.5 shrink-0" />
+                  <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+                    Pilih template di bawah untuk membuka WhatsApp dengan pesan yang sudah diisi secara otomatis sesuai data pendaftaran pelanggan.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {[
+                    {
+                      title: "1. Konfirmasi & Jadwal Survei Jalur",
+                      desc: "Kirim pesan perkenalan teknisi dan rencana survei lokasi rumah pendaftar baru.",
+                      message: `*ARMEDIA NET - SURVEI LOKASI* 📍\n\nHalo Kak *${selectedWaCustomer["Nama Lengkap"]}*,\n\nTerima kasih telah mengajukan pendaftaran pasang baru internet unlimited ARMEDIA Net untuk alamat *${selectedWaCustomer["Alamat Pemasangan"] || "-"}* (${selectedWaCustomer.Desa || "-"}).\n\nTim teknis kami berencana untuk melakukan survei jalur kabel ke rumah Kakak pada:\n📅 *Hari*: ....................\n⏰ *Jam*: ....................\n\nApakah Kakak/kerabat ada di rumah pada waktu tersebut untuk membantu menunjukkan lokasi survei? Terima kasih atas kerjasamanya.\n\nSalam Hangat,\n*ARMEDIA Net* ⚡`
+                    },
+                    {
+                      title: "2. Penjadwalan & Etika Tarik Kabel",
+                      desc: "Jadwal penarikan kabel/modem serta panduan sopan santun melintasi lahan tetangga.",
+                      message: `*ARMEDIA NET - JADWAL INSTALASI & PERIZINAN* 🔌\n\nHalo Kak *${selectedWaCustomer["Nama Lengkap"]}*,\n\nSelamat, pendaftaran internet ARMEDIA Net Anda telah disetujui! Tim teknisi kami dijadwalkan untuk melakukan penarikan kabel dan instalasi modem pada:\n📅 *Hari*: ....................\n⏰ *Jam*: ....................\n\n*PENTING (Etika & Moralitas)*:\nDi ARMEDIA, kami sangat menjunjung tinggi Etika, Sopan Santun, dan Moralitas. Jika penarikan kabel tim kami harus melintas di atas rumah atau lahan tetangga, mohon bantuannya untuk *meminta izin kepada tetangga/kerabat tersebut sebelum proses pengerjaan dimulai* agar berjalan lancar.\n\nTerima kasih atas kerjasamanya! 🙏\n\nSalam Hangat,\n*ARMEDIA Net* ⚡`
+                    },
+                    {
+                      title: "3. Rincian Tagihan Pro-rata & Aktivasi",
+                      desc: "Kirim informasi kelayakan internet aktif beserta notifikasi pro-rata billing bulan pertama.",
+                      message: `*ARMEDIA NET - AKTIVASI & PRO-RATA BILLING* 💳\n\nHalo Kak *${selectedWaCustomer["Nama Lengkap"]}*,\n\nLayanan internet ARMEDIA Net Anda di *${selectedWaCustomer["Alamat Pemasangan"] || "-"}* telah aktif sepenuhnya dan siap digunakan! 🎉\n\nBerikut informasi rincian paket Anda:\n📦 *Paket*: ${selectedWaCustomer.Paket || "-"}\n💰 *Status Tagihan*: Pro-rata bulan pertama otomatis terhitung sesuai tanggal On Anda.\n\nSelamat menikmati internet cepat dan unlimited tanpa batas dari ARMEDIA Net!\n\nSalam Hangat,\n*ARMEDIA Net* ⚡`
+                    }
+                  ].map((tpl, i) => {
+                    const handleSend = () => {
+                      const phone = String(selectedWaCustomer["No HP / WA"] || "").replace(/\D/g, "");
+                      const waPhone = phone.startsWith("0") ? "62" + phone.slice(1) : phone;
+                      const encodedMsg = encodeURIComponent(tpl.message);
+                      window.open(`https://wa.me/${waPhone}?text=${encodedMsg}`, "_blank");
+                      setSelectedWaCustomer(null);
+                    };
+
+                    return (
+                      <div key={i} className="p-4 bg-white border border-slate-100 hover:border-emerald-500 rounded-2xl transition-all shadow-sm flex flex-col justify-between gap-3 group">
+                        <div>
+                          <h4 className="text-xs font-black text-[#0d1655] group-hover:text-emerald-600 transition-colors uppercase tracking-wider">{tpl.title}</h4>
+                          <p className="text-[10px] text-slate-400 font-bold mt-1 leading-relaxed">{tpl.desc}</p>
+                        </div>
+                        <button 
+                          onClick={handleSend}
+                          className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-wider transition-all shadow-md shadow-emerald-500/10 active:scale-95"
+                        >
+                          <Lucide.Send size={12} /> Kirim via WhatsApp
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

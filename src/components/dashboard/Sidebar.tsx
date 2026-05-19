@@ -11,10 +11,11 @@ interface SidebarProps {
   setIsDarkMode: (val: boolean) => void;
   onLogout: () => void;
   onAddNew?: () => void;
+  pendingCount?: number;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  isSidebarOpen, activeTab, setActiveTab, onLogout
+  isSidebarOpen, activeTab, setActiveTab, onLogout, pendingCount = 0
 }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -83,6 +84,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   >
                     <item.icon size={16} className={isActive ? 'text-white' : 'text-blue-200/50 group-hover:text-white'} />
                     {isSidebarOpen && <span className="flex-1 text-left truncate">{item.label}</span>}
+                    {isSidebarOpen && item.id === "Registrations" && pendingCount > 0 && (
+                      <span className="bg-[#f47920] text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-md shrink-0 select-none animate-pulse">
+                        {pendingCount}
+                      </span>
+                    )}
+                    {!isSidebarOpen && item.id === "Registrations" && pendingCount > 0 && (
+                      <span className="absolute top-2 right-2 w-2 h-2 bg-[#f47920] rounded-full ring-2 ring-[#0d1655] select-none animate-pulse" />
+                    )}
 
                     {!isSidebarOpen && (
                       <div className="absolute left-full ml-4 px-3 py-1.5 bg-slate-950 text-white text-[10px] font-black uppercase tracking-widest rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-md">
