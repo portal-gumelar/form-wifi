@@ -675,13 +675,13 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
 
             {activeTab === "Customers" && (
               <motion.div key="customers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <CustomersView data={data} isDarkMode={isDarkMode} onViewDetails={setSelectedReg} onDelete={setConfirmDelete} onUpdateStatus={handleUpdateStatus} />
+                <CustomersView data={filteredData} isDarkMode={isDarkMode} onViewDetails={setSelectedReg} onDelete={setConfirmDelete} onUpdateStatus={handleUpdateStatus} />
               </motion.div>
             )}
 
             {activeTab === "Map View" && (
               <motion.div key="map" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <GeographicalView data={data} isDarkMode={isDarkMode} />
+                <GeographicalView data={filteredData} isDarkMode={isDarkMode} />
               </motion.div>
             )}
           </AnimatePresence>
