@@ -176,7 +176,14 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                       {item["Nama Lengkap"]?.charAt(0) || "U"}
                     </div>
                     <div className="flex flex-col min-w-0">
-                      <p className="font-bold text-slate-800 text-xs sm:text-sm truncate max-w-[120px] sm:max-w-[180px]">{item["Nama Lengkap"]}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-slate-800 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[160px]">{item["Nama Lengkap"]}</p>
+                        {item["Foto KTP"] ? (
+                          <span className="bg-emerald-50 text-emerald-700 text-[8px] font-black border border-emerald-200/60 px-1.5 py-0.5 rounded-md leading-none select-none uppercase tracking-widest shrink-0 scale-95">KTP OK</span>
+                        ) : (
+                          <span className="bg-slate-50 text-slate-400 text-[8px] font-black border border-slate-200/60 px-1.5 py-0.5 rounded-md leading-none select-none uppercase tracking-widest shrink-0 scale-95">No KTP</span>
+                        )}
+                      </div>
                       <p className="text-[10px] text-slate-400 font-bold">ID: #{getCustomerNo(item.Timestamp).split('-')[1] || "00"}</p>
                     </div>
                   </div>

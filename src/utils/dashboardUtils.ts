@@ -94,7 +94,7 @@ export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
   
   doc.text(`Dicetak pada: ${new Date().toLocaleString("id-ID")}`, 280, 20, { align: "right" });
 
-  const headers = [["No.", "Customer ID", "Nama Lengkap", "WhatsApp", "Paket Layanan", "Kecamatan / Desa", "Tanggal Daftar"]];
+  const headers = [["No.", "Customer ID", "Nama Lengkap", "WhatsApp", "Paket Layanan", "Kecamatan / Desa", "Tanggal Daftar", "KTP"]];
   const rows = data.map((item, idx) => [
     idx + 1,
     getCustomerNo(item.Timestamp),
@@ -102,7 +102,8 @@ export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
     item["No HP / WA"],
     String(item.Paket || "").split("(")[0],
     `${item.Kecamatan || "-"} / ${item.Desa || "-"}`,
-    item.Timestamp.split(",")[0]
+    item.Timestamp.split(",")[0],
+    item["Foto KTP"] ? "ADA" : "TIDAK"
   ]);
 
   autoTable(doc, {
@@ -136,7 +137,7 @@ export const downloadPDF = (data: RegistrationData[]) => {
   
   doc.text(`Dicetak pada: ${new Date().toLocaleString("id-ID")}`, 280, 20, { align: "right" });
 
-  const headers = [["No.", "Customer ID", "Nama Lengkap", "WhatsApp", "Paket Layanan", "Kecamatan / Desa", "Tanggal Daftar"]];
+  const headers = [["No.", "Customer ID", "Nama Lengkap", "WhatsApp", "Paket Layanan", "Kecamatan / Desa", "Tanggal Daftar", "KTP"]];
   const rows = data.map((item, idx) => [
     idx + 1,
     getCustomerNo(item.Timestamp),
@@ -144,7 +145,8 @@ export const downloadPDF = (data: RegistrationData[]) => {
     item["No HP / WA"],
     String(item.Paket || "").split("(")[0],
     `${item.Kecamatan || "-"} / ${item.Desa || "-"}`,
-    item.Timestamp.split(",")[0]
+    item.Timestamp.split(",")[0],
+    item["Foto KTP"] ? "ADA" : "TIDAK"
   ]);
 
   autoTable(doc, {
