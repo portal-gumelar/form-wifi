@@ -14,7 +14,7 @@ interface RegistrationTableProps {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-  BARU: { label: "TERDAFTAR", color: "text-blue-600", bg: "bg-blue-50", icon: Lucide.PlusCircle },
+  PENGAJUAN: { label: "PENGAJUAN", color: "text-blue-600", bg: "bg-blue-50", icon: Lucide.PlusCircle },
   SURVEY: { label: "SURVEY", color: "text-indigo-600", bg: "bg-indigo-50", icon: Lucide.Search },
   PROSES: { label: "PROSES", color: "text-amber-600", bg: "bg-amber-50", icon: Lucide.Loader2 },
   AKTIF: { label: "AKTIF", color: "text-emerald-600", bg: "bg-emerald-50", icon: Lucide.CheckCircle2 },
@@ -32,7 +32,7 @@ const StatusDropdown = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const activeConfig = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.BARU;
+  const activeConfig = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.PENGAJUAN;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -217,7 +217,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                 )}
                 <td className="px-4 sm:px-6 py-3.5 text-center">
                   <StatusDropdown 
-                    currentStatus={item.status || "BARU"} 
+                    currentStatus={item.status || "PENGAJUAN"} 
                     onSelect={(newStatus) => onUpdateStatus(item.Timestamp, newStatus)} 
                   />
                 </td>
