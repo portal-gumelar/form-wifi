@@ -75,7 +75,68 @@ export const exportToExcel = (data: RegistrationData[]) => {
 };
 
 const LOGO_URL = "https://ik.imagekit.io/Gumelar/LogO/logo%20pt.png?updatedAt=1778213993513";
-const BRAND_COLOR = [67, 24, 255];
+const BRAND_COLOR = [13, 22, 85]; // Navy corporate brand color for header
+
+const appendKtpAttachments = (doc: any, data: RegistrationData[]) => {
+  data.forEach((item) => {
+    const ktpData = item["Foto KTP"];
+    if (ktpData && String(ktpData).startsWith("data:image/")) {
+      doc.addPage();
+      
+      // Frame
+      doc.setDrawColor(244, 121, 32); // Brand Orange
+      doc.setLineWidth(1);
+      doc.rect(14, 14, 269, 182);
+      
+      // Header Info
+      doc.setFontSize(16);
+      doc.setTextColor(13, 22, 85); // Navy
+      doc.setFont("helvetica", "bold");
+      doc.text(`LAMPIRAN FOTO KTP - ${String(item["Nama Lengkap"] || "").toUpperCase()}`, 20, 26);
+      
+      doc.setFontSize(9);
+      doc.setTextColor(100, 116, 139);
+      doc.setFont("helvetica", "normal");
+      doc.text(`ID Pelanggan: ${getCustomerNo(item.Timestamp)} | No. WA: ${item["No HP / WA"] || "-"}`, 20, 32);
+      doc.text(`Alamat: ${item["Alamat Pemasangan"] || "-"} (${item.Desa || "-"}, ${item.Kecamatan || "-"}) | Paket: ${item.Paket || "-"}`, 20, 37);
+      
+      // Thin line divider
+      doc.setDrawColor(226, 232, 240);
+      doc.line(20, 41, 277, 41);
+      
+      // Render KTP image centered & framed
+      try {
+        let format = "JPEG";
+        if (ktpData.includes("image/png")) format = "PNG";
+        else if (ktpData.includes("image/webp")) format = "WEBP";
+        
+        const imgWidth = 142;
+        const imgHeight = 90;
+        const imgX = (297 - imgWidth) / 2;
+        const imgY = 50;
+        
+        // Premium gray/orange framing card border for the KTP photo
+        doc.setFillColor(248, 250, 252);
+        doc.rect(imgX - 4, imgY - 4, imgWidth + 8, imgHeight + 8, "F");
+        doc.setDrawColor(203, 213, 225);
+        doc.rect(imgX - 4, imgY - 4, imgWidth + 8, imgHeight + 8, "S");
+        
+        doc.addImage(ktpData, format, imgX, imgY, imgWidth, imgHeight);
+        
+        // Footer signature watermark
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text("Arsip pendaftaran digital resmi PT. AKSES ARTHA MEDIA (ARMEDIA Net).", 20, 188);
+      } catch (err) {
+        console.error("Gagal merawat gambar KTP ke PDF:", err);
+        doc.setFontSize(10);
+        doc.setTextColor(239, 68, 68);
+        doc.setFont("helvetica", "bold");
+        doc.text("[Foto KTP tidak dapat ditampilkan secara visual - Format file korup atau tidak didukung]", 20, 60);
+      }
+    }
+  });
+};
 
 export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
   const doc = new jsPDF("l", "mm", "a4");
@@ -83,7 +144,7 @@ export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
   // Header with Logo
   doc.addImage(LOGO_URL, "PNG", 14, 10, 15, 15);
   doc.setFontSize(22);
-  doc.setTextColor(67, 24, 255);
+  doc.setTextColor(13, 22, 85);
   doc.setFont("helvetica", "bold");
   doc.text("ARMEDIA NET", 32, 20);
   
@@ -103,7 +164,7 @@ export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
     String(item.Paket || "").split("(")[0],
     `${item.Kecamatan || "-"} / ${item.Desa || "-"}`,
     item.Timestamp.split(",")[0],
-    item["Foto KTP"] ? "ADA" : "TIDAK"
+    item["Foto KTP"] ? "ADA (Lampiran)" : "TIDAK"
   ]);
 
   autoTable(doc, {
@@ -116,6 +177,8 @@ export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
     alternateRowStyles: { fillColor: [244, 247, 254] },
     margin: { top: 40 }
   });
+
+  appendKtpAttachments(doc, data);
 
   return URL.createObjectURL(doc.output("blob"));
 };
@@ -126,7 +189,7 @@ export const downloadPDF = (data: RegistrationData[]) => {
   // Header with Logo
   doc.addImage(LOGO_URL, "PNG", 14, 10, 15, 15);
   doc.setFontSize(22);
-  doc.setTextColor(67, 24, 255);
+  doc.setTextColor(13, 22, 85);
   doc.setFont("helvetica", "bold");
   doc.text("ARMEDIA NET", 32, 20);
   
@@ -146,7 +209,7 @@ export const downloadPDF = (data: RegistrationData[]) => {
     String(item.Paket || "").split("(")[0],
     `${item.Kecamatan || "-"} / ${item.Desa || "-"}`,
     item.Timestamp.split(",")[0],
-    item["Foto KTP"] ? "ADA" : "TIDAK"
+    item["Foto KTP"] ? "ADA (Lampiran)" : "TIDAK"
   ]);
 
   autoTable(doc, {
@@ -159,6 +222,8 @@ export const downloadPDF = (data: RegistrationData[]) => {
     alternateRowStyles: { fillColor: [244, 247, 254] },
     margin: { top: 40 }
   });
+
+  appendKtpAttachments(doc, data);
 
   doc.save(`Armedia_Report_${new Date().toLocaleDateString()}.pdf`);
 };
