@@ -38,8 +38,32 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ url, onClose, 
               </button>
             </div>
           </div>
-          <div className="flex-1 bg-slate-100 p-4">
-            <iframe src={url} className="w-full h-full rounded-2xl border-none shadow-inner" title="PDF Preview"></iframe>
+          <div className="flex-1 bg-slate-100 p-4 flex flex-col items-center justify-center overflow-auto">
+            {/* Desktop: Iframe PDF Preview */}
+            <iframe 
+              src={url} 
+              className="hidden md:block w-full h-full rounded-2xl border-none shadow-inner bg-white" 
+              title="PDF Preview"
+            ></iframe>
+
+            {/* Mobile Fallback: Direct Download Option */}
+            <div className="block md:hidden text-center p-8 bg-white rounded-3xl border shadow-sm max-w-md w-full flex flex-col items-center gap-6">
+              <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center shadow-inner">
+                <Lucide.FileText size={40} />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Pratinjau PDF di HP</h3>
+                <p className="text-xs text-slate-500 font-bold mt-2 leading-relaxed">
+                  Browser HP Anda tidak mendukung pratinjau langsung dokumen PDF. Silakan unduh dokumen laporan resmi ARMEDIA Net di bawah ini.
+                </p>
+              </div>
+              <button
+                onClick={onDownload}
+                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-[#F47920] hover:bg-orange-600 rounded-2xl transition-all text-sm font-black uppercase tracking-wider text-white shadow-lg active:scale-95"
+              >
+                <Lucide.Download size={20} /> Unduh & Buka PDF
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>
