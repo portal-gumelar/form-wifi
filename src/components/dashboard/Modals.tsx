@@ -71,6 +71,19 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
             <button onClick={onClose} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all"><Lucide.X size={20} /></button>
           </div>
           <div className="p-10 space-y-6">
+            {/* Persetujuan Syarat & Ketentuan Audit Banner */}
+            <div className="p-5 rounded-[1.5rem] bg-emerald-50/80 border border-emerald-500/20 flex items-center gap-4 shadow-sm shadow-emerald-500/5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+                <Lucide.CheckCircle size={20} strokeWidth={2.5} />
+              </div>
+              <div>
+                <p className="text-[9px] font-black text-emerald-800 uppercase tracking-[0.15em] leading-none mb-1">Persetujuan Syarat & Ketentuan</p>
+                <p className="text-xs font-black text-emerald-950 uppercase tracking-tight">
+                  {item["Persetujuan S&K"] || "SETUJU (Telah Dibaca & Disetujui)"}
+                </p>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-6">
               <div className="col-span-2 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Installation Path</p>
@@ -91,6 +104,22 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
                 <p className="font-black text-slate-500">{item.Timestamp}</p>
               </div>
             </div>
+            {item.Catatan && (
+              <div className="p-6 rounded-2xl border border-amber-100 bg-amber-50/30">
+                <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                  <Lucide.MessageSquare size={12} /> Catatan / Pesan Evaluasi Klien
+                </p>
+                <p className="font-bold text-slate-800 text-sm leading-relaxed whitespace-pre-wrap">{item.Catatan}</p>
+              </div>
+            )}
+            {item["Foto KTP"] && (
+              <div className="p-6 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/30">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Foto KTP / ID Card Pelanggan</p>
+                <div className="w-full h-48 bg-slate-100 dark:bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200">
+                  <img src={item["Foto KTP"]} alt="KTP Pelanggan" className="w-full h-full object-contain cursor-zoom-in hover:scale-105 transition-transform duration-300" onClick={() => window.open(item["Foto KTP"], '_blank')} />
+                </div>
+              </div>
+            )}
             {item["Link Google Maps"] && (
               <a href={item["Link Google Maps"]} target="_blank" rel="noreferrer"
                 className="flex items-center justify-center gap-3 w-full py-5 bg-[#0d1655] text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-500/20"
@@ -352,6 +381,45 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Provider Saat Ini</label>
                   <input type="text" value={formData["Provider Saat Ini"] || ""} onChange={e => handleChange("Provider Saat Ini", e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920]" placeholder="Contoh: Indihome / Belum" />
                 </div>
+                <div className="sm:col-span-3 space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Foto KTP / ID Card Pelanggan</label>
+                  {formData["Foto KTP"] ? (
+                    <div className="relative w-full h-36 border border-slate-200 bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center group shadow-sm">
+                      <img src={formData["Foto KTP"]} alt="KTP" className="w-full h-full object-contain" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => handleChange("Foto KTP", "")}
+                          className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-black text-[10px] uppercase tracking-widest rounded-lg transition-all active:scale-95"
+                        >
+                          Hapus Foto
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-200 hover:border-[#F47920] rounded-xl bg-slate-50 cursor-pointer transition-all">
+                      <div className="text-center px-4">
+                        <p className="text-[10px] font-black text-[#1a2d8f] uppercase tracking-wider">Unggah Foto KTP Baru</p>
+                        <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Pilih Gambar dari Perangkat</p>
+                      </div>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              handleChange("Foto KTP", reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden" 
+                      />
+                    </label>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -401,6 +469,16 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Alokasi Waktu Survei Lokasi</label>
                   <input type="text" value={formData["Waktu Survei"] || ""} onChange={e => handleChange("Waktu Survei", e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920]" placeholder="Contoh: Jam 10:00 Pagi" />
+                </div>
+                <div className="sm:col-span-2 space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Catatan Evaluasi / Pesan Pelanggan</label>
+                  <textarea
+                    value={formData.Catatan || ""}
+                    onChange={e => handleChange("Catatan", e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] resize-none"
+                    placeholder="Catatan dari pelanggan atau catatan internal survei lapangan oleh tim teknis..."
+                  />
                 </div>
               </div>
             </div>

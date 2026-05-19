@@ -106,7 +106,10 @@ const normalizeRow = (row: any): RegistrationData => ({
   "Tanggal Rencana Pasang": String(row["Tanggal Rencana Pasang"] || ""),
   "Waktu Survei":           String(row["Waktu Survei"] || ""),
   "Link Google Maps":       String(row["Link Google Maps"] || ""),
-  status:                   String(row.status || row.Status || "BARU"),
+  status:                   String(row.status || row.Status || "PENGAJUAN"),
+  "Foto KTP":               String(row["Foto KTP"] || row.fotoKtp || ""),
+  "Persetujuan S&K":        String(row["Persetujuan S&K"] || row.persetujuanSnk || ""),
+  "Catatan":                String(row.Catatan || row.catatan || ""),
 });
 
 // --- Komponen Utama Dashboard ---
@@ -162,7 +165,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
         const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
         const normalized = rawData.map((item: any) => ({
           ...normalizeRow(item),
-          status: localStatuses[item.Timestamp] || item.status || item.Status || "BARU"
+          status: localStatuses[item.Timestamp] || item.status || item.Status || "PENGAJUAN"
         }));
         // D: Deteksi pendaftar baru
         setData(prev => {
@@ -214,7 +217,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
             const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
             const applyStatuses = (list: any[]) => list.map(item => ({
               ...normalizeRow(item),
-              status: localStatuses[item.Timestamp] || item.status || item.Status || "BARU"
+              status: localStatuses[item.Timestamp] || item.status || item.Status || "PENGAJUAN"
             }));
 
             if (rawData.length > 0) {
@@ -229,7 +232,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
             const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
             setData(combinedData.map(item => ({
               ...item,
-              status: localStatuses[item.Timestamp] || item.status || "BARU"
+              status: localStatuses[item.Timestamp] || item.status || "PENGAJUAN"
             })));
           }
         }
@@ -293,7 +296,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
     const finalItem: RegistrationData = {
       ...updatedItem,
       Timestamp: finalTimestamp,
-      status: updatedItem.status || "BARU"
+      status: updatedItem.status || "PENGAJUAN"
     };
 
     // 1. Optimistic Update (Manipulasi State lokal agar UI langsung sinkron tanpa loading delay)
@@ -313,9 +316,12 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
       params.append("Paket", updatedItem.Paket || "");
       params.append("Tanggal Rencana Pasang", updatedItem["Tanggal Rencana Pasang"] || "");
       params.append("Waktu Survei", updatedItem["Waktu Survei"] || "");
-      params.append("status", updatedItem.status || "BARU");
+      params.append("status", updatedItem.status || "PENGAJUAN");
       if (updatedItem["Link Google Maps"]) {
         params.append("Link Google Maps", updatedItem["Link Google Maps"]);
+      }
+      if (updatedItem["Foto KTP"]) {
+        params.append("Foto KTP", updatedItem["Foto KTP"]);
       }
 
       // 3. Tembak Payload via POST Method ke Jembatan API GAS Anda
@@ -336,7 +342,10 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
     const newEntry: RegistrationData = {
       Timestamp: "baru-" + Date.now(),
       "Nama Lengkap": "", "No HP / WA": "", "Alamat Pemasangan": "",
-      Paket: "GUYUB_1 (20 Mbps) - Rp 115.000/Bln", status: "BARU", "Kecamatan": "GUMELAR", "Desa": "GUMELAR"
+      "Provider Saat Ini": "Belum Pernah Pasang", "Sumber Info": "Rekomendasi Teman",
+      Paket: "GUYUB_1 (20 Mbps) - Rp 115.000/Bln", status: "PENGAJUAN", "Kecamatan": "GUMELAR", "Desa": "GUMELAR",
+      "Persetujuan S&K": "SETUJU (Manual Admin)",
+      "Catatan": ""
     };
     setEditingReg(newEntry);
     setIsAddingNew(true);

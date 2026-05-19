@@ -16,6 +16,9 @@ export interface RegistrationData {
   "Waktu Survei"?: string;
   "Link Google Maps"?: string;
   status?: string;
+  "Foto KTP"?: string;
+  "Persetujuan S&K"?: string;
+  "Catatan"?: string;
 }
 
 export interface DashboardStats {

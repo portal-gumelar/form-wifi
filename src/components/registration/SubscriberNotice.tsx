@@ -1,17 +1,29 @@
 // Last update: 2026-05-19 00:00 - Redesain Ramah Orang Awam
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Lucide from "lucide-react";
 
 interface SubscriberNoticeProps {
   isAccepted: boolean;
   onAcceptChange: (checked: boolean) => void;
+  selectedPackage?: string;
   isDarkMode?: boolean;
 }
 
-export const SubscriberNotice: React.FC<SubscriberNoticeProps> = ({ isAccepted, onAcceptChange }) => {
+export const SubscriberNotice: React.FC<SubscriberNoticeProps> = ({ isAccepted, onAcceptChange, selectedPackage }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [activeSpeedTab, setActiveSpeedTab] = useState<"p1" | "p2" | "p3" | "p4" | "p5">("p1");
+
+  useEffect(() => {
+    if (selectedPackage) {
+      if (selectedPackage.includes("20 Mbps")) setActiveSpeedTab("p1");
+      else if (selectedPackage.includes("30 Mbps")) setActiveSpeedTab("p2");
+      else if (selectedPackage.includes("50 Mbps")) setActiveSpeedTab("p3");
+      else if (selectedPackage.includes("75 Mbps")) setActiveSpeedTab("p4");
+      else if (selectedPackage.includes("100 Mbps")) setActiveSpeedTab("p5");
+    }
+  }, [selectedPackage]);
 
   const REKENING_MANDIRI = "0060014607117";
 
@@ -70,35 +82,62 @@ export const SubscriberNotice: React.FC<SubscriberNoticeProps> = ({ isAccepted, 
   return (
     <div className="w-full space-y-3">
 
-      {/* ── BLOK HEADER MENCOLOK ─────────────────────────────── */}
-      <div className="w-full bg-gradient-to-r from-[#0d1655] to-blue-900 rounded-2xl p-5 text-white flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex items-center gap-4 flex-1">
-          <div className="w-12 h-12 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center shrink-0">
-            <Lucide.BookOpen size={24} className="text-[#FDB913]" />
+      {/* ── BLOK HEADER MENCOLOK (DI-DESAIN ULANG AGAR SUPER DOMINAN) ── */}
+      <div className={`w-full rounded-[2.5rem] p-6 text-white flex flex-col sm:flex-row sm:items-center gap-5 transition-all duration-500 border-2 relative overflow-hidden ${
+        isExpanded
+          ? "bg-gradient-to-br from-[#0d1655] via-[#111d73] to-[#1a2d8f] border-[#7b8fd4]/30 shadow-xl"
+          : "bg-gradient-to-r from-[#0d1655] via-[#101c6f] to-orange-950/95 border-orange-500 shadow-[0_15px_40px_rgba(244,121,32,0.25)] animate-pulse hover:animate-none"
+      }`}>
+        {/* Glowing visual accent for mandatory reminder */}
+        {!isExpanded && (
+          <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/20 rounded-full blur-2xl pointer-events-none" />
+        )}
+        
+        <div className="flex items-start gap-4 flex-1">
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border transition-all duration-300 ${
+            isExpanded ? "bg-white/10 border-white/20" : "bg-orange-500/20 border-orange-400 animate-bounce"
+          }`}>
+            {isExpanded ? (
+              <Lucide.BookOpen size={26} className="text-[#FDB913]" />
+            ) : (
+              <Lucide.AlertTriangle size={26} className="text-orange-400" />
+            )}
           </div>
           <div>
-            <p className="text-[11px] font-black text-[#FDB913] uppercase tracking-widest mb-1">⚡ Langkah Terakhir Sebelum Kirim</p>
-            <h3 className="text-lg sm:text-2xl font-black leading-tight text-white">
-              Baca Syarat & Ketentuan
+            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+              <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-0.5 rounded-full shadow-sm border ${
+                isExpanded 
+                  ? "bg-blue-900/60 text-[#FDB913] border-blue-800" 
+                  : "bg-red-600 text-white border-red-500 animate-pulse"
+              }`}>
+                {isExpanded ? "Syarat & Ketentuan" : "⚠️ WAJIB DI BACA"}
+              </span>
+            </div>
+            
+            <h3 className="text-xl sm:text-2xl font-black leading-tight tracking-tight italic bg-gradient-to-r from-white via-slate-100 to-slate-200 bg-clip-text text-transparent uppercase drop-shadow-sm">
+              Langkah Terakhir Sebelum anda mengajukan pendaftaran
             </h3>
-            <p className="text-sm text-white/80 font-bold mt-1">Hanya 2 poin — cukup 1 menit!</p>
+            
+            <p className="text-sm font-bold mt-2.5 text-slate-300">
+              Hanya <span className="text-orange-400 font-black underline decoration-orange-400 decoration-2">2 poin penting</span> — cukup 1 menit!
+            </p>
           </div>
         </div>
 
-        {/* Tombol Buka / Tutup — eksplisit dan besar */}
+        {/* Tombol Buka / Tutup — eksplisit, besar, dan pulsing */}
         <button
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
-          className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-black text-sm uppercase tracking-wider transition-all shrink-0 active:scale-95 ${
+          className={`flex items-center justify-center gap-2 px-7 py-4 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest transition-all shrink-0 active:scale-95 shadow-lg border-2 ${
             isExpanded
-              ? "bg-white text-[#0d1655] shadow-lg"
-              : "bg-[#F47920] text-white shadow-lg shadow-orange-500/30 hover:bg-orange-400"
+              ? "bg-white border-white text-[#0d1655] hover:bg-slate-50"
+              : "bg-[#F47920] border-[#F47920] text-white hover:bg-orange-600 hover:border-orange-600 ring-4 ring-orange-500/20 shadow-orange-500/40"
           }`}
         >
           {isExpanded ? (
-            <><Lucide.ChevronUp size={16} /> Tutup</>
+            <><Lucide.ChevronUp size={16} /> Tutup Ketentuan</>
           ) : (
-            <><Lucide.BookOpen size={16} /> Buka & Baca</>
+            <><Lucide.BookOpen size={16} className="animate-pulse" /> Wajib Buka & Baca</>
           )}
         </button>
       </div>
@@ -115,16 +154,23 @@ export const SubscriberNotice: React.FC<SubscriberNoticeProps> = ({ isAccepted, 
           >
             <div className="bg-white border-2 border-slate-100 rounded-2xl overflow-hidden shadow-sm">
 
-              {/* POIN 1 — Kabel Tetangga */}
+              {/* POIN 1 — Izin Kabel */}
               <div className="p-5 border-b-2 border-dashed border-orange-100">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center font-black text-sm shrink-0">1</div>
-                  <h4 className="font-black text-sm text-slate-800">Izin Kabel ke Tetangga 🏠</h4>
+                  <h4 className="font-black text-sm text-slate-800 uppercase tracking-wide">IJIN TARIK KABEL KE TETANGGA 🏠</h4>
                 </div>
-                <div className="ml-10 space-y-2 text-sm text-slate-600 font-medium leading-relaxed">
-                  <p>Saat pemasangan, kabel internet biasanya perlu melewati atap atau lahan tetangga.</p>
-                  <div className="bg-orange-50 border-l-4 border-orange-400 p-3 rounded-r-xl font-bold text-orange-800">
-                    👉 Mohon minta izin dulu ke tetangga sebelum tim teknisi datang, agar proses pemasangan berjalan lancar.
+                <div className="ml-10 space-y-3 text-sm text-slate-600 font-bold leading-relaxed">
+                  <p className="text-[#0d1655] font-black text-sm border-l-4 border-[#F47920] pl-3 py-1.5 bg-orange-50/40 rounded-r-xl">
+                    Di ARMEDIA, kami sangat menjunjung tinggi <span className="text-[#F47920]">Etika</span>, <span className="text-[#F47920]">Sopan Santun</span>, dan <span className="text-[#F47920]">Moralitas</span>.
+                  </p>
+                  <p className="font-medium text-slate-600">
+                    Kami ingin memastikan kehadiran internet di rumah Anda tidak mengganggu kenyamanan tetangga. Oleh karena itu, jika penarikan kabel tim teknis kami harus melintas di atas rumah atau lahan tetangga, mohon bantuannya untuk meminta izin kepada tetangga/kerabat tersebut sebelum proses pengerjaan dimulai.
+                  </p>
+                  <div className="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-r-2xl text-orange-950 font-black space-y-1">
+                    <p>Bantu tim teknis kami bekerja dengan tenang, dan lancar, sehingga internet Anda pun terpasang dengan nyaman!</p>
+                    <p className="text-xs text-orange-700 mt-2 uppercase tracking-wide">Terimakasih atas Kerjasamanya</p>
+                    <p className="text-xs text-[#0d1655] font-black uppercase tracking-widest mt-1">ARMEDIA.</p>
                   </div>
                 </div>
               </div>
@@ -140,8 +186,55 @@ export const SubscriberNotice: React.FC<SubscriberNoticeProps> = ({ isAccepted, 
                     Tagihan bulan pertama dihitung dari tanggal internet Anda mulai aktif (bukan dari awal bulan). Jadi makin awal dipasang, makin banyak yang dibayar di bulan pertama — tapi bulan berikutnya sudah normal.
                   </p>
 
-                  {/* Tabel utama — 30 baris × 5 paket */}
-                  <div className="w-full overflow-x-auto rounded-xl border border-slate-200 custom-scrollbar">
+                   {/* Tab Selector untuk HP agar pas dan tidak perlu scroll ke samping */}
+                  <div className="block md:hidden w-full bg-slate-100 p-1 rounded-2xl flex gap-1 overflow-x-auto custom-scrollbar">
+                    {[
+                      { key: "p1" as const, label: "20 Mbps" },
+                      { key: "p2" as const, label: "30 Mbps" },
+                      { key: "p3" as const, label: "50 Mbps" },
+                      { key: "p4" as const, label: "75 Mbps" },
+                      { key: "p5" as const, label: "100 Mbps" },
+                    ].map((tab) => (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setActiveSpeedTab(tab.key)}
+                        className={`flex-1 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-center transition-all whitespace-nowrap ${
+                          activeSpeedTab === tab.key
+                            ? "bg-[#F47920] text-white shadow-md shadow-orange-500/10"
+                            : "text-slate-600 hover:bg-slate-200"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Tabel HP (2 Kolom - Tanpa Scroll Samping) */}
+                  <div className="block md:hidden w-full rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                    <p className="text-[10px] font-black text-[#0d1655] uppercase tracking-widest px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+                      📋 Tabel Pro-rata Tagihan Bulan Pertama
+                    </p>
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-[#0d1655] text-white text-[10px] font-black uppercase">
+                          <th className="px-4 py-2.5 text-center w-1/3 border-r border-white/10">Tanggal On</th>
+                          <th className="px-4 py-2.5 text-[#FDB913] w-2/3">Biaya Pro-rata ({activeSpeedTab === "p1" ? "20 Mbps" : activeSpeedTab === "p2" ? "30 Mbps" : activeSpeedTab === "p3" ? "50 Mbps" : activeSpeedTab === "p4" ? "75 Mbps" : "100 Mbps"})</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-bold">
+                        {tarifNormal.map((row, idx) => (
+                          <tr key={idx} className={idx % 2 === 0 ? "bg-white hover:bg-orange-50/20" : "bg-slate-50/60 hover:bg-orange-50/20"}>
+                            <td className="px-4 py-2 text-center font-black bg-slate-50 border-r border-slate-200 text-[#0d1655]">{row.tgl}</td>
+                            <td className="px-4 py-2 text-orange-600 font-black">Rp {row[activeSpeedTab]}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Tabel Utama Desktop (5 Kolom - Tampang Lebar Asli) */}
+                  <div className="hidden md:block w-full overflow-x-auto rounded-xl border border-slate-200 custom-scrollbar">
                     <p className="text-[10px] font-black text-[#0d1655] uppercase tracking-widest px-3 pt-2.5 pb-1.5 bg-slate-50 border-b border-slate-200">
                       📋 Tabel Pro-rata Tagihan Bulan Pertama (Rp)
                     </p>
@@ -171,8 +264,31 @@ export const SubscriberNotice: React.FC<SubscriberNoticeProps> = ({ isAccepted, 
                     </table>
                   </div>
 
-                  {/* Tabel khusus gabungan tgl 28-30 */}
-                  <div className="w-full overflow-x-auto rounded-xl border-2 border-blue-200 bg-blue-50/40 custom-scrollbar">
+                  {/* Tabel Gabungan HP (2 Kolom - Tanpa Scroll Samping) */}
+                  <div className="block md:hidden w-full rounded-2xl border-2 border-blue-200 bg-blue-50/40 overflow-hidden shadow-sm">
+                    <p className="text-[10px] font-black text-blue-800 uppercase tracking-widest px-4 py-2.5 border-b border-blue-200">
+                      💡 Contoh Bayar Gabungan (Tgl 28–30)
+                    </p>
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-blue-700 text-white text-[10px] font-black uppercase">
+                          <th className="px-4 py-2.5 text-center w-1/3 border-r border-white/10">Tanggal On</th>
+                          <th className="px-4 py-2.5 text-yellow-300 w-2/3">Biaya Gabungan ({activeSpeedTab === "p1" ? "20 Mbps" : activeSpeedTab === "p2" ? "30 Mbps" : activeSpeedTab === "p3" ? "50 Mbps" : activeSpeedTab === "p4" ? "75 Mbps" : "100 Mbps"})</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-blue-100 font-black text-blue-900">
+                        {tarifGabungan.map((row, idx) => (
+                          <tr key={idx} className="hover:bg-blue-100/50">
+                            <td className="px-4 py-2 text-center font-black bg-blue-100/60 border-r border-blue-200">{row.tgl}</td>
+                            <td className="px-4 py-2 text-orange-600 font-black">Rp {row[activeSpeedTab]}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Tabel Gabungan Desktop (5 Kolom - Tampang Lebar Asli) */}
+                  <div className="hidden md:block w-full overflow-x-auto rounded-xl border-2 border-blue-200 bg-blue-50/40 custom-scrollbar">
                     <p className="text-[10px] font-black text-blue-800 uppercase tracking-widest px-3 pt-2.5 pb-1.5 border-b border-blue-200">
                       💡 Contoh Bayar Gabungan (Tgl 28–30): Bisa digabung ke bulan depan
                     </p>

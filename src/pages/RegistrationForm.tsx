@@ -27,9 +27,22 @@ const initialForm = {
   prioritas: "",
   prioritasLain: "",
   sumberInfo: "",
+  fotoKtp: "",
+  catatan: "",
 };
 
-const VILLAGES = ["GUMELAR", "CIHONJE", "TLAGA", "SAMUDRA", "SAMUDRA KULON", "CILANGKAP", "PANINGKABAN"];
+const VILLAGES = [
+  "GUMELAR",
+  "CIHONJE",
+  "TLAGA",
+  "SAMUDRA KULON",
+  "SAMUDRA",
+  "CILANGKAP",
+  "PANINGKABAN",
+  "KARANG KEMOJING",
+  "GANCANG",
+  "KEDUNG URANG"
+];
 const COVERED_VILLAGES = ["GUMELAR", "CIHONJE"];
 
 export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; desa: string }) => void; setShowAdminModal: (v: boolean) => void }> = ({ setSubmitted, setShowAdminModal }) => {
@@ -42,6 +55,8 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
   const [isNoticeAccepted, setIsNoticeAccepted] = useState(false);
   const [showEthicModal, setShowEthicModal]     = useState(false); // ETIKA & SILATURAHMI
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const isSelectedCovered = form.desa ? COVERED_VILLAGES.includes(form.desa) : false;
 
   const progress = Math.round((["currentProvider", "namaLengkap", "desa", "alamat", "noHp", "paket", "tanggalPasang", "sumberInfo"].filter(f => form[f as keyof typeof form]).length / 8) * 100);
 
@@ -95,8 +110,8 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.currentProvider || !form.namaLengkap || !form.kecamatan || !form.desa || !form.alamat || !form.noHp || !form.paket || !form.tanggalPasang || !form.sumberInfo) {
-      setError("Mohon lengkapi semua field yang wajib diisi (*).");
+    if (!form.currentProvider || !form.namaLengkap || !form.kecamatan || !form.desa || !form.alamat || !form.noHp || !form.paket || !form.tanggalPasang || !form.sumberInfo || !form.fotoKtp) {
+      setError("Mohon lengkapi semua field yang wajib diisi (*), termasuk mengunggah foto KTP.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -128,12 +143,15 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                           key === "linkGoogleMaps" ? "Link Google Maps" :
                             key === "waktuSurvei" ? "Waktu Survei" :
                               key === "prioritas" ? "Prioritas" :
-                                key === "sumberInfo" ? "Sumber Info" : key;
+                                key === "sumberInfo" ? "Sumber Info" : 
+                                  key === "fotoKtp" ? "Foto KTP" :
+                                    key === "catatan" ? "Catatan" : key;
         payload.append(apiKey, val);
       }
     });
     payload.append("Timestamp", new Date().toLocaleString("id-ID"));
     payload.append("status", "PENGAJUAN"); // SOP: setiap form masuk = PENGAJUAN
+    payload.append("Persetujuan S&K", "SETUJU (Sudah Dibaca & Disetujui)");
 
     try {
       await fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: payload, mode: "no-cors" });
@@ -154,7 +172,9 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         link: form.linkGoogleMaps,
         survei: form.waktuSurvei,
         prioritas: form.prioritas === "lain" ? form.prioritasLain : form.prioritas,
-        sumber: form.sumberInfo
+        sumber: form.sumberInfo,
+        fotoKtp: form.fotoKtp,
+        catatan: form.catatan
       };
 
       localStorage.setItem('adminData', JSON.stringify([newEntry, ...localData]));
@@ -188,22 +208,22 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
             {/* Body card */}
             <div className="bg-white rounded-3xl p-6 space-y-5 shadow-2xl">
               <p className="text-slate-700 text-sm font-medium leading-relaxed">
-                Terima kasih atas ketertarikan Anda pada layanan kami. Kami melihat saat ini Anda telah didukung oleh{" "}
-                <strong className="text-[#0d1655] underline">layanan RT/RW Net setempat atau Layanan Internet Pertemanan.</strong>
+                Terima kasih atas ketertarikan Anda terhadap layanan kami. Kami melihat bahwa saat ini Anda telah didukung oleh{" "}
+                <strong className="text-[#0d1655] underline">layanan RT/RW Net setempat atau Layanan Internet Komunitas.</strong>
               </p>
 
               <div className="border-l-4 border-[#F47920] pl-4 bg-orange-50/60 py-3 rounded-r-2xl">
                 <p className="text-slate-600 text-sm italic leading-relaxed">
-                  Sebagai penyedia layanan yang sangat menjunjung tinggi etika bisnis dan kearifan lokal, kami sangat menghormati kontribusi para pengelola RT/RW Net dalam membangun akses internet di lingkungan Anda. Oleh karena itu, demi menjaga silaturahmi dan kenyamanan bersama, kami menyarankan Anda untuk berkonsultasi terlebih dahulu dengan pengelola RT/RW Net Anda.
+                  Sebagai penyedia layanan yang menjunjung tinggi etika bisnis dan kearifan lokal, kami sangat menghargai kontribusi para pengelola RT/RW Net dalam membangun akses internet di lingkungan Anda. Oleh karena itu, demi menjaga silaturahmi dan kenyamanan bersama, kami menyarankan Anda untuk berkonsultasi terlebih dahulu dengan pengelola RT/RW Net setempat.
                 </p>
               </div>
 
               <p className="text-slate-700 text-sm leading-relaxed">
-                Kehadiran kami bertujuan untuk <strong className="underline">berkolaborasi dan melengkapi kebutuhan</strong>, bukan untuk merusak harmoni yang sudah terbangun dengan baik di lingkungan Anda.
+                Kehadiran kami bertujuan untuk <strong className="underline">berkolaborasi dan melengkapi kebutuhan</strong>, bukan untuk mengganggu harmoni yang telah terbangun dengan baik di lingkungan Anda.
               </p>
 
               <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black leading-relaxed">
-                Jika di kemudian hari ada kebutuhan khusus yang memerlukan sinergi dengan sistem kami, pintu kami selalu terbuka untuk diskusi yang saling menguntungkan semua pihak.
+                Apabila di kemudian hari terdapat kebutuhan khusus yang memerlukan sinergi dengan layanan kami, kami selalu terbuka untuk berdiskusi demi kepentingan semua pihak.
               </p>
             </div>
 
@@ -275,10 +295,22 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
             <div className="h-full bg-gradient-to-r from-[#F47920] to-orange-400 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(244,121,32,0.5)]" style={{ width: `${progress}%` }}></div>
           </div>
 
-          <div className="bg-[#1a2d8f] p-8 md:p-12 text-white relative flex flex-col justify-center items-start">
+          <div className="bg-[#1a2d8f] p-8 md:p-12 text-white relative flex flex-col justify-center items-start overflow-hidden">
+            {/* Soft modern ambient lighting */}
+            <div className="absolute -top-24 -left-24 w-48 h-48 bg-orange-500/20 rounded-full blur-[80px] pointer-events-none" />
+            <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-blue-500/30 rounded-full blur-[80px] pointer-events-none" />
+            
             <div className="absolute top-0 right-0 p-8 opacity-10"><LogoMark /></div>
-            <h2 className="font-black text-2xl sm:text-4xl tracking-tight">FORMULIR REGISTRASI</h2>
-            <p className="text-white/70 text-xs sm:text-sm font-bold uppercase tracking-widest mt-2">Lengkapi data untuk pemasangan internet unlimited</p>
+            
+            <span className="bg-[#F47920] text-white text-[9px] font-black uppercase tracking-[0.25em] px-3.5 py-1 rounded-full mb-3 shadow-md shadow-orange-500/10 border border-orange-400/20">
+              Registrasi Online
+            </span>
+            <h2 className="font-black text-3xl sm:text-5xl tracking-tight italic bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent uppercase drop-shadow-sm leading-none">
+              FORMULIR REGISTRASI
+            </h2>
+            <p className="text-[#FDB913] text-[11px] sm:text-xs font-black uppercase tracking-[0.15em] mt-3.5 leading-relaxed border-l-4 border-[#F47920] pl-3">
+              Lengkapi data untuk pemasangan internet unlimited
+            </p>
           </div>
 
           <form onSubmit={handleFormSubmit} className="p-6 md:p-12 flex flex-col gap-8 md:gap-10">
@@ -307,54 +339,93 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                   <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">
                     Pilih Desa Domisili <span className="text-red-500">*</span>
                   </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsVillageDropdownOpen(!isVillageDropdownOpen);
+                        }}
+                        className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border-2 text-sm font-black uppercase tracking-wide transition-all text-left ${
+                          isVillageDropdownOpen
+                            ? form.desa
+                              ? isSelectedCovered
+                                ? 'border-emerald-500 bg-white ring-4 ring-emerald-500/10'
+                                : 'border-amber-500 bg-white ring-4 ring-amber-500/10'
+                              : 'border-[#F47920] bg-white ring-4 ring-orange-500/10'
+                            : form.desa
+                              ? isSelectedCovered
+                                ? 'border-emerald-400 bg-emerald-50/60 text-emerald-950 shadow-sm shadow-emerald-100/50'
+                                : 'border-amber-400 bg-amber-50/60 text-amber-950 shadow-sm shadow-amber-100/50'
+                              : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300'
+                        }`}
+                      >
+                        <span className={
+                          form.desa
+                            ? isSelectedCovered
+                              ? "text-emerald-800 font-black"
+                              : "text-amber-800 font-black"
+                            : "text-slate-400 font-bold"
+                        }>
+                          {form.desa ? `DESA ${form.desa}` : "— SILAKAN PILIH DESA —"}
+                        </span>
+                        <ChevronDown size={18} className={`transition-transform duration-300 ${
+                          isVillageDropdownOpen ? 'rotate-180' : ''
+                        } ${
+                          form.desa
+                            ? isSelectedCovered
+                              ? 'text-emerald-500'
+                              : 'text-amber-500'
+                            : 'text-slate-400'
+                        }`} />
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!form.namaLengkap || !form.noHp) {
-                        setError("Wajib isi Nama dan Nomor WhatsApp terlebih dahulu!");
-                        document.getElementById("sec-datadiri")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                        return;
-                      }
-                      setIsVillageDropdownOpen(!isVillageDropdownOpen);
-                    }}
-                    className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border-2 text-sm font-black uppercase tracking-wide transition-all text-left ${isVillageDropdownOpen ? 'border-[#F47920] bg-white ring-4 ring-orange-500/10' : 'border-slate-200 bg-slate-50 text-slate-700'
-                      }`}
-                  >
-                    <span className={form.desa ? "text-[#1a2d8f] font-black" : "text-slate-400 font-bold"}>
-                      {form.desa ? `DESA ${form.desa}` : "— SILAKAN PILIH DESA —"}
-                    </span>
-                    <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 ${isVillageDropdownOpen ? 'rotate-180 text-[#F47920]' : ''}`} />
-                  </button>
-
-                  {isVillageDropdownOpen && (
-                    <div className="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-slate-100 z-50 p-1.5 max-h-[250px] overflow-y-auto custom-scrollbar">
-                      {VILLAGES.map((v) => {
-                        const isCovered = COVERED_VILLAGES.includes(v);
-                        const isSelected = form.desa === v;
-                        return (
-                          <button
-                            key={v}
-                            type="button"
-                            onClick={() => {
-                              handleChange({ target: { name: 'desa', value: v } });
-                              setIsVillageDropdownOpen(false);
-                            }}
-                            className={`w-full flex items-center justify-between p-3 rounded-xl transition-all mb-0.5 text-left ${isSelected ? 'bg-orange-50/80 text-[#1a2d8f]' : 'hover:bg-slate-50'
-                              }`}
-                          >
-                            <span className={`text-xs font-black tracking-tight ${isSelected ? 'text-[#F47920]' : 'text-slate-700'}`}>
-                              {v}
-                            </span>
-                            <span className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border ${isCovered ? 'bg-emerald-50 text-emerald-600 border-emerald-100/50' : 'bg-amber-50 text-amber-600 border-amber-100/50'
-                              }`}>
-                              {isCovered ? "✓ Tersedia" : "⏳ Segera Hadir"}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                      {isVillageDropdownOpen && (
+                        <div className="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-slate-100 z-50 p-1.5 max-h-[250px] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-250">
+                          {VILLAGES.map((v) => {
+                            const isCovered = COVERED_VILLAGES.includes(v);
+                            const isSelected = form.desa === v;
+                            return (
+                              <button
+                                key={v}
+                                type="button"
+                                onClick={() => {
+                                  handleChange({ target: { name: 'desa', value: v } });
+                                  setIsVillageDropdownOpen(false);
+                                }}
+                                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all mb-0.5 text-left border ${
+                                  isSelected
+                                    ? isCovered
+                                      ? 'bg-emerald-50 border-emerald-500/20 text-emerald-950 font-black'
+                                      : 'bg-amber-50 border-amber-500/20 text-amber-950 font-black'
+                                    : 'border-transparent text-slate-700'
+                                } ${
+                                  isCovered
+                                    ? 'hover:bg-emerald-50/50 hover:text-emerald-800'
+                                    : 'hover:bg-amber-50/50 hover:text-amber-800'
+                                }`}
+                              >
+                                <span className={`text-xs font-black tracking-tight ${
+                                  isSelected
+                                    ? isCovered ? 'text-emerald-700' : 'text-amber-700'
+                                    : 'text-slate-700 font-bold'
+                                }`}>
+                                  {v}
+                                </span>
+                                <span className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border transition-all ${
+                                  isCovered
+                                    ? isSelected
+                                      ? 'bg-emerald-500 text-white border-emerald-600'
+                                      : 'bg-emerald-50 text-emerald-700 border-emerald-100/50'
+                                    : isSelected
+                                      ? 'bg-amber-500 text-white border-amber-600'
+                                      : 'bg-amber-50 text-amber-700 border-amber-100/50'
+                                }`}>
+                                  {isCovered ? "✓ Tersedia" : "⏳ Segera Hadir"}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
 
                   {coverageWarning && (
                     <div className="mt-5 p-5 bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-100 rounded-[2rem] flex items-start gap-4 shadow-sm">
@@ -374,6 +445,67 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
                 <div id="inp-alamat" className="w-full">
                   <InputField label="Alamat Lengkap (RT/RW)" name="alamat" value={form.alamat} onChange={handleChange} placeholder="Nama jalan, nomor rumah, RT/RW..." required textarea />
+                </div>
+
+                <div className="w-full">
+                  <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">
+                    Upload Foto KTP <span className="text-red-500">*</span>
+                  </label>
+                  
+                  {!form.fotoKtp ? (
+                    <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-slate-200 hover:border-[#F47920] rounded-[2rem] bg-slate-50 hover:bg-orange-50/10 cursor-pointer transition-all duration-300">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                        <div className="w-12 h-12 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center mb-3">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                        <p className="text-xs font-black text-[#1a2d8f] uppercase tracking-wide">Pilih atau Ambil Foto KTP</p>
+                        <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">Format JPG, PNG, atau WEBP (Maksimal 5MB)</p>
+                      </div>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        capture="environment"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (file.size > 5 * 1024 * 1024) {
+                              setError("Ukuran file foto KTP tidak boleh melebihi 5MB!");
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setForm(prev => ({ ...prev, fotoKtp: reader.result as string }));
+                              setError("");
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden" 
+                      />
+                    </label>
+                  ) : (
+                    <div className="relative w-full h-44 rounded-[2rem] border-2 border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center group shadow-inner">
+                      <img 
+                        src={form.fotoKtp} 
+                        alt="Preview KTP" 
+                        className="w-full h-full object-contain"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => setForm(prev => ({ ...prev, fotoKtp: "" }))}
+                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                          </svg>
+                          Hapus Foto
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </Section>
@@ -444,10 +576,27 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
               </div>
             </Section>
 
+            <Section id="sec-catatan" title="Catatan Tambahan / Pesan Khusus (Opsional)" icon="📝">
+              <div className="w-full">
+                <label className="block text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">
+                  Ada pesan khusus untuk tim teknis kami? (Misal: rute kabel, jam pemasangan, atau kerabat)
+                </label>
+                <textarea
+                  name="catatan"
+                  value={form.catatan}
+                  onChange={handleChange}
+                  placeholder="Tulis pesan atau catatan evaluasi Anda di sini... (Contoh: Mohon penarikan kabel lewat pagar belakang rumah, atau hubungi no WA jika belum aktif)"
+                  rows={4}
+                  className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-200 rounded-[1.5rem] font-bold text-sm text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-[#F47920] focus:ring-4 focus:ring-orange-500/10 transition-all outline-none resize-none shadow-inner"
+                />
+              </div>
+            </Section>
+
             <div id="sec-notice-block" className="scroll-mt-24">
               <SubscriberNotice
                 isAccepted={isNoticeAccepted}
                 onAcceptChange={setIsNoticeAccepted}
+                selectedPackage={form.paket}
               />
             </div>
 
