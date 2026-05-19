@@ -248,9 +248,11 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                     <button 
                       onClick={() => setSelectedWaCustomer(item)} 
                       title="Chat WhatsApp (Template)"
-                      className="p-2 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all border border-emerald-100 active:scale-95"
+                      className="p-2 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all border border-emerald-100 active:scale-95 flex items-center justify-center"
                     >
-                      <Lucide.MessageCircle size={14} strokeWidth={2.5} />
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                        <path d="M12.031 2c-5.514 0-9.99 4.476-9.99 9.99 0 1.761.461 3.477 1.336 4.996L2 22l5.184-1.361c1.465.8 3.109 1.22 4.847 1.22 5.514 0 9.99-4.476 9.99-9.99S17.545 2 12.031 2zm0 1.662c4.6 0 8.328 3.737 8.328 8.328 0 4.59-3.728 8.328-8.328 8.328-1.579 0-3.084-.44-4.385-1.272l-.314-.2-.196.115-2.73.717.729-2.65-.213-.343c-.854-1.282-1.306-2.784-1.306-4.34 0-4.6 3.737-8.328 8.315-8.328zm-3.69 3.68c-.13 0-.272.015-.41.04-.377.067-.624.237-.783.535-.292.548-.426 1.472-.426 2.378 0 1.096.34 2.158.981 3.064 1.116 1.579 2.766 2.88 4.67 3.682.747.315 1.534.502 2.277.542.413.023.793-.01 1.1-.097.433-.122.75-.38.895-.733.2-.487.327-1.127.327-1.636 0-.175-.084-.282-.24-.36l-1.92-.96c-.156-.078-.328-.06-.445.056l-.587.587c-.12.12-.296.14-.445.048-.483-.298-.946-.667-1.368-1.09-.423-.422-.792-.885-1.09-1.368-.092-.149-.072-.325.048-.445l.587-.587c.116-.117.134-.289.056-.445l-.96-1.92c-.078-.156-.185-.24-.36-.24z"/>
+                      </svg>
                     </button>
                     <button 
                       onClick={() => onDelete(item.Timestamp)} 
