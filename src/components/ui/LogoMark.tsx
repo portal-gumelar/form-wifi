@@ -5,7 +5,7 @@ export const LogoMark: React.FC<{ className?: string }> = ({ className }) => {
     <img 
       src="https://ik.imagekit.io/Gumelar/LogO/logo%20pt.png?updatedAt=1778213993513" 
       alt="Logo" 
-      className={className || "w-10 h-10 object-contain"} 
+      className={className || "w-20 sm:w-28 h-auto object-contain"} 
     />
   );
 };
