@@ -1,3 +1,30 @@
+// RT/RW structure
+export interface RwRt {
+  id: string;
+  rw: string;
+  rt: string;
+  customerCount: number;
+  fundAmount: number; // 2000 per customer
+}
+
+// Village structure with RT/RW
+export interface Village {
+  id: string;
+  name: string;
+  customerCount: number;
+  fundAmount: number; // 2000 per customer
+  rws: RwRt[];
+  createdAt: string;
+}
+
+// Village Fund Summary
+export interface VillageFundSummary {
+  totalCustomers: number;
+  totalVillageFund: number;
+  totalRwRtFund: number;
+  grandTotal: number;
+}
+
 export interface RegistrationData {
   Timestamp: string;
   "Nama Lengkap": string;
@@ -10,6 +37,9 @@ export interface RegistrationData {
   // REVISI SOP: Menyinkronkan properti wilayah untuk eliminasi error dasbor
   Kecamatan: string;
   Desa: string;
+  // Dana Desa fields
+  RW?: string;
+  RT?: string;
 
   // REVISI SOP: Properti opsional untuk manajemen penjadwalan instalasi tim teknis
   "Tanggal Rencana Pasang"?: string;

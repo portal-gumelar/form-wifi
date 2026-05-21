@@ -22,6 +22,7 @@ const MobileBottomNav: React.FC<{
   const navItems = [
     { id: "Dashboard", icon: Lucide.Home, label: "Home" },
     { id: "Registrations", icon: Lucide.CheckSquare, label: "Pesanan", badge: pendingCount },
+    { id: "Dana Desa CSR", icon: Lucide.Wallet, label: "Dana Desa" },
     { id: "Map View", icon: Lucide.MapPin, label: "Peta" },
     { id: "Customers", icon: Lucide.Users, label: "Pelanggan" },
   ];
@@ -29,7 +30,7 @@ const MobileBottomNav: React.FC<{
   return (
     <nav className="fixed bottom-4 left-4 right-4 z-[70] md:hidden">
       <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 px-2 py-3">
-        <div className="grid grid-cols-4 justify-around items-center">
+        <div className="grid grid-cols-5 justify-around items-center">
           {navItems.map((item, index) => {
             const isActive = activeTab === item.id;
             const Icon = item.icon;
@@ -140,7 +141,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ]
     },
     {
-      section: "ANALISIS UTARA", items: [
+      section: "DANA DESA", items: [
+        { id: "Dana Desa CSR", icon: Lucide.Wallet, label: "Dana Desa CSR" },
+      ]
+    },
+    {
+      section: "ANALISIS DATA", items: [
         { id: "Analytics", icon: Lucide.BarChart2, label: "Grafik Analitik" },
         { id: "Map View", icon: Lucide.MapPin, label: "Peta Distribusi" },
       ]

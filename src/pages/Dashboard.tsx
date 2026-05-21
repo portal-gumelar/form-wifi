@@ -4,6 +4,7 @@ import * as Lucide from "lucide-react";
 
 // Components
 import { Sidebar } from "../components/dashboard/Sidebar";
+import { PACKAGES } from "../constants/packages";
 import { Header } from "../components/dashboard/Header";
 import { KPICards } from "../components/dashboard/KPICards";
 import { AnalyticsCharts, FullAnalytics } from "../components/dashboard/AnalyticsCharts";
@@ -12,6 +13,7 @@ import { PDFPreviewModal, DetailsModal, ConfirmDeleteModal, EditRegistrationModa
 import { CustomersView } from "../components/dashboard/CustomersView";
 import { GeographicalView } from "../components/dashboard/GeographicalView";
 import { ManajemenPelanggan } from "../components/dashboard/ManajemenPelanggan";
+import { VillageFundChart } from "../components/dashboard/VillageFundChart";
 
 // Utils & Types
 import { RegistrationData, DashboardStats } from "../types";
@@ -104,6 +106,8 @@ const normalizeRow = (row: any): RegistrationData => ({
   "Sumber Info":            String(row["Sumber Info"] || ""),
   Kecamatan:                String(row.Kecamatan || row.kecamatan || "GUMELAR"),
   Desa:                     String(row.Desa || row.desa || ""),
+  RW:                       String(row.RW || row.rw || ""),
+  RT:                       String(row.RT || row.rt || ""),
   "Tanggal Rencana Pasang": String(row["Tanggal Rencana Pasang"] || ""),
   "Waktu Survei":           String(row["Waktu Survei"] || ""),
   "Link Google Maps":       String(row["Link Google Maps"] || ""),
@@ -112,6 +116,20 @@ const normalizeRow = (row: any): RegistrationData => ({
   "Persetujuan S&K":        String(row["Persetujuan S&K"] || row.persetujuanSnk || ""),
   "Catatan":                String(row.Catatan || row.catatan || ""),
 });
+
+// --- Helper: Extract price from Paket string ---
+const extractPrice = (paket: string, packages: typeof PACKAGES): number => {
+  // Try to find matching package
+  for (const pkg of packages) {
+    const pkgLabel = pkg.label.toLowerCase();
+    const pkgSpeed = pkg.speed.toLowerCase();
+    if (paket.toLowerCase().includes(pkgLabel) || paket.toLowerCase().includes(pkgSpeed)) {
+      return parseInt(pkg.price.replace(/\./g, ''));
+    }
+  }
+  // Default fallback to 115000 if no match
+  return 115000;
+};
 
 // --- Komponen Utama Dashboard ---
 export default function Dashboard({ googleScriptUrl, onLogout }: any) {
@@ -605,11 +623,11 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
             {/* Dashboard Tab */}
             {activeTab === "Dashboard" && (
               <motion.div key="dashboard" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
-                <KPICards totalRegistrants={data.length} statusCounts={stats.statusCounts} isDarkMode={isDarkMode} />
+                <KPICards totalRegistrants={data.length} statusCounts={stats.statusCounts} isDarkMode={isDarkMode} data={data} />
 
                 {/* 📊 Revenue Summary Cards + Quick Actions */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                  {/* Revenue Card */}
+                  {/* Revenue Card - Dynamic calculation based on Paket */}
                   <div className="bg-gradient-to-br from-[#0d1655] to-[#1a2a7a] rounded-2xl p-4 text-white shadow-xl shadow-blue-900/20">
                     <div className="flex items-center justify-between mb-3">
                       <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
@@ -618,8 +636,12 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                       <span className="text-[10px] font-black bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-lg">AKTIF</span>
                     </div>
                     <p className="text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Pendapatan/Bulan</p>
-                    <p className="text-xl md:text-2xl font-black">Rp {(stats.statusCounts?.AKTIF || 0) * 115000}</p>
-                    <p className="text-[10px] text-blue-300 mt-1">Basis: Paket Rp 115.000</p>
+                    <p className="text-xl md:text-2xl font-black">Rp {(() => {
+                      const activeData = data.filter(d => (d.status || "").toUpperCase() === "AKTIF");
+                      const totalRevenue = activeData.reduce((sum, item) => sum + extractPrice(item.Paket, PACKAGES), 0);
+                      return totalRevenue.toLocaleString("id-ID");
+                    })()}</p>
+                    <p className="text-[10px] text-blue-300 mt-1">{data.filter(d => (d.status || "").toUpperCase() === "AKTIF").length} Pelanggan Aktif</p>
                   </div>
 
                   {/* Growth Card */}
@@ -787,32 +809,44 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                 />
               </motion.div>
             )}
+
+            {activeTab === "Dana Desa CSR" && (
+              <motion.div key="dana-desa" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <VillageFundChart data={data} isDarkMode={isDarkMode} />
+              </motion.div>
+            )}
           </AnimatePresence>
         </section>
       </main>
 
       {/* Mobile Bottom Navigation Bar - Visible only on Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200 px-6 py-4 flex justify-between items-center z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
-        {[
-          { id: "Dashboard", icon: Lucide.Home },
-          { id: "Registrations", icon: Lucide.Users },
-          { id: "Analytics", icon: Lucide.PieChart },
-          { id: "Map View", icon: Lucide.Map },
-        ].map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-col items-center gap-1 p-2 transition-all ${isActive ? "text-[#0d1655] scale-110" : "text-slate-400 hover:text-slate-600"}`}
-            >
-              <tab.icon size={22} className={isActive ? "fill-blue-900/10" : ""} />
-              <span className={`text-[9px] font-black uppercase tracking-widest ${isActive ? "opacity-100" : "opacity-0 h-0"}`}>
-                {tab.id.slice(0, 4)}
-              </span>
-            </button>
-          )
-        })}
+      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200 px-2 py-3 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
+        <div className="grid grid-cols-5 justify-around items-center">
+          {[
+            { id: "Dashboard", icon: Lucide.Home, label: "Home" },
+            { id: "Registrations", icon: Lucide.CheckSquare, label: "Pesanan" },
+            { id: "Dana Desa CSR", icon: Lucide.Wallet, label: "Dana Desa" },
+            { id: "Map View", icon: Lucide.MapPin, label: "Peta" },
+            { id: "Customers", icon: Lucide.Users, label: "Pelanggan" },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all duration-300 ease-out ${isActive ? 'scale-105' : 'hover:scale-95'}`}
+              >
+                <div className={`relative p-2.5 rounded-full transition-all duration-300 ${isActive ? 'bg-gradient-to-br from-[#f97316] to-[#f47920] shadow-lg shadow-orange-500/30' : 'hover:bg-gray-100'}`}>
+                  <tab.icon size={20} className={`transition-all duration-300 ${isActive ? 'text-white scale-110' : 'text-[#0d1655]/60'}`} strokeWidth={isActive ? 2.5 : 2} />
+                </div>
+                <span className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${isActive ? 'bg-[#f97316] scale-100' : 'bg-transparent'}`} />
+                <span className={`text-[9px] font-medium transition-all duration-300 ${isActive ? 'text-[#0d1655] font-semibold' : 'text-[#0d1655]/50'}`}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Modals */}
