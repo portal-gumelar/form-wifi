@@ -52,7 +52,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ url, onClose, 
                   </div>
                   <div>
                     <p className="text-xs font-black text-slate-700">Pratinjau Laporan</p>
-                    <p className="text-[10px] text-slate-400 font-medium">ARMEDIA Net</p>
+                    <p className="text-[10px] text-slate-400 font-medium">ARMEDIA.ID</p>
                   </div>
                 </div>
                 <button

@@ -161,7 +161,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `armedia-registrasi-${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `armedia.id-registrasi-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
   };
 
@@ -467,9 +467,9 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
               <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
                 <div className="space-y-3">
                   {[
-                    { title: "1. Jadwal Survei", message: `*ARMEDIA NET - SURVEI* 📍\n\nHalo Kak *${selectedWaCustomer["Nama Lengkap"]}*,\n\nTerima kasih telah mendaftar ARMEDIA Net. Tim kami akan survei di *${selectedWaCustomer["Alamat Pemasangan"] || "-"}*.\n\nMohon informasi jadwal terbaik untuk survei.` },
-                    { title: "2. Jadwal Instalasi", message: `*ARMEDIA NET - INSTALASI* 🔌\n\nHalo Kak *${selectedWaCustomer["Nama Lengkap"]}*,\n\nPendaftaran disetujui! Tim teknisi akan melakukan instalasi di alamat Anda. Mohon kesiapan saat jadwal yang ditentukan.` },
-                    { title: "3. Aktivasi & Billing", message: `*ARMEDIA NET - AKTIF* 💳\n\nHalo Kak *${selectedWaCustomer["Nama Lengkap"]}*,\n\nInternet Anda sudah AKTIF di *${selectedWaCustomer["Alamat Pemasangan"] || "-"}*!\n📦 Paket: ${selectedWaCustomer.Paket || "-"}\n\nSelamat menikmati internet unlimited!` }
+                    { title: "1. Jadwal Survei", message: `*ARMEDIA.ID - SURVEI* 📍\n\nHalo Kak *${selectedWaCustomer["Nama Lengkap"]}*,\n\nTerima kasih telah mendaftar ARMEDIA.ID. Tim kami akan survei di *${selectedWaCustomer["Alamat Pemasangan"] || "-"}*.\n\nMohon informasi jadwal terbaik untuk survei.` },
+                    { title: "2. Jadwal Instalasi", message: `*ARMEDIA.ID - INSTALASI* 🔌\n\nHalo Kak *${selectedWaCustomer["Nama Lengkap"]}*,\n\nPendaftaran disetujui! Tim teknisi akan melakukan instalasi di alamat Anda. Mohon kesiapan saat jadwal yang ditentukan.` },
+                    { title: "3. Aktivasi & Billing", message: `*ARMEDIA.ID - AKTIF* 💳\n\nHalo Kak *${selectedWaCustomer["Nama Lengkap"]}*,\n\nInternet Anda sudah AKTIF di *${selectedWaCustomer["Alamat Pemasangan"] || "-"}*!\n📦 Paket: ${selectedWaCustomer.Paket || "-"}\n\nSelamat menikmati internet unlimited!` }
                   ].map((tpl, i) => (
                     <div key={i} className="p-4 bg-white border border-slate-100 hover:border-emerald-500 rounded-2xl transition-all shadow-sm">
                       <h4 className="text-xs font-black text-[#0d1655] uppercase tracking-wider mb-2">{tpl.title}</h4>

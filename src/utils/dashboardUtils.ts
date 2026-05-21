@@ -126,7 +126,7 @@ const appendKtpAttachments = (doc: any, data: RegistrationData[]) => {
         // Footer signature watermark
         doc.setFontSize(8);
         doc.setTextColor(148, 163, 184);
-        doc.text("Arsip pendaftaran digital resmi PT. AKSES ARTHA MEDIA (ARMEDIA Net).", 20, 188);
+        doc.text("Arsip pendaftaran digital resmi PT. AKSES ARTHA MEDIA (ARMEDIA.ID).", 20, 188);
       } catch (err) {
         console.error("Gagal merawat gambar KTP ke PDF:", err);
         doc.setFontSize(10);
@@ -146,7 +146,7 @@ export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
   doc.setFontSize(22);
   doc.setTextColor(13, 22, 85);
   doc.setFont("helvetica", "bold");
-  doc.text("ARMEDIA NET", 32, 20);
+  doc.text("ARMEDIA.ID", 32, 20);
   
   doc.setFontSize(10);
   doc.setTextColor(112, 126, 174);

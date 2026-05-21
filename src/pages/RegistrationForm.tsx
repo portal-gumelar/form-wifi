@@ -315,7 +315,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         <div className="flex items-center justify-center gap-3 group transition-transform hover:scale-105 active:scale-95 cursor-default">
           <LogoMark />
           <div className="text-left">
-            <div className="text-[#FDB913] font-black text-2xl sm:text-4xl tracking-tight leading-none group-hover:text-white transition-colors">ARMEDIA<span className="text-white">_NET</span></div>
+            <div className="text-[#FDB913] font-black text-2xl sm:text-4xl tracking-tight leading-none group-hover:text-white transition-colors">ARMEDIA<span className="text-white">.ID</span></div>
             <div className="text-white/70 text-[10px] sm:text-xs tracking-widest uppercase mt-1">PT. Akses Artha Media</div>
           </div>
         </div>
@@ -689,7 +689,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
         <footer className="mt-12 text-center text-white/30 text-[10px] font-black uppercase tracking-[0.3em] space-y-4">
           <p>PT. Akses Artha Media • Jakarta • Indonesia</p>
-          <button onClick={() => setShowAdminModal(true)} className="hover:text-[#F47920] transition-colors cursor-default">© {new Date().getFullYear()} ARMEDIA_NET</button>
+          <button onClick={() => setShowAdminModal(true)} className="hover:text-[#F47920] transition-colors cursor-default">© {new Date().getFullYear()} ARMEDIA.ID</button>
         </footer>
       </main>
     </div>
