@@ -70,6 +70,19 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Auto-advance helper - scroll to next section smoothly
+  const scrollTo = (id: string) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        // Add highlight effect for visual feedback
+        el.classList.add("ring-4", "ring-[#F47920]/20");
+        setTimeout(() => el.classList.remove("ring-4", "ring-[#F47920]/20"), 1500);
+      }
+    }, 300);
+  };
+
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -80,25 +93,67 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         setCoverageWarning("mohon maaf desa anda belum terkafer oleh jaringan kami. mohon menunggu");
       } else {
         setCoverageWarning("");
+        // Auto-advance after village selection
+        setTimeout(() => {
+          document.getElementById("inp-alamat")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 200);
       }
     }
 
-    const scrollTo = (id: string) => {
-      setTimeout(() => {
-        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 300);
-    };
-
+    // Auto-advance flow based on filled fields
     if (name === "currentProvider") {
       if (value === "Internet Lokal (RT/RW NET)") {
         setShowEthicModal(true); // tampilkan modal etika
       } else {
         scrollTo("sec-datadiri");
+        // Auto-focus first field in data diri section
+        setTimeout(() => {
+          const namaInput = document.querySelector('input[name="namaLengkap"]') as HTMLInputElement;
+          namaInput?.focus();
+        }, 500);
       }
     }
-    else if (name === "paket") scrollTo("sec-jadwal");
-    else if (name === "tanggalPasang") scrollTo("sec-lokasi");
-    else if (name === "sumberInfo") scrollTo("sec-notice-block");
+    else if (name === "namaLengkap" && value) {
+      // Auto-advance to next field after name
+      setTimeout(() => {
+        const noHpInput = document.querySelector('input[name="noHp"]') as HTMLInputElement;
+        noHpInput?.focus();
+      }, 300);
+    }
+    else if (name === "noHp" && value) {
+      // After HP filled, village dropdown is visible - highlight it
+      setTimeout(() => {
+        const villageBtn = document.querySelector('[data-village-dropdown]') as HTMLElement;
+        villageBtn?.click();
+      }, 300);
+    }
+    else if (name === "alamat" && value.length > 5) {
+      // After address, scroll to KTP upload
+      setTimeout(() => {
+        document.getElementById("sec-jadwal")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
+    }
+    else if (name === "paket") {
+      scrollTo("sec-jadwal");
+    }
+    else if (name === "tanggalPasang") {
+      scrollTo("sec-lokasi");
+      // Auto-advance to lokasi section
+      setTimeout(() => {
+        const mapsInput = document.querySelector('input[name="linkGoogleMaps"]') as HTMLInputElement;
+        mapsInput?.focus();
+      }, 500);
+    }
+    else if (name === "waktuSurvei" && value) {
+      // After survei time, auto-advance to sumber info
+      setTimeout(() => {
+        document.getElementById("sec-sumber")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
+    }
+    else if (name === "sumberInfo") {
+      scrollTo("sec-notice-block");
+      // Auto-scroll to notice section
+    }
   };
 
   const handlePackageSelect = (pkgLabel: string, pkgSpeed: string, pkgPrice: string) => {
