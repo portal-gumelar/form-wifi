@@ -53,7 +53,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBack }) => {
               className="w-full h-full object-contain drop-shadow-md"
             />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">Armedia Net</h1>
+          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">ARMEDIA.ID</h1>
           <p className="text-[#FDB913] font-bold mt-2 text-xs uppercase tracking-widest">Administrator Access</p>
         </div>
 

@@ -191,7 +191,7 @@ export const downloadPDF = (data: RegistrationData[]) => {
   doc.setFontSize(22);
   doc.setTextColor(13, 22, 85);
   doc.setFont("helvetica", "bold");
-  doc.text("ARMEDIA NET", 32, 20);
+  doc.text("ARMEDIA.ID", 32, 20);
   
   doc.setFontSize(10);
   doc.setTextColor(112, 126, 174);
