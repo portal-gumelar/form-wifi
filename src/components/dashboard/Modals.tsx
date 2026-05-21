@@ -1,4 +1,4 @@
-// Last update: 2026-05-18 22:35 - Fix Mobile Dropdown Clipping & Full File Sync
+// Last update: 2026-05-21 - Mobile Bottom Sheet, Radio Cards, Pill Status
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Lucide from "lucide-react";
@@ -39,30 +39,56 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ url, onClose, 
             </div>
           </div>
           <div className="flex-1 bg-slate-100 p-4 flex flex-col items-center justify-center overflow-auto">
-            {/* Desktop: Iframe PDF Preview */}
             <iframe 
               src={url} 
               className="hidden md:block w-full h-full rounded-2xl border-none shadow-inner bg-white" 
               title="PDF Preview"
             ></iframe>
-
-            {/* Mobile Fallback: Direct Download Option */}
-            <div className="block md:hidden text-center p-8 bg-white rounded-3xl border shadow-sm max-w-md w-full flex flex-col items-center gap-6">
-              <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center shadow-inner">
-                <Lucide.FileText size={40} />
+            <div className="block md:hidden w-full h-full flex flex-col">
+              <div className="flex items-center justify-between mb-4 px-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center">
+                    <Lucide.FileText size={20} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-slate-700">Pratinjau Laporan</p>
+                    <p className="text-[10px] text-slate-400 font-medium">ARMEDIA Net</p>
+                  </div>
+                </div>
+                <button
+                  onClick={onDownload}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-[#F47920] hover:bg-orange-600 rounded-xl transition-all text-xs font-black uppercase tracking-wide text-white shadow-md active:scale-95"
+                >
+                  <Lucide.Download size={16} /> Unduh
+                </button>
               </div>
-              <div>
-                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Pratinjau PDF di HP</h3>
-                <p className="text-xs text-slate-500 font-bold mt-2 leading-relaxed">
-                  Browser HP Anda tidak mendukung pratinjau langsung dokumen PDF. Silakan unduh dokumen laporan resmi ARMEDIA Net di bawah ini.
+              <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <object 
+                  data={url} 
+                  type="application/pdf"
+                  className="w-full h-full min-h-[60vh]"
+                  title="PDF Preview Mobile"
+                >
+                  <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-4">
+                      <Lucide.FileText size={32} />
+                    </div>
+                    <h3 className="text-base font-black text-slate-800 mb-2">Pratinjau Tidak Tersedia</h3>
+                    <p className="text-xs text-slate-500 mb-4">Browser Anda tidak mendukung pratinjau PDF langsung.</p>
+                    <button
+                      onClick={onDownload}
+                      className="flex items-center gap-2 px-6 py-3 bg-[#F47920] hover:bg-orange-600 rounded-xl transition-all text-sm font-black text-white shadow-lg active:scale-95"
+                    >
+                      <Lucide.Download size={18} /> Download PDF
+                    </button>
+                  </div>
+                </object>
+              </div>
+              <div className="mt-4 text-center px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl">
+                <p className="text-[10px] text-blue-700 font-medium">
+                  📱 Tip: Putar HP ke mode landscape untuk tampilan PDF lebih luas
                 </p>
               </div>
-              <button
-                onClick={onDownload}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-[#F47920] hover:bg-orange-600 rounded-2xl transition-all text-sm font-black uppercase tracking-wider text-white shadow-lg active:scale-95"
-              >
-                <Lucide.Download size={20} /> Unduh & Buka PDF
-              </button>
             </div>
           </div>
         </motion.div>
@@ -82,73 +108,159 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
     {item && (
       <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
         <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
-          className={`${isDarkMode ? 'bg-[#1e293b] border-slate-800' : 'bg-white border-white'} rounded-[3rem] w-full max-w-2xl overflow-hidden shadow-2xl border`}
+          className={`${isDarkMode ? 'bg-[#1e293b] border-slate-800' : 'bg-white border-white'} rounded-[3rem] w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl border flex flex-col`}
         >
-          <div className="bg-[#0d1655] p-10 text-white flex justify-between items-center">
+          {/* Header */}
+          <div className="bg-[#0d1655] p-6 text-white flex justify-between items-center shrink-0">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center border border-white/20"><Lucide.User size={24} className="text-[#FDB913]" /></div>
               <div>
                 <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{getCustomerNo(item.Timestamp)}</p>
-                <h2 className="text-2xl font-black italic">Registry Details</h2>
+                <h2 className="text-xl font-black italic">Detail Lengkap Pelanggan</h2>
               </div>
             </div>
             <button onClick={onClose} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all"><Lucide.X size={20} /></button>
           </div>
-          <div className="p-10 space-y-6">
-            {/* Persetujuan Syarat & Ketentuan Audit Banner */}
-            <div className="p-5 rounded-[1.5rem] bg-emerald-50/80 border border-emerald-500/20 flex items-center gap-4 shadow-sm shadow-emerald-500/5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-md">
-                <Lucide.CheckCircle size={20} strokeWidth={2.5} />
+          
+          {/* Content - Scrollable */}
+          <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
+            {/* Info Pelanggan */}
+            <div className="bg-gradient-to-br from-[#0d1655] to-[#1a2a7a] rounded-2xl p-5 text-white shadow-lg">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center font-black text-2xl text-white">
+                  {item["Nama Lengkap"]?.charAt(0) || "U"}
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-white">{item["Nama Lengkap"]}</h3>
+                  <p className="text-slate-300 text-sm font-medium">{item["No HP / WA"]}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[9px] font-black text-emerald-800 uppercase tracking-[0.15em] leading-none mb-1">Persetujuan Syarat & Ketentuan</p>
-                <p className="text-xs font-black text-emerald-950 uppercase tracking-tight">
-                  {item["Persetujuan S&K"] || "SETUJU (Telah Dibaca & Disetujui)"}
-                </p>
+              {/* Status Badge */}
+              <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider ${
+                item.status === 'AKTIF' ? 'bg-emerald-500 text-white' :
+                item.status === 'PROSES' ? 'bg-amber-500 text-white' :
+                item.status === 'SURVEY' ? 'bg-blue-500 text-white' :
+                item.status === 'PENGAJUAN' ? 'bg-slate-500 text-white' :
+                'bg-red-500 text-white'
+              }`}>
+                {item.status}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
-              <div className="col-span-2 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Installation Path</p>
-                <p className="font-bold text-sm leading-relaxed">{item["Alamat Pemasangan"]}</p>
+            {/* Detail Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Paket */}
+              <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Lucide.Zap size={14} className="text-[#F47920]" />
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paket Internet</p>
+                </div>
+                <p className="font-black text-[#F47920] text-sm">{item.Paket?.replace(/\.(\d+\s*Mbps)/i, ' $1') || "-"}</p>
               </div>
-              <div className="p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Service Plan</p>
-                <p className="font-black text-[#F47920] dark:text-blue-400">
-                  {(() => {
-                    const paket = String(item.Paket || "");
-                    const match = paket.match(/(\d+)\s*Mbps/i);
-                    return match ? `${match[1]}.Mbps` : paket.split("(")[0].trim();
-                  })()}
-                </p>
+
+              {/* Provider Saat Ini */}
+              <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Lucide.Wifi size={14} className="text-blue-500" />
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Provider Saat Ini</p>
+                </div>
+                <p className="font-bold text-slate-700 text-sm">{item["Provider Saat Ini"] || "Belum Pernah Pasang"}</p>
               </div>
-              <div className="p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Timestamp</p>
-                <p className="font-black text-slate-500">{item.Timestamp}</p>
+
+              {/* Kecamatan & Desa */}
+              <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Lucide.MapPin size={14} className="text-emerald-500" />
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kecamatan & Desa</p>
+                </div>
+                <p className="font-bold text-slate-700 text-sm">{item.Kecamatan || "GUMELAR"} / {item.Desa || "-"}</p>
+              </div>
+
+              {/* Sumber Info */}
+              <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Lucide.Info size={14} className="text-purple-500" />
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sumber Info</p>
+                </div>
+                <p className="font-bold text-slate-700 text-sm">{item["Sumber Info"] || "-"}</p>
+              </div>
+
+              {/* Tanggal Rencana Pasang */}
+              <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Lucide.Calendar size={14} className="text-amber-500" />
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rencana Pasang</p>
+                </div>
+                <p className="font-bold text-slate-700 text-sm">{item["Tanggal Rencana Pasang"] || "Belum Dijadwalkan"}</p>
+              </div>
+
+              {/* Waktu Survei */}
+              <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Lucide.Clock size={14} className="text-cyan-500" />
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Waktu Survei</p>
+                </div>
+                <p className="font-bold text-slate-700 text-sm">{item["Waktu Survei"] || "-"}</p>
               </div>
             </div>
+
+            {/* Alamat Pemasangan */}
+            <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-2 mb-2">
+                <Lucide.Home size={14} className="text-[#0d1655]" />
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Alamat Pemasangan</p>
+              </div>
+              <p className="font-bold text-slate-700 text-sm leading-relaxed">{item["Alamat Pemasangan"]}</p>
+            </div>
+
+            {/* Timestamp */}
+            <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Lucide.History size={14} className="text-slate-400" />
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Waktu Pendaftaran</p>
+              </div>
+              <p className="font-bold text-slate-500 text-sm">{item.Timestamp}</p>
+            </div>
+
+            {/* Persetujuan */}
+            <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-500/20">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Lucide.CheckCircle size={14} className="text-emerald-500" />
+                <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Persetujuan S&K</p>
+              </div>
+              <p className="font-bold text-emerald-800 text-sm">{item["Persetujuan S&K"] || "SETUJU"}</p>
+            </div>
+
+            {/* Catatan */}
             {item.Catatan && (
-              <div className="p-6 rounded-2xl border border-amber-100 bg-amber-50/30">
-                <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                  <Lucide.MessageSquare size={12} /> Catatan / Pesan Evaluasi Klien
-                </p>
-                <p className="font-bold text-slate-800 text-sm leading-relaxed whitespace-pre-wrap">{item.Catatan}</p>
+              <div className="p-4 rounded-2xl border border-amber-100 bg-amber-50/30">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Lucide.MessageSquare size={14} className="text-amber-500" />
+                  <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Catatan</p>
+                </div>
+                <p className="font-bold text-slate-700 text-sm whitespace-pre-wrap">{item.Catatan}</p>
               </div>
             )}
+
+            {/* Foto KTP */}
             {item["Foto KTP"] && (
-              <div className="p-6 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/30">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Foto KTP / ID Card Pelanggan</p>
-                <div className="w-full h-48 bg-slate-100 dark:bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200">
+              <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <Lucide.CreditCard size={14} className="text-slate-500" />
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Foto KTP / ID Card</p>
+                </div>
+                <div className="w-full h-48 bg-slate-100 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200">
                   <img src={item["Foto KTP"]} alt="KTP Pelanggan" className="w-full h-full object-contain cursor-zoom-in hover:scale-105 transition-transform duration-300" onClick={() => window.open(item["Foto KTP"], '_blank')} />
                 </div>
               </div>
             )}
+
+            {/* Link Google Maps */}
             {item["Link Google Maps"] && (
               <a href={item["Link Google Maps"]} target="_blank" rel="noreferrer"
-                className="flex items-center justify-center gap-3 w-full py-5 bg-[#0d1655] text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-500/20"
+                className="flex items-center justify-center gap-3 py-4 bg-[#0d1655] text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-blue-500/20 hover:bg-[#1a2a7a] transition-all"
               >
-                <Lucide.MapPin size={18} className="text-[#FDB913]" /> Visualize on Map
+                <Lucide.MapPin size={18} className="text-[#FDB913]" /> Lihat Lokasi di Google Maps
               </a>
             )}
           </div>
@@ -194,156 +306,83 @@ interface EditModalProps {
   onSave: (data: RegistrationData) => void;
 }
 
-const PAKET_CONFIG: Record<string, { color: string; bg: string; icon: any }> = {
-  "GUYUB_1": { color: "text-orange-600", bg: "bg-orange-50", icon: Lucide.Zap },
-  "GUYUB_2": { color: "text-blue-600", bg: "bg-blue-50", icon: Lucide.Zap },
-  "GUYUB_3": { color: "text-indigo-600", bg: "bg-indigo-50", icon: Lucide.Zap },
-  "REGULER_1": { color: "text-amber-600", bg: "bg-amber-50", icon: Lucide.Crown },
-  "REGULER_2": { color: "text-orange-600", bg: "bg-orange-50", icon: Lucide.Crown },
-  "REGULER_3": { color: "text-rose-600", bg: "bg-rose-50", icon: Lucide.Crown },
-  "REGULER_4": { color: "text-purple-600", bg: "bg-purple-50", icon: Lucide.Crown },
-};
+// Paket options - Simple Mbps only
+const PAKET_OPTIONS = [
+  { key: "20", label: "20 Mbps", price: "Rp 115.000", color: "from-orange-400 to-orange-500", icon: Lucide.Zap },
+  { key: "30", label: "30 Mbps", price: "Rp 140.000", color: "from-blue-400 to-blue-500", icon: Lucide.Zap },
+  { key: "50", label: "50 Mbps", price: "Rp 175.000", color: "from-indigo-400 to-indigo-500", icon: Lucide.Zap },
+  { key: "100", label: "100 Mbps", price: "Rp 515.000", color: "from-purple-400 to-purple-500", icon: Lucide.Crown },
+];
 
-const CustomPaketDropdown = ({ value, onChange, isDarkMode }: { value: string; onChange: (val: string) => void; isDarkMode: boolean; }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const options = [
-    "GUYUB_1 (20 Mbps) - Rp 115.000/Bln",
-    "GUYUB_2 (30 Mbps) - Rp 140.000/Bln",
-    "GUYUB_3 (50 Mbps) - Rp 175.000/Bln",
-    "REGULER_1 (20 Mbps) - Rp 165.000/Bln",
-    "REGULER_2 (30 Mbps) - Rp 215.000/Bln",
-    "REGULER_3 (50 Mbps) - Rp 315.000/Bln",
-    "REGULER_4 (100 Mbps) - Rp 515.000/Bln"
-  ];
-
-  const getPackageKey = (val: string) => val.split(" ")[0];
-  const activeKey = getPackageKey(value);
-  const activeConfig = PAKET_CONFIG[activeKey] || { color: "text-slate-600", bg: "bg-slate-50", icon: Lucide.Wifi };
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setIsOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
+// Radio Card untuk Paket (Mobile Friendly)
+const PaketRadioCards = ({ value, onChange }: { value: string; onChange: (val: string) => void }) => {
+  const getMbpsFromValue = (val: string) => {
+    const match = val.match(/(\d+)\s*Mbps/i);
+    return match ? match[1] : '';
+  };
+  const selectedMbps = getMbpsFromValue(value);
+  
   return (
-    <div className="relative w-full" ref={dropdownRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between pl-11 pr-4 py-3.5 rounded-xl border text-sm font-bold transition-all ${isOpen ? 'ring-4 ring-orange-500/10 border-[#F47920]' : 'border-slate-200'} ${isDarkMode ? 'bg-slate-800' : 'bg-slate-50 text-slate-700'}`}
-      >
-        <div className="flex items-center gap-2 truncate">
-          <activeConfig.icon size={16} className={`${activeConfig.color} shrink-0`} />
-          <span className={`${activeConfig.color} text-xs sm:text-sm truncate`}>{value || "Pilih Paket Kecepatan"}</span>
-        </div>
-        <Lucide.ChevronDown size={16} className={`text-slate-400 transition-transform shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 4, scale: 0.99 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.99 }}
-            className="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] border border-slate-100 z-[999] p-1.5 max-h-[180px] overflow-y-auto custom-scrollbar"
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      {PAKET_OPTIONS.map((paket) => {
+        const isSelected = selectedMbps === paket.key;
+        const fullValue = `${paket.label} - ${paket.price}/Bln`;
+        return (
+          <button
+            key={paket.key}
+            type="button"
+            onClick={() => onChange(fullValue)}
+            className={`relative p-3 rounded-xl border-2 transition-all text-left overflow-hidden ${
+              isSelected 
+                ? `border-transparent bg-gradient-to-br ${paket.color} text-white shadow-lg` 
+                : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
           >
-            {options.map((opt) => {
-              const key = getPackageKey(opt);
-              const config = PAKET_CONFIG[key] || { color: "text-slate-600", bg: "bg-slate-50", icon: Lucide.Wifi };
-              const isActive = value === opt;
-              return (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); onChange(opt); setIsOpen(false); }}
-                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all mb-0.5 text-left ${isActive ? config.bg : 'hover:bg-slate-50'}`}
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-black truncate ${isActive ? config.color : 'text-slate-800'}`}>{opt.split(" - ")[0]}</p>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{opt.split(" - ")[1]}</p>
-                  </div>
-                  {isActive && <Lucide.Check size={14} className={config.color} />}
-                </button>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {isSelected && (
+              <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                <Lucide.Check size={10} className={paket.color.includes('orange') ? 'text-orange-500' : paket.color.includes('blue') ? 'text-blue-500' : paket.color.includes('indigo') ? 'text-indigo-500' : 'text-purple-500'} />
+              </div>
+            )}
+            <paket.icon size={14} className={`mb-1 ${isSelected ? 'text-white/80' : 'text-slate-400'}`} />
+            <p className={`text-xs font-black ${isSelected ? 'text-white' : 'text-slate-700'}`}>{paket.label}</p>
+            <p className={`text-[9px] font-bold ${isSelected ? 'text-white/70' : 'text-slate-400'}`}>{paket.price}</p>
+          </button>
+        );
+      })}
     </div>
   );
 };
 
-const STATUS_MODAL_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-  PENGAJUAN:              { label: "PENGAJUAN",              color: "text-blue-600",    bg: "bg-blue-50",    icon: Lucide.PlusCircle   },
-  SURVEY:                 { label: "SURVEI LOKASI",          color: "text-indigo-600", bg: "bg-indigo-50",  icon: Lucide.Search       },
-  PROSES:                 { label: "PROSES PASANG",          color: "text-amber-600",  bg: "bg-amber-50",  icon: Lucide.Loader2      },
-  AKTIF:                  { label: "AKTIF",                  color: "text-emerald-600",bg: "bg-emerald-50",icon: Lucide.CheckCircle2 },
-  "NON AKTIF":            { label: "NON AKTIF",              color: "text-slate-500",  bg: "bg-slate-50",  icon: Lucide.PauseCircle  },
-  "BERHENTI BERLANGGANAN":{ label: "BERHENTI BERLANGGANAN",  color: "text-red-600",    bg: "bg-red-50",    icon: Lucide.XCircle      },
-  // Legacy
-  BARU:  { label: "BARU (LEGACY)",  color: "text-sky-600",  bg: "bg-sky-50",  icon: Lucide.PlusCircle },
-  BATAL: { label: "BATAL",          color: "text-red-400",  bg: "bg-red-50",  icon: Lucide.XCircle    },
-};
-
-const CustomStatusDropdown = ({ value, onChange, isDarkMode }: { value: string; onChange: (val: string) => void; isDarkMode: boolean; }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const activeKey = value || "PENGAJUAN";
-  const activeConfig = STATUS_MODAL_CONFIG[activeKey] || STATUS_MODAL_CONFIG.PENGAJUAN;
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setIsOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
+// Status Pill Buttons (Mobile Friendly)
+const StatusPillButtons = ({ value, onChange }: { value: string; onChange: (val: string) => void }) => {
+  const STATUSES = [
+    { key: "PENGAJUAN", label: "Pengajuan", color: "bg-blue-500", icon: Lucide.PlusCircle },
+    { key: "SURVEY", label: "Survei", color: "bg-indigo-500", icon: Lucide.Search },
+    { key: "PROSES", label: "Proses", color: "bg-amber-500", icon: Lucide.Loader2 },
+    { key: "AKTIF", label: "Aktif", color: "bg-emerald-500", icon: Lucide.CheckCircle2 },
+    { key: "NON AKTIF", label: "Non-Aktif", color: "bg-slate-400", icon: Lucide.PauseCircle },
+  ];
+  
   return (
-    <div className="relative w-full" ref={dropdownRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between pl-11 pr-4 py-3.5 rounded-xl border text-sm font-black transition-all ${isOpen ? 'ring-4 ring-blue-500/10 border-blue-600' : 'border-slate-200'} ${isDarkMode ? 'bg-slate-800' : 'bg-slate-50'}`}
-      >
-        <div className="flex items-center gap-2 truncate">
-          <activeConfig.icon size={16} className={`${activeConfig.color} ${activeKey === 'PROSES' ? 'animate-spin' : ''} shrink-0`} />
-          <span className={`${activeConfig.color} text-xs sm:text-sm truncate`}>{activeConfig.label}</span>
-        </div>
-        <Lucide.ChevronDown size={16} className={`text-slate-400 transition-transform shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 4, scale: 0.99 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.99 }}
-            className="absolute left-0 right-0 mt-1 bg-white rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] border border-slate-100 z-[999] p-1.5 max-h-[180px] overflow-y-auto custom-scrollbar"
+    <div className="flex flex-wrap gap-2">
+      {STATUSES.map((s) => {
+        const isSelected = value === s.key;
+        return (
+          <button
+            key={s.key}
+            type="button"
+            onClick={() => onChange(s.key)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black transition-all border-2 ${
+              isSelected 
+                ? `${s.color} text-white border-transparent shadow-lg` 
+                : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-slate-300'
+            }`}
           >
-            {Object.entries(STATUS_MODAL_CONFIG).map(([key, config]) => {
-              const isActive = activeKey === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); onChange(key); setIsOpen(false); }}
-                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all mb-0.5 text-left ${isActive ? config.bg : 'hover:bg-slate-50'}`}
-                >
-                  <config.icon size={14} className={`${config.color} ${key === 'PROSES' && isActive ? 'animate-spin' : ''}`} />
-                  <span className={`text-xs font-black ${isActive ? config.color : 'text-slate-700'}`}>{config.label}</span>
-                </button>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <s.icon size={12} className={isSelected ? 'text-white' : s.color.replace('bg-', 'text-')} />
+            {s.label}
+          </button>
+        );
+      })}
     </div>
   );
 };
@@ -363,15 +402,20 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[500] flex items-center justify-center p-3 sm:p-4 bg-[#0d1655]/85 backdrop-blur-md">
+      <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-[#0d1655]/85 backdrop-blur-md">
         <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 30, opacity: 0 }}
-          className={`${isDarkMode ? 'bg-[#1e293b] border-slate-800 text-white' : 'bg-white border-slate-100 text-slate-800'} rounded-[2rem] w-full max-w-3xl overflow-hidden shadow-2xl border flex flex-col max-h-[85vh] sm:max-h-[90vh]`}
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          exit={{ y: "100%" }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className={`${isDarkMode ? 'bg-[#1e293b] border-slate-800 text-white' : 'bg-white border-slate-100 text-slate-800'} 
+            w-full sm:max-w-3xl max-h-[95vh] sm:max-h-[90vh] rounded-t-3xl sm:rounded-[2rem] 
+            overflow-hidden shadow-2xl border flex flex-col`}
         >
-          {/* Header Modal */}
+          {/* Header Modal - Mobile Handle + Desktop Normal */}
           <div className="bg-[#0d1655] p-4 sm:p-5 text-white flex justify-between items-center shrink-0 z-30 border-b border-white/10">
+            {/* Mobile Drag Handle */}
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-white/30 rounded-full sm:hidden" />
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
                 <Lucide.UserPlus size={20} className="text-[#FDB913]" />
@@ -385,7 +429,7 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
           </div>
 
           {/* FORM BODY - Scrollable Container */}
-          <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-6 custom-scrollbar bg-white">
+          <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-6 custom-scrollbar bg-white pb-24 sm:pb-6">
 
             {/* SEKTOR I: DATA PRIBADI */}
             <div className="space-y-3">
@@ -393,22 +437,22 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
                 <Lucide.User size={12} /> Sektor I: Identitas & Kontak Pendaftar
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Nama Lengkap</label>
-                  <input type="text" value={formData["Nama Lengkap"] || ""} onChange={e => handleChange("Nama Lengkap", e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920]" placeholder="Nama Lengkap" />
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800">Nama Lengkap</label>
+                  <input type="text" value={formData["Nama Lengkap"] || ""} onChange={e => handleChange("Nama Lengkap", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Nama Lengkap" />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">No HP / WhatsApp</label>
-                  <input type="text" value={formData["No HP / WA"] || ""} onChange={e => handleChange("No HP / WA", e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920]" placeholder="Contoh: 0812..." />
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800">No. HP / WhatsApp</label>
+                  <input type="text" value={formData["No HP / WA"] || ""} onChange={e => handleChange("No HP / WA", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: 0812..." />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Provider Saat Ini</label>
-                  <input type="text" value={formData["Provider Saat Ini"] || ""} onChange={e => handleChange("Provider Saat Ini", e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920]" placeholder="Contoh: Indihome / Belum" />
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800">Provider Saat Ini</label>
+                  <input type="text" value={formData["Provider Saat Ini"] || ""} onChange={e => handleChange("Provider Saat Ini", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: Indihome / Belum" />
                 </div>
-                <div className="sm:col-span-3 space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Foto KTP / ID Card Pelanggan</label>
+                <div className="sm:col-span-3 space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800 block">Foto KTP / ID Card Pelanggan</label>
                   {formData["Foto KTP"] ? (
-                    <div className="relative w-full h-36 border border-slate-200 bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center group shadow-sm">
+                    <div className="relative w-full h-36 border border-slate-200 bg-white rounded-xl overflow-hidden flex items-center justify-center group shadow-sm">
                       <img src={formData["Foto KTP"]} alt="KTP" className="w-full h-full object-contain" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                         <button
@@ -421,10 +465,10 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
                       </div>
                     </div>
                   ) : (
-                    <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-200 hover:border-[#F47920] rounded-xl bg-slate-50 cursor-pointer transition-all">
+                    <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-200 hover:border-[#F47920] rounded-xl bg-slate-50/50 cursor-pointer transition-all">
                       <div className="text-center px-4">
-                        <p className="text-[10px] font-black text-[#1a2d8f] uppercase tracking-wider">Unggah Foto KTP Baru</p>
-                        <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Pilih Gambar dari Perangkat</p>
+                        <p className="text-[10px] font-bold text-[#1a2d8f]">Unggah Foto KTP Baru</p>
+                        <p className="text-[9px] text-slate-400 font-medium mt-0.5">Pilih Gambar dari Perangkat</p>
                       </div>
                       <input 
                         type="file" 
@@ -453,21 +497,21 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
                 <Lucide.MapPin size={12} /> Sektor II: Distribusi Lokasi Rumah
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <div className="sm:col-span-2 space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Alamat Lengkap Rumah (RT/RW)</label>
-                  <input type="text" value={formData["Alamat Pemasangan"] || ""} onChange={e => handleChange("Alamat Pemasangan", e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920]" placeholder="Nama jalan, RT/RW, Dusun" />
+                <div className="sm:col-span-2 space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800">Alamat Lengkap Rumah (RT/RW)</label>
+                  <input type="text" value={formData["Alamat Pemasangan"] || ""} onChange={e => handleChange("Alamat Pemasangan", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Nama jalan, RT/RW, Banjar" />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Kecamatan</label>
-                  <input type="text" value={formData.Kecamatan || ""} onChange={e => handleChange("Kecamatan", e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920]" />
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800">Kecamatan</label>
+                  <input type="text" value={formData.Kecamatan || ""} onChange={e => handleChange("Kecamatan", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Desa</label>
-                  <input type="text" value={formData.Desa || ""} onChange={e => handleChange("Desa", e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920]" />
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800">Desa</label>
+                  <input type="text" value={formData.Desa || ""} onChange={e => handleChange("Desa", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" />
                 </div>
-                <div className="sm:col-span-4 space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Link Koordinat GPS (Google Maps URL)</label>
-                  <input type="text" value={formData["Link Google Maps"] || ""} onChange={e => handleChange("Link Google Maps", e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920]" placeholder="https://maps.google.com/..." />
+                <div className="sm:col-span-4 space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800">Link Koordinat GPS (Google Maps)</label>
+                  <input type="text" value={formData["Link Google Maps"] || ""} onChange={e => handleChange("Link Google Maps", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="https://maps.google.com/..." />
                 </div>
               </div>
             </div>
@@ -477,47 +521,52 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
               <h4 className="text-[10px] font-black text-[#F47920] uppercase tracking-[0.15em] border-b border-slate-100 pb-1 flex items-center gap-1">
                 <Lucide.Calendar size={12} /> Sektor III: Opsi Paket & Penjadwalan Kerja
               </h4>
+              
+              {/* Paket Radio Cards - Mobile Friendly */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-800 block">Pilihan Paket Internet</label>
+                <PaketRadioCards value={formData.Paket} onChange={(val) => handleChange("Paket", val)} />
+              </div>
+              
+              {/* Status Pill Buttons - Mobile Friendly */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-800 block">Status Tahapan Progres</label>
+                <StatusPillButtons value={formData.status || "PENGAJUAN"} onChange={(val) => handleChange("status", val)} />
+              </div>
+              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Pilihan Paket Internet</label>
-                  <CustomPaketDropdown value={formData.Paket} onChange={(val) => handleChange("Paket", val)} isDarkMode={isDarkMode} />
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800">Rencana Tanggal Pasang</label>
+                  <input type="text" value={formData["Tanggal Rencana Pasang"] || ""} onChange={e => handleChange("Tanggal Rencana Pasang", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: 25 Mei 2026" />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status Tahapan Progres</label>
-                  <CustomStatusDropdown value={formData.status || "PENGAJUAN"} onChange={(val) => handleChange("status", val)} isDarkMode={isDarkMode} />
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800">Alokasi Waktu Survei</label>
+                  <input type="text" value={formData["Waktu Survei"] || ""} onChange={e => handleChange("Waktu Survei", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: Jam 10:00 Pagi" />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Rencana Tanggal Pasang</label>
-                  <input type="text" value={formData["Tanggal Rencana Pasang"] || ""} onChange={e => handleChange("Tanggal Rencana Pasang", e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920]" placeholder="Contoh: 25 Mei 2026" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Alokasi Waktu Survei Lokasi</label>
-                  <input type="text" value={formData["Waktu Survei"] || ""} onChange={e => handleChange("Waktu Survei", e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920]" placeholder="Contoh: Jam 10:00 Pagi" />
-                </div>
-                <div className="sm:col-span-2 space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Catatan Evaluasi / Pesan Pelanggan</label>
+                <div className="sm:col-span-2 space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800">Catatan Evaluasi / Pesan</label>
                   <textarea
                     value={formData.Catatan || ""}
                     onChange={e => handleChange("Catatan", e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] resize-none"
-                    placeholder="Catatan dari pelanggan atau catatan internal survei lapangan oleh tim teknis..."
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] resize-none placeholder:text-slate-400"
+                    placeholder="Catatan dari pelanggan atau catatan internal survei..."
                   />
                 </div>
               </div>
             </div>
-
-            {/* Invisible Spatial Buffer (Spacer Penjamin Kebebasan Dropdown di HP) */}
-            <div className="h-44 sm:h-12 w-full pointer-events-none" />
-
           </div>
 
-          {/* FOOTER - Menempel Kokoh di Bawah */}
-          <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3 shrink-0 z-50">
-            <button type="button" onClick={onClose} className="flex-1 py-3 bg-white hover:bg-slate-100 border border-slate-300 text-slate-600 font-black rounded-xl text-xs uppercase tracking-widest shadow-sm transition-all">
+          {/* FOOTER - Fixed Sticky di Mobile, Normal di Desktop */}
+          <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3 shrink-0 z-50 
+            fixed bottom-0 left-0 right-0 sm:relative
+            shadow-[0_-4px_20px_rgba(0,0,0,0.1)] sm:shadow-none
+            rounded-t-3xl sm:rounded-none
+          ">
+            <button type="button" onClick={onClose} className="flex-1 py-3.5 sm:py-3 bg-white hover:bg-slate-100 border border-slate-300 text-slate-600 font-black rounded-xl text-xs uppercase tracking-widest shadow-sm transition-all">
               Batal
             </button>
-            <button type="button" onClick={() => onSave(formData)} className="flex-[2] py-3 bg-gradient-to-r from-[#F47920] to-orange-500 hover:from-orange-600 hover:to-orange-500 text-white font-black rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-orange-500/30 flex justify-center items-center gap-2 transition-all">
+            <button type="button" onClick={() => onSave(formData)} className="flex-[2] py-3.5 sm:py-3 bg-gradient-to-r from-[#F47920] to-orange-500 hover:from-orange-600 hover:to-orange-500 text-white font-black rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-orange-500/30 flex justify-center items-center gap-2 transition-all">
               <Lucide.Save size={16} /> Simpan Data
             </button>
           </div>

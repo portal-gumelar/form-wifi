@@ -11,6 +11,7 @@ import { RegistrationTable } from "../components/dashboard/RegistrationTable";
 import { PDFPreviewModal, DetailsModal, ConfirmDeleteModal, EditRegistrationModal } from "../components/dashboard/Modals";
 import { CustomersView } from "../components/dashboard/CustomersView";
 import { GeographicalView } from "../components/dashboard/GeographicalView";
+import { ManajemenPelanggan } from "../components/dashboard/ManajemenPelanggan";
 
 // Utils & Types
 import { RegistrationData, DashboardStats } from "../types";
@@ -399,13 +400,10 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
       {/* Sidebar - Tersembunyi di HP, Aktif di Laptop */}
       <div className="hidden md:block">
         <Sidebar
-          isSidebarOpen={isSidebarOpen}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           isDarkMode={isDarkMode}
-          setIsDarkMode={setIsDarkMode}
           onLogout={onLogout}
-          onAddNew={handleAddNew}
           pendingCount={pendingCount}
         />
       </div>
@@ -609,6 +607,91 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
               <motion.div key="dashboard" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
                 <KPICards totalRegistrants={data.length} statusCounts={stats.statusCounts} isDarkMode={isDarkMode} />
 
+                {/* 📊 Revenue Summary Cards + Quick Actions */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                  {/* Revenue Card */}
+                  <div className="bg-gradient-to-br from-[#0d1655] to-[#1a2a7a] rounded-2xl p-4 text-white shadow-xl shadow-blue-900/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                        <Lucide.CreditCard size={20} />
+                      </div>
+                      <span className="text-[10px] font-black bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-lg">AKTIF</span>
+                    </div>
+                    <p className="text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Pendapatan/Bulan</p>
+                    <p className="text-xl md:text-2xl font-black">Rp {(stats.statusCounts?.AKTIF || 0) * 115000}</p>
+                    <p className="text-[10px] text-blue-300 mt-1">Basis: Paket Rp 115.000</p>
+                  </div>
+
+                  {/* Growth Card */}
+                  <div className="bg-gradient-to-br from-[#F47920] to-[#d86617] rounded-2xl p-4 text-white shadow-xl shadow-orange-500/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                        <Lucide.TrendingUp size={20} />
+                      </div>
+                      <span className="text-[10px] font-black bg-white/20 text-white px-2 py-1 rounded-lg">BULAN INI</span>
+                    </div>
+                    <p className="text-[10px] font-bold text-orange-100 uppercase tracking-wider mb-1">Total Pendaftar</p>
+                    <p className="text-xl md:text-2xl font-black">{data.length}</p>
+                    <p className="text-[10px] text-orange-100 mt-1">🎯 Target: 50/bulan</p>
+                  </div>
+
+                  {/* Survey Card */}
+                  <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                        <Lucide.MapPin size={20} className="text-indigo-600" />
+                      </div>
+                      <span className="text-[10px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg">PIPELINE</span>
+                    </div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Butuh Survei</p>
+                    <p className="text-xl md:text-2xl font-black text-[#0d1655]">{stats.statusCounts?.SURVEY || 0}</p>
+                    <div className="mt-2 w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                      <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${Math.min(((stats.statusCounts?.SURVEY || 0) / 20) * 100, 100)}%` }}></div>
+                    </div>
+                  </div>
+
+                  {/* Proses Card */}
+                  <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                        <Lucide.Loader2 size={20} className="text-amber-600" />
+                      </div>
+                      <span className="text-[10px] font-black bg-amber-50 text-amber-600 px-2 py-1 rounded-lg">PROGRES</span>
+                    </div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sedang Dipasang</p>
+                    <p className="text-xl md:text-2xl font-black text-[#0d1655]">{stats.statusCounts?.PROSES || 0}</p>
+                    <div className="mt-2 flex items-center gap-1">
+                      <Lucide.CheckCircle size={12} className="text-emerald-500" />
+                      <span className="text-[10px] font-bold text-slate-400">{stats.statusCounts?.AKTIF || 0} Aktif</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ⚡ Quick Actions */}
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+                  <h4 className="text-xs font-black text-[#0d1655] uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Lucide.Zap size={14} className="text-[#F47920]" /> Aksi Cepat
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <button onClick={handleAddNew} className="flex items-center gap-2 px-4 py-3 bg-[#0d1655] hover:bg-[#1a2a7a] text-white rounded-xl transition-all">
+                      <Lucide.PlusCircle size={16} />
+                      <span className="text-xs font-black">Tambah Data</span>
+                    </button>
+                    <button onClick={() => exportToExcel(filteredData)} className="flex items-center gap-2 px-4 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-xl transition-all border border-emerald-100">
+                      <Lucide.FileSpreadsheet size={16} />
+                      <span className="text-xs font-black">Export Excel</span>
+                    </button>
+                    <button onClick={() => setActiveTab("Analytics")} className="flex items-center gap-2 px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl transition-all border border-blue-100">
+                      <Lucide.PieChart size={16} />
+                      <span className="text-xs font-black">Lihat Analytics</span>
+                    </button>
+                    <button onClick={() => setActiveTab("Map View")} className="flex items-center gap-2 px-4 py-3 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-xl transition-all border border-amber-100">
+                      <Lucide.Map size={16} />
+                      <span className="text-xs font-black">Peta Wilayah</span>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="w-full space-y-4">
                   <div className="flex items-center justify-between px-1">
                     <h3 className="text-lg font-black text-[#0d1655]">Aktivitas Terbaru</h3>
@@ -622,9 +705,10 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                       data={filteredData.slice(0, 5)}
                       isDarkMode={isDarkMode}
                       onViewDetails={setSelectedReg}
+                      onEdit={setEditingReg}
                       onDelete={setConfirmDelete}
                       onUpdateStatus={handleUpdateStatus}
-                      mini
+                      mini={true}
                     />
                   </div>
                 </div>
@@ -644,11 +728,13 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                       options={stats?.packageData || []}
                     />
                     <div className="flex gap-2">
-                      <button onClick={() => exportToExcel(filteredData)} className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl border-2 border-emerald-100 font-bold hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+                      <button onClick={() => exportToExcel(filteredData)} className="flex flex-col items-center gap-1 px-3 py-2 bg-emerald-50 text-emerald-600 rounded-2xl border-2 border-emerald-100 font-bold hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
                         <Lucide.FileSpreadsheet size={20} />
+                        <span className="text-[9px] font-black uppercase tracking-wide">Excel</span>
                       </button>
-                      <button onClick={() => setPdfPreviewUrl(generatePDFBlobUrl(filteredData))} className="p-3 bg-red-50 text-red-600 rounded-2xl border-2 border-red-100 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm">
+                      <button onClick={() => setPdfPreviewUrl(generatePDFBlobUrl(filteredData))} className="flex flex-col items-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-2xl border-2 border-red-100 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm">
                         <Lucide.FileText size={20} />
+                        <span className="text-[9px] font-black uppercase tracking-wide">PDF</span>
                       </button>
                     </div>
                   </div>
@@ -662,7 +748,8 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                   <RegistrationTable
                     data={filteredData}
                     isDarkMode={isDarkMode}
-                    onViewDetails={setEditingReg}
+                    onViewDetails={setSelectedReg}
+                    onEdit={setEditingReg}
                     onDelete={setConfirmDelete}
                     onUpdateStatus={handleUpdateStatus}
                   />
@@ -686,6 +773,18 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
             {activeTab === "Map View" && (
               <motion.div key="map" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <GeographicalView data={filteredData} isDarkMode={isDarkMode} />
+              </motion.div>
+            )}
+
+            {activeTab === "Manajemen" && (
+              <motion.div key="manajemen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <ManajemenPelanggan 
+                  data={data} 
+                  isDarkMode={isDarkMode} 
+                  onViewDetails={setSelectedReg}
+                  onDelete={setConfirmDelete}
+                  onUpdateStatus={handleUpdateStatus}
+                />
               </motion.div>
             )}
           </AnimatePresence>
