@@ -136,10 +136,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       section: "MENU INTI", items: [
         { id: "Dashboard", icon: Lucide.Home, label: "Ringkasan" },
         { id: "Registrations", icon: Lucide.CheckSquare, label: "Kelola Pesanan" },
-        { id: "Manajemen", icon: Lucide.UserCog, label: "Manajemen Pelanggan" },
         { id: "Customers", icon: Lucide.Users, label: "Data Pelanggan" },
       ]
     },
+
     {
       section: "DANA DESA", items: [
         { id: "Dana Desa CSR", icon: Lucide.Wallet, label: "Dana Desa CSR" },

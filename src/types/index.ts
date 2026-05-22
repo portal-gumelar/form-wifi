@@ -49,6 +49,7 @@ export interface RegistrationData {
   "Foto KTP"?: string;
   "Persetujuan S&K"?: string;
   "Catatan"?: string;
+  "Tanggal Aktif"?: string;
 }
 
 export interface DashboardStats {

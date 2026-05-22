@@ -12,6 +12,8 @@ interface RegistrationTableProps {
   onDelete: (timestamp: string) => void;
   onUpdateStatus: (timestamp: string, status: string) => void;
   mini?: boolean;
+  hideHeader?: boolean;
+  allowedStatuses?: string[];
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
@@ -19,17 +21,19 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   SURVEY: { label: "Survei Lokasi", color: "text-amber-600", bg: "bg-amber-50", icon: Lucide.Search },
   PROSES: { label: "Proses Pasang", color: "text-orange-600", bg: "bg-orange-50", icon: Lucide.Loader2 },
   AKTIF: { label: "Aktif", color: "text-emerald-600", bg: "bg-emerald-50", icon: Lucide.CheckCircle2 },
-  BELUM_AKTIF: { label: "Non-Aktif", color: "text-rose-500", bg: "bg-rose-50", icon: Lucide.PauseCircle },
+  "NON AKTIF": { label: "Non-Aktif", color: "text-rose-500", bg: "bg-rose-50", icon: Lucide.PauseCircle },
   PENDING: { label: "Pending", color: "text-orange-500", bg: "bg-orange-50", icon: Lucide.Clock },
   BATAL: { label: "Batal", color: "text-red-600", bg: "bg-red-50", icon: Lucide.XCircle },
 };
 
 const StatusDropdown = ({ 
   currentStatus, 
-  onSelect 
+  onSelect,
+  allowedStatuses
 }: { 
   currentStatus: string; 
-  onSelect: (status: string) => void 
+  onSelect: (status: string) => void;
+  allowedStatuses?: string[];
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -66,7 +70,9 @@ const StatusDropdown = ({
           >
             <div className="text-[10px] font-bold text-slate-400 tracking-wider px-2.5 py-1.5 mb-1 border-b border-slate-100">Pilih Status</div>
             <div className="space-y-0.5 max-h-[180px] overflow-y-auto custom-scrollbar">
-              {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+              {Object.entries(STATUS_CONFIG)
+                .filter(([key]) => !allowedStatuses || allowedStatuses.includes(key))
+                .map(([key, config]) => (
                 <button
                   key={key}
                   onClick={() => {
@@ -93,9 +99,9 @@ const StatusDropdown = ({
 };
 
 export const RegistrationTable: React.FC<RegistrationTableProps> = ({ 
-  data, onViewDetails, onEdit, onDelete, onUpdateStatus, mini = false 
+  data, isDarkMode, onViewDetails, onEdit, onDelete, onUpdateStatus, mini = false, hideHeader = false, allowedStatuses 
 }) => {
-  const [sortConfig, setSortConfig] = useState<{ key: keyof RegistrationData | 'status'; direction: 'asc' | 'desc' } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof RegistrationData | 'status'; direction: 'asc' | 'desc' } | null>({ key: 'Timestamp', direction: 'asc' });
   const [selectedWaCustomer, setSelectedWaCustomer] = useState<RegistrationData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -108,11 +114,11 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(item => 
-        item["Nama Lengkap"]?.toLowerCase().includes(query) ||
-        item["Alamat Pemasangan"]?.toLowerCase().includes(query) ||
-        item["No HP / WA"]?.toLowerCase().includes(query) ||
-        item.Desa?.toLowerCase().includes(query) ||
-        item.Paket?.toLowerCase().includes(query)
+        String(item["Nama Lengkap"] || "").toLowerCase().includes(query) ||
+        String(item["Alamat Pemasangan"] || "").toLowerCase().includes(query) ||
+        String(item["No HP / WA"] || "").toLowerCase().includes(query) ||
+        String(item.Desa || "").toLowerCase().includes(query) ||
+        String(item.Paket || "").toLowerCase().includes(query)
       );
     }
     if (statusFilter !== "ALL") {
@@ -146,6 +152,18 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
     belumAktif: data.filter(d => d.status === 'NON AKTIF' || d.status === 'BERHENTI BERLANGGANAN').length,
     ktp: data.filter(d => d["Foto KTP"]).length
   }), [data]);
+
+  const getDaysAgo = (timestamp: string) => {
+    if (!timestamp) return "";
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return "";
+    const now = new Date();
+    const diffTime = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays <= 0) return "Baru saja";
+    if (diffDays === 1) return "Kemarin";
+    return `${diffDays} hari lalu`;
+  };
 
   const exportToCSV = () => {
     const headers = ["Nama Lengkap", "Alamat", "Desa", "No HP", "Paket", "Status", "Timestamp"];
@@ -231,7 +249,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                   <td className="px-4 sm:px-6 py-3.5">
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center font-black text-[#0d1655] text-xs shrink-0 border border-slate-200">
-                        {item["Nama Lengkap"]?.charAt(0) || "U"}
+                        {String(item["Nama Lengkap"] || "U").charAt(0).toUpperCase()}
                       </div>
                       <p className="font-bold text-slate-800 text-xs truncate max-w-[120px]">{item["Nama Lengkap"]}</p>
                     </div>
@@ -256,21 +274,50 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
   return (
     <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden w-full">
       {/* Header with Search, Filter, Stats & Actions */}
+      {!hideHeader && (
       <div className="p-4 sm:p-6 border-b border-slate-100 bg-white">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <div className="flex items-center gap-2">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 min-w-0">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full xl:w-auto min-w-0">
+            <div className="flex items-center gap-2 shrink-0">
               <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100">
                 <Lucide.LayoutList size={16} className="text-[#0d1655]" />
               </div>
               <h3 className="text-sm sm:text-base font-black text-[#0d1655] tracking-tight">Manajemen Pesanan</h3>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2.5 py-1 bg-blue-50 border border-blue-100 rounded-lg text-[9px] font-black text-blue-600">Total: {quickStats.total}</span>
-              <span className="px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-lg text-[9px] font-black text-emerald-600">Aktif: {quickStats.aktif}</span>
-              <span className="px-2.5 py-1 bg-amber-50 border border-amber-100 rounded-lg text-[9px] font-black text-amber-600">Proses: {quickStats.proses}</span>
-              <span className="px-2.5 py-1 bg-indigo-50 border border-indigo-100 rounded-lg text-[9px] font-black text-indigo-600">Survey: {quickStats.survey}</span>
-              <span className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-black text-slate-500">Belum Aktif: {quickStats.belumAktif}</span>
+            
+            {/* Quick Filter Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 custom-scrollbar w-full max-w-full">
+              {[
+                { id: "ALL", label: "Semua", count: quickStats.total, icon: Lucide.LayoutGrid },
+                { id: "PENGAJUAN", label: "Pengajuan", count: data.filter(d => d.status === 'PENGAJUAN' || !d.status).length, icon: Lucide.PlusCircle },
+                { id: "SURVEY", label: "Survei", count: quickStats.survey, icon: Lucide.Search },
+                { id: "PROSES", label: "Proses Pasang", count: quickStats.proses, icon: Lucide.RefreshCw },
+                { id: "PENDING", label: "Pending", count: data.filter(d => d.status === 'PENDING').length, icon: Lucide.Clock },
+                { id: "BATAL", label: "Batal", count: data.filter(d => d.status === 'BATAL').length, icon: Lucide.XCircle }
+              ].map(tab => {
+                 if (tab.id !== "ALL" && allowedStatuses && !allowedStatuses.includes(tab.id)) return null;
+                 const isActive = statusFilter === tab.id;
+                 const Icon = tab.icon;
+                 return (
+                   <button
+                     key={tab.id}
+                     onClick={() => { setStatusFilter(tab.id); setCurrentPage(1); }}
+                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-black transition-all border ${
+                       isActive
+                         ? 'bg-[#0d1655] text-white border-[#0d1655] shadow-md shadow-blue-900/20'
+                         : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                     }`}
+                   >
+                     <Icon size={14} className={isActive ? "text-white" : "text-slate-400"} />
+                     {tab.label}
+                     {isActive && (
+                       <span className="px-1.5 py-0.5 rounded-md text-[9px] bg-white/20 ml-1">
+                         {tab.count}
+                       </span>
+                     )}
+                   </button>
+                 );
+              })}
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
@@ -284,25 +331,12 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                 className="w-full sm:w-64 pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0d1655] transition-all"
               />
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0d1655] transition-all cursor-pointer"
-            >
-              <option value="ALL">Semua Status</option>
-              <option value="AKTIF">Aktif</option>
-              <option value="PROSES">Proses</option>
-              <option value="SURVEY">Survey</option>
-              <option value="PENGAJUAN">Pengajuan</option>
-              <option value="PENDING">Pending</option>
-              <option value="BATAL">Batal</option>
-            </select>
-            <div className="flex items-center gap-2">
-              <button onClick={exportToCSV} className="px-3 py-2 bg-emerald-50 border border-emerald-100 rounded-xl text-xs font-black text-emerald-600 hover:bg-emerald-100 transition-all flex items-center gap-1.5">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button onClick={exportToCSV} className="flex-1 sm:flex-initial justify-center px-3 py-2 bg-emerald-50 border border-emerald-100 rounded-xl text-xs font-black text-emerald-600 hover:bg-emerald-100 transition-all flex items-center gap-1.5">
                 <Lucide.FileDown size={14} /> Export
               </button>
               {selectedRows.size > 0 && (
-                <button onClick={bulkDelete} className="px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl text-xs font-black text-rose-600 hover:bg-rose-100 transition-all flex items-center gap-1.5">
+                <button onClick={bulkDelete} className="flex-1 sm:flex-initial justify-center px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl text-xs font-black text-rose-600 hover:bg-rose-100 transition-all flex items-center gap-1.5">
                   <Lucide.Trash2 size={14} /> Hapus ({selectedRows.size})
                 </button>
               )}
@@ -310,6 +344,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
           </div>
         </div>
       </div>
+      )}
       
       <div className="w-full overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-collapse table-auto text-xs sm:text-sm">
@@ -321,11 +356,11 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
               <th className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest cursor-pointer hover:text-[#F47920]" onClick={() => requestSort('Nama Lengkap')}>
                 <div className="flex items-center gap-1.5 whitespace-nowrap">Pelanggan {getSortIcon('Nama Lengkap')}</div>
               </th>
-              <th className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest cursor-pointer hover:text-[#F47920]" onClick={() => requestSort('Alamat Pemasangan')}>
+              <th className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest cursor-pointer hover:text-[#F47920] hidden md:table-cell" onClick={() => requestSort('Alamat Pemasangan')}>
                 <div className="flex items-center gap-1.5 whitespace-nowrap">Alamat {getSortIcon('Alamat Pemasangan')}</div>
               </th>
               <th className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest text-center">Status</th>
-              <th className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest whitespace-nowrap text-center">Progress</th>
+              <th className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest whitespace-nowrap text-center hidden md:table-cell">Progress</th>
               <th className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest text-right">Aksi</th>
             </tr>
           </thead>
@@ -340,32 +375,53 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                 </td>
               </tr>
             ) : (
-              paginatedData.map((item, idx) => (
-                <tr key={idx} className={`hover:bg-slate-50/40 transition-colors ${selectedRows.has(item.Timestamp) ? 'bg-emerald-50/30' : ''}`}>
+              paginatedData.map((item, idx) => {
+                const getRowBg = (status: string) => {
+                  if (status === 'SURVEY') return 'bg-amber-50/40 hover:bg-amber-50/80';
+                  if (status === 'PROSES') return 'bg-orange-50/40 hover:bg-orange-50/80';
+                  if (status === 'PENDING') return 'bg-slate-50/60 hover:bg-slate-100/80';
+                  if (status === 'BATAL') return 'bg-red-50/40 hover:bg-red-50/80';
+                  return 'hover:bg-slate-50/40';
+                };
+                
+                return (
+                <tr key={idx} className={`transition-colors ${selectedRows.has(item.Timestamp) ? 'bg-emerald-50/60' : getRowBg(item.status || '')}`}>
                   <td className="px-3 sm:px-4 py-3.5">
                     <input type="checkbox" checked={selectedRows.has(item.Timestamp)} onChange={() => toggleSelectRow(item.Timestamp)} className="w-4 h-4 rounded border-slate-300 text-[#0d1655]" />
                   </td>
                   <td className="px-4 sm:px-6 py-3.5">
                     <div className="flex items-center gap-2.5 sm:gap-3">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-100 flex items-center justify-center font-black text-[#0d1655] text-xs sm:text-sm shrink-0 border border-slate-200">
-                        {item["Nama Lengkap"]?.charAt(0) || "U"}
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-100 flex items-center justify-center font-black text-[#0d1655] text-xs sm:text-sm shrink-0 border border-slate-200 shadow-sm">
+                        {String(item["Nama Lengkap"] || "U").charAt(0).toUpperCase()}
                       </div>
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2">
                           <button onClick={() => onViewDetails(item)} className="font-black text-slate-800 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[160px] hover:text-[#F47920] transition-colors text-left">{item["Nama Lengkap"]}</button>
                           {item["Foto KTP"] ? (
-                            <span className="bg-emerald-50 text-emerald-700 text-[8px] font-black border border-emerald-200/60 px-1.5 py-0.5 rounded-md uppercase tracking-widest shrink-0 scale-95">KTP</span>
+                            <span className="bg-emerald-50 text-emerald-700 text-[8px] font-black border border-emerald-200/60 px-1.5 py-0.5 rounded-md uppercase tracking-widest shrink-0 scale-95 shadow-sm">KTP</span>
                           ) : (
                             <span className="bg-slate-50 text-slate-400 text-[8px] font-black border border-slate-200/60 px-1.5 py-0.5 rounded-md uppercase tracking-widest shrink-0 scale-95">No KTP</span>
                           )}
                         </div>
-                        <p className="text-[10px] text-slate-400 font-bold">ID: #{getCustomerNo(item.Timestamp).split('-')[1] || "00"}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <p className="text-[10px] text-slate-400 font-bold">ID: #{getCustomerNo(item.Timestamp).split('-')[1] || "00"}</p>
+                          <span className="text-slate-300">•</span>
+                          <p className="text-[10px] text-orange-500 font-black tracking-wide bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100 flex items-center gap-1">
+                            <Lucide.Clock size={10} /> {getDaysAgo(item.Timestamp)}
+                          </p>
+                        </div>
+                        {/* Mobile Address - Hidden on Desktop */}
+                        <div className="md:hidden mt-1">
+                          <p className="text-[10px] text-slate-500 truncate max-w-[140px] leading-tight">
+                            {String(item["Alamat Pemasangan"] || "")}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 sm:px-6 py-3.5">
+                  <td className="px-4 sm:px-6 py-3.5 hidden md:table-cell">
                     {(() => {
-                      const address = item["Alamat Pemasangan"] || "";
+                      const address = String(item["Alamat Pemasangan"] || "");
                       const lowerAddr = address.toLowerCase();
                       let colorConfig = { color: "text-blue-600", bg: "bg-blue-50 border-blue-100" };
                       const keywords: Record<string, { color: string; bg: string }> = {
@@ -380,16 +436,36 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                         if (lowerAddr.includes(key)) { colorConfig = keywords[key]; break; }
                       }
                       return (
-                        <div className={`inline-block px-2.5 py-1 rounded-lg border ${colorConfig.bg} max-w-[160px] sm:max-w-[240px] truncate`}>
+                        <div className={`inline-block px-2.5 py-1 rounded-lg border ${colorConfig.bg} max-w-[160px] sm:max-w-[240px]`}>
                           <p className={`text-[11px] font-black truncate ${colorConfig.color}`}>{address}</p>
+                          {(item.RW || item.RT) && (
+                            <div className="flex gap-1 mt-0.5">
+                              {item.RW && <span className="text-[9px] font-black bg-[#0d1655] text-white px-1.5 py-0.5 rounded">{item.RW}</span>}
+                              {item.RT && <span className="text-[9px] font-black bg-[#F47920] text-white px-1.5 py-0.5 rounded">{item.RT}</span>}
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
                   </td>
                   <td className="px-4 sm:px-6 py-3.5 text-center">
-                    <StatusDropdown currentStatus={item.status || "PENGAJUAN"} onSelect={(newStatus) => onUpdateStatus(item.Timestamp, newStatus)} />
+                    <StatusDropdown 
+                      currentStatus={item.status || "PENGAJUAN"} 
+                      onSelect={(newStatus) => onUpdateStatus(item.Timestamp, newStatus)} 
+                      allowedStatuses={allowedStatuses}
+                    />
+                    {item.status === "AKTIF" && item["Tanggal Aktif"] && !isNaN(new Date(item["Tanggal Aktif"]).getTime()) && (
+                      <div className="mt-2 flex flex-col gap-1 items-start">
+                        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-emerald-100 bg-emerald-50 text-[9px] font-bold text-emerald-600">
+                          <Lucide.Power size={10} /> Aktif: {new Date(item["Tanggal Aktif"]).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </div>
+                        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-rose-100 bg-rose-50 text-[9px] font-bold text-rose-600">
+                          <Lucide.CalendarDays size={10} /> Jatuh Tempo: Tgl {new Date(item["Tanggal Aktif"]).getDate()} tiap bln
+                        </div>
+                      </div>
+                    )}
                   </td>
-                  <td className="px-4 sm:px-6 py-3.5 text-center">
+                  <td className="px-4 sm:px-6 py-3.5 text-center hidden md:table-cell">
                     <div className="w-16 sm:w-20 bg-slate-100 h-1.5 rounded-full overflow-hidden inline-block">
                       <div className="bg-[#F47920] h-full transition-all duration-1000 ease-out" style={{ width: item.status === 'AKTIF' ? '100%' : item.status === 'PROSES' ? '70%' : item.status === 'SURVEY' ? '40%' : '15%' }}></div>
                     </div>
@@ -415,7 +491,8 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                     </div>
                   </td>
                 </tr>
-              ))
+              );
+            })
             )}
           </tbody>
         </table>
@@ -478,8 +555,9 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                       <p className="text-[10px] text-slate-500 font-bold mb-3 line-clamp-2">{tpl.message}</p>
                       <button 
                         onClick={() => {
-                          const phone = String(selectedWaCustomer["No HP / WA"] || "").replace(/\D/g, "");
-                          const waPhone = phone.startsWith("0") ? "62" + phone.slice(1) : phone;
+                          const phone = String(selectedWaCustomer["No HP / WA"] || "");
+                          const clean = String(phone).replace(/\D/g, "");
+                          const waPhone = clean.startsWith("0") ? "62" + clean.slice(1) : clean;
                           window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(tpl.message)}`, "_blank");
                           setSelectedWaCustomer(null);
                         }}

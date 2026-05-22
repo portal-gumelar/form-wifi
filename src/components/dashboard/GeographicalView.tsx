@@ -13,16 +13,11 @@ declare const L: any;
 export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDarkMode }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<any>(null);
-  const [selectedDesa, setSelectedDesa] = useState<string>("");
   const [selectedKTP, setSelectedKTP] = useState<RegistrationData | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Get unique villages
-  const villages = [...new Set(data.map(item => item.Desa || "Tidak Diketahui"))].sort();
-
-  // Filter data by selected village
-  const filteredData = selectedDesa 
-    ? data.filter(item => item.Desa === selectedDesa)
-    : data;
+  // Use data directly (which is already filtered globally from Dashboard)
+  const filteredData = data;
 
   // Stats
   const withKTP = filteredData.filter(item => item["Foto KTP"] && String(item["Foto KTP"]).startsWith("data:image/")).length;
@@ -65,13 +60,25 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
     geoData.forEach(point => {
       if (point.coords) {
         const hasKTP = point["Foto KTP"] && String(point["Foto KTP"]).startsWith("data:image/");
-        const markerColor = hasKTP ? 'green' : 'red';
         
+        // Enhance marker based on status
+        const status = (point.status || "").toUpperCase();
+        let markerColor = '#94a3b8'; // default
+        let iconHtml = '📍';
+        let glowColor = 'rgba(148, 163, 184, 0.4)';
+        
+        if (status === 'AKTIF') { markerColor = '#10b981'; iconHtml = '✓'; glowColor = 'rgba(16, 185, 129, 0.5)'; }
+        else if (status === 'PROSES') { markerColor = '#f59e0b'; iconHtml = '⚙'; glowColor = 'rgba(245, 158, 11, 0.5)'; }
+        else if (status === 'SURVEY') { markerColor = '#3b82f6'; iconHtml = '👁'; glowColor = 'rgba(59, 130, 246, 0.5)'; }
+        else if (status === 'PENGAJUAN') { markerColor = '#8b5cf6'; iconHtml = '+'; glowColor = 'rgba(139, 92, 246, 0.5)'; }
+        else if (status === 'BATAL' || status === 'NON AKTIF') { markerColor = '#ef4444'; iconHtml = '✕'; glowColor = 'rgba(239, 68, 68, 0.5)'; }
+        else if (hasKTP) { markerColor = '#16a34a'; iconHtml = '📷'; glowColor = 'rgba(22, 163, 74, 0.5)'; }
+
         const icon = L.divIcon({
           className: 'custom-marker',
-          html: `<div style="background-color: ${hasKTP ? '#16a34a' : '#ef4444'}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-          iconSize: [12, 12],
-          iconAnchor: [6, 6]
+          html: `<div style="background-color: ${markerColor}; width: 26px; height: 26px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px ${glowColor}, 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 900; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">${iconHtml}</div>`,
+          iconSize: [26, 26],
+          iconAnchor: [13, 13]
         });
 
         const marker = L.marker(point.coords, { icon }).addTo(leafletMap.current);
@@ -109,59 +116,72 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
       </div>
 
       {/* Filter & Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Village Filter */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
-          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Filter Desa</label>
-          <select 
-            value={selectedDesa} 
-            onChange={(e) => setSelectedDesa(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-[#0d1655] transition-all cursor-pointer"
-          >
-            <option value="">Semua Desa ({data.length} pelanggan)</option>
-            {villages.map(desa => {
-              const count = data.filter(item => item.Desa === desa).length;
-              return <option key={desa} value={desa}>{desa} ({count})</option>;
-            })}
-          </select>
-        </div>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* KTP Stats */}
-        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 shadow-sm flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md">
-            <Lucide.Image size={24} />
+        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/30">
+              <Lucide.Image size={24} />
+            </div>
+            <div>
+              <p className="text-3xl font-black text-emerald-700 leading-none">{withKTP}</p>
+              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mt-1">Data KTP Tersedia</p>
+            </div>
           </div>
-          <div>
-            <p className="text-2xl font-black text-emerald-700">{withKTP}</p>
-            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Pelanggan Dengan KTP</p>
+          <div className="hidden sm:block text-right">
+             <div className="w-12 h-12 rounded-full border-4 border-emerald-200 flex items-center justify-center text-emerald-600 font-black text-[10px]">
+               {Math.round((withKTP / (filteredData.length || 1)) * 100)}%
+             </div>
           </div>
         </div>
 
         {/* Missing KTP Stats */}
-        <div className={`border rounded-2xl p-4 shadow-sm flex items-center gap-3 ${withoutKTP > 0 ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'}`}>
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-md ${withoutKTP > 0 ? 'bg-red-500 text-white' : 'bg-slate-300 text-slate-500'}`}>
-            <Lucide.ImageOff size={24} />
-          </div>
-          <div>
-            <p className={`text-2xl font-black ${withoutKTP > 0 ? 'text-red-700' : 'text-slate-500'}`}>{withoutKTP}</p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-red-600">Belum Ada Foto KTP</p>
+        <div className={`border rounded-2xl p-5 shadow-sm flex items-center justify-between ${withoutKTP > 0 ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'}`}>
+          <div className="flex items-center gap-4">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg ${withoutKTP > 0 ? 'bg-red-500 text-white shadow-red-500/30' : 'bg-slate-300 text-slate-500'}`}>
+              <Lucide.ImageOff size={24} />
+            </div>
+            <div>
+              <p className={`text-3xl font-black leading-none ${withoutKTP > 0 ? 'text-red-700' : 'text-slate-500'}`}>{withoutKTP}</p>
+              <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${withoutKTP > 0 ? 'text-red-600' : 'text-slate-500'}`}>KTP Belum Ada</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content: Map + KTP List */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className={`grid grid-cols-1 lg:grid-cols-5 gap-6 ${isFullscreen ? 'fixed inset-0 z-[100] bg-slate-50 p-4 md:p-6 overflow-hidden' : ''}`}>
         {/* Map */}
-        <div className="lg:col-span-3 h-[380px] sm:h-[500px] bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm relative z-10" style={{ touchAction: 'pan-y' }}>
+        <div className={`${isFullscreen ? 'lg:col-span-5 h-full' : 'lg:col-span-3 h-[380px] sm:h-[500px]'} bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm relative z-10 transition-all`} style={{ touchAction: 'pan-y' }}>
           <div ref={mapRef} className="w-full h-full z-10" />
+          
+          {/* Legend overlay */}
+          <div className="absolute bottom-6 left-4 z-[400] bg-white/90 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-white/50 text-[10px] font-black uppercase tracking-wider space-y-2 pointer-events-none">
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block shadow-[0_0_8px_rgba(16,185,129,0.5)] flex items-center justify-center text-white text-[8px]">✓</span> AKTIF</div>
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-500 inline-block shadow-[0_0_8px_rgba(245,158,11,0.5)] flex items-center justify-center text-white text-[8px]">⚙</span> PROSES</div>
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-blue-500 inline-block shadow-[0_0_8px_rgba(59,130,246,0.5)] flex items-center justify-center text-white text-[8px]">👁</span> SURVEI</div>
+            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-purple-500 inline-block shadow-[0_0_8px_rgba(139,92,246,0.5)] flex items-center justify-center text-white text-[8px]">+</span> PENGAJUAN</div>
+          </div>
+
+          <button 
+            onClick={() => {
+              setIsFullscreen(!isFullscreen);
+              setTimeout(() => leafletMap.current?.invalidateSize(), 300);
+            }}
+            className="absolute top-4 right-4 z-[400] bg-white p-3 rounded-2xl shadow-xl border border-slate-200 text-[#0d1655] hover:bg-slate-50 transition-all hover:scale-105"
+            title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
+          >
+            {isFullscreen ? <Lucide.Minimize size={20} /> : <Lucide.Maximize size={20} />}
+          </button>
         </div>
 
         {/* KTP Customer List */}
+        {!isFullscreen && (
         <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="bg-[#0d1655] p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Lucide.IdCard size={20} className="text-[#F47920]" />
-              <h4 className="text-sm font-black text-white">Daftar Pelanggan {selectedDesa || "Semua"}</h4>
+              <h4 className="text-sm font-black text-white">Daftar Pelanggan Area Map</h4>
             </div>
             <span className="bg-white/10 px-3 py-1 rounded-lg text-[10px] font-black text-white">
               {filteredData.length} data
@@ -218,6 +238,7 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
             )}
           </div>
         </div>
+        )}
       </div>
 
       {/* KTP Preview Modal */}

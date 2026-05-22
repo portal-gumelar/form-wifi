@@ -11,8 +11,8 @@ import { AnalyticsCharts, FullAnalytics } from "../components/dashboard/Analytic
 import { RegistrationTable } from "../components/dashboard/RegistrationTable";
 import { PDFPreviewModal, DetailsModal, ConfirmDeleteModal, EditRegistrationModal } from "../components/dashboard/Modals";
 import { CustomersView } from "../components/dashboard/CustomersView";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import { GeographicalView } from "../components/dashboard/GeographicalView";
-import { ManajemenPelanggan } from "../components/dashboard/ManajemenPelanggan";
 import { VillageFundChart } from "../components/dashboard/VillageFundChart";
 
 // Utils & Types
@@ -97,24 +97,24 @@ const CustomPaketDropdown = ({ value, onChange, options }: { value: string, onCh
 
 // --- Normalisasi Field dari Google Sheets (di luar komponen agar selalu tersedia) ---
 const normalizeRow = (row: any): RegistrationData => ({
-  Timestamp:                String(row.Timestamp || ""),
-  "Nama Lengkap":           String(row["Nama Lengkap"] || ""),
-  "No HP / WA":             String(row["No HP / WA"] || ""),
-  Paket:                    String(row.Paket || ""),
-  "Alamat Pemasangan":      String(row["Alamat Pemasangan"] || row["alamat pemasangan"] || ""),
-  "Provider Saat Ini":      String(row["Provider Saat Ini"] || ""),
-  "Sumber Info":            String(row["Sumber Info"] || ""),
-  Kecamatan:                String(row.Kecamatan || row.kecamatan || "GUMELAR"),
-  Desa:                     String(row.Desa || row.desa || ""),
-  RW:                       String(row.RW || row.rw || ""),
-  RT:                       String(row.RT || row.rt || ""),
+  Timestamp: String(row.Timestamp || ""),
+  "Nama Lengkap": String(row["Nama Lengkap"] || ""),
+  "No HP / WA": String(row["No HP / WA"] || ""),
+  Paket: String(row.Paket || ""),
+  "Alamat Pemasangan": String(row["Alamat Pemasangan"] || row["alamat pemasangan"] || ""),
+  "Provider Saat Ini": String(row["Provider Saat Ini"] || ""),
+  "Sumber Info": String(row["Sumber Info"] || ""),
+  Kecamatan: String(row.Kecamatan || row.kecamatan || "GUMELAR"),
+  Desa: String(row.Desa || row.desa || ""),
+  RW: String(row.RW || row.rw || ""),
+  RT: String(row.RT || row.rt || ""),
   "Tanggal Rencana Pasang": String(row["Tanggal Rencana Pasang"] || ""),
-  "Waktu Survei":           String(row["Waktu Survei"] || ""),
-  "Link Google Maps":       String(row["Link Google Maps"] || ""),
-  status:                   String(row.status || row.Status || "PENGAJUAN"),
-  "Foto KTP":               String(row["Foto KTP"] || row.fotoKtp || ""),
-  "Persetujuan S&K":        String(row["Persetujuan S&K"] || row.persetujuanSnk || ""),
-  "Catatan":                String(row.Catatan || row.catatan || ""),
+  "Waktu Survei": String(row["Waktu Survei"] || ""),
+  "Link Google Maps": String(row["Link Google Maps"] || ""),
+  status: String(row.status || row.Status || "PENGAJUAN"),
+  "Foto KTP": String(row["Foto KTP"] || row.fotoKtp || ""),
+  "Persetujuan S&K": String(row["Persetujuan S&K"] || row.persetujuanSnk || ""),
+  "Catatan": String(row.Catatan || row.catatan || ""),
 });
 
 // --- Helper: Extract price from Paket string ---
@@ -147,13 +147,13 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [filterStatus, setFilterStatus] = useState("");
   // Filter Mbps dan Desa (permintaan Pak Yusuf)
-  const [filterMbps, setFilterMbps]   = useState("");
-  const [filterDesa, setFilterDesa]   = useState("");
+  const [filterMbps, setFilterMbps] = useState("");
+  const [filterDesa, setFilterDesa] = useState("");
   // B: Filter tanggal
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
   // D: Notifikasi
-  const [notifications, setNotifications] = useState<{id: string; name: string; time: string}[]>([]);
+  const [notifications, setNotifications] = useState<{ id: string; name: string; time: string }[]>([]);
   const [showNotif, setShowNotif] = useState(false);
   const [lastCount, setLastCount] = useState(0);
   // H: Auto-refresh status
@@ -330,6 +330,8 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
       params.append("Nama Lengkap", updatedItem["Nama Lengkap"] || "");
       params.append("Kecamatan", updatedItem.Kecamatan || "GUMELAR");
       params.append("Desa", updatedItem.Desa || "GUMELAR");
+      if (updatedItem.RW) params.append("RW", updatedItem.RW);
+      if (updatedItem.RT) params.append("RT", updatedItem.RT);
       params.append("Alamat Pemasangan", updatedItem["Alamat Pemasangan"] || "");
       params.append("No HP / WA", updatedItem["No HP / WA"] || "");
       params.append("Paket", updatedItem.Paket || "");
@@ -392,9 +394,15 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
         const tsDate = item.Timestamp ? item.Timestamp.split(",")[0] : "";
         const parts = tsDate.split("/");
         if (parts.length === 3) {
-          const itemDate = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
-          if (filterDateFrom) matchesDate = matchesDate && itemDate >= new Date(filterDateFrom);
-          if (filterDateTo)   matchesDate = matchesDate && itemDate <= new Date(filterDateTo);
+          const itemDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+          if (filterDateFrom) {
+            const [y, m, d] = filterDateFrom.split("-").map(Number);
+            matchesDate = matchesDate && itemDate >= new Date(y, m - 1, d);
+          }
+          if (filterDateTo) {
+            const [y, m, d] = filterDateTo.split("-").map(Number);
+            matchesDate = matchesDate && itemDate <= new Date(y, m - 1, d);
+          }
         }
       }
       return matchesSearch && matchesPaket && matchesStatus && matchesMbps && matchesDesa && matchesDate;
@@ -441,7 +449,13 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
         <section className="px-4 md:px-8 py-6 flex flex-col justify-center">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl md:text-3xl font-black text-[#0d1655] tracking-tight">{activeTab}</h1>
+              <h1 className="text-2xl md:text-3xl font-black text-[#0d1655] tracking-tight">
+                {activeTab === "Map View" ? "Peta Distribusi" : 
+                 activeTab === "Dashboard" ? "Beranda" :
+                 activeTab === "Registrations" ? "Data Pendaftaran" :
+                 activeTab === "Analytics" ? "Grafik Analitik" :
+                 activeTab === "Customers" ? "Data Pelanggan" : activeTab}
+              </h1>
               <p className="text-xs md:text-sm text-slate-500 mt-1 font-bold">Pemantauan & Ringkasan Aktivitas</p>
             </div>
             <div className="flex items-center gap-2">
@@ -449,11 +463,10 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
               <button
                 onClick={silentRefresh}
                 title={`Terakhir diperbarui: ${lastRefresh.toLocaleTimeString("id-ID")}`}
-                className={`hidden md:flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all ${
-                  isRefreshing
-                    ? "bg-blue-50 border-blue-200 text-blue-600 animate-pulse"
-                    : "bg-white border-slate-200 text-slate-500 hover:border-[#0d1655] hover:text-[#0d1655]"
-                }`}
+                className={`hidden md:flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all ${isRefreshing
+                  ? "bg-blue-50 border-blue-200 text-blue-600 animate-pulse"
+                  : "bg-white border-slate-200 text-slate-500 hover:border-[#0d1655] hover:text-[#0d1655]"
+                  }`}
               >
                 <Lucide.RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} />
                 {isRefreshing ? "Memperbarui..." : `${lastRefresh.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`}
@@ -511,88 +524,88 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
         </section>
 
         <section className="px-4 md:px-8 pb-8 space-y-6">
-          {/* Filter Status Bar - Status SOP Armedia (Pak Yusuf) */}
-          <div className="flex items-center gap-3 overflow-x-auto custom-scrollbar pb-3 snap-x">
+          {/* Filter Status Bar - disembunyikan di tab Data Pelanggan, Dana Desa CSR, dan Analytics */}
+          {activeTab !== "Customers" && activeTab !== "Dana Desa CSR" && activeTab !== "Analytics" && <div className="flex items-center gap-3 overflow-x-auto custom-scrollbar pb-3 snap-x">
             {[
-              { id: "",                       label: "Semua",                  icon: Lucide.LayoutGrid,   color: "" },
-              { id: "PENGAJUAN",              label: "Pengajuan",              icon: Lucide.PlusCircle,   color: "text-blue-600" },
-              { id: "SURVEY",                 label: "Survei",                 icon: Lucide.Search,       color: "text-orange-500" },
-              { id: "PROSES",                 label: "Proses Pasang",          icon: Lucide.Loader2,      color: "text-yellow-600" },
-              { id: "AKTIF",                  label: "Aktif",                  icon: Lucide.CheckCircle2, color: "text-emerald-600" },
-              { id: "NON AKTIF",              label: "Non Aktif",              icon: Lucide.PauseCircle,  color: "text-slate-500" },
-              { id: "BERHENTI BERLANGGANAN",  label: "Berhenti Berlangganan",  icon: Lucide.XCircle,      color: "text-red-500" },
+              { id: "", label: "Semua", icon: Lucide.LayoutGrid, color: "" },
+              { id: "PENGAJUAN", label: "Pengajuan", icon: Lucide.PlusCircle, color: "text-blue-600" },
+              { id: "SURVEY", label: "Survei", icon: Lucide.Search, color: "text-orange-500" },
+              { id: "PROSES", label: "Proses Pasang", icon: Lucide.Loader2, color: "text-yellow-600" },
+              { id: "BATAL", label: "Batal", icon: Lucide.XCircle, color: "text-red-500" },
             ].map((f) => (
               <button
                 key={f.id}
                 onClick={() => setFilterStatus(f.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black transition-all shrink-0 snap-start border-2 whitespace-nowrap ${
-                  filterStatus === f.id
-                    ? "bg-[#0d1655] text-white border-[#0d1655] shadow-lg shadow-blue-900/20"
-                    : "bg-white text-slate-500 hover:bg-slate-50 border-slate-200"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black transition-all shrink-0 snap-start border-2 whitespace-nowrap ${filterStatus === f.id
+                  ? "bg-[#0d1655] text-white border-[#0d1655] shadow-lg shadow-blue-900/20"
+                  : "bg-white text-slate-500 hover:bg-slate-50 border-slate-200"
+                  }`}
               >
                 <f.icon size={14} className={filterStatus === f.id ? "" : f.color} />
                 {f.label}
                 {filterStatus === f.id && (
                   <span className="bg-white/20 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md">
-                    {filteredData.length}
+                    {f.id === ""
+                      ? filteredData.filter(d => !["AKTIF", "NON AKTIF"].includes((d.status || "").toUpperCase())).length
+                      : filteredData.length}
                   </span>
                 )}
               </button>
             ))}
-          </div>
+          </div>}
 
-          {/* Filter Mbps & Desa - permintaan Pak Yusuf */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Filter Mbps */}
-            <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
-              <Lucide.Zap size={14} className="text-[#F47920] shrink-0" />
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Mbps:</span>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {["", "20", "30", "50", "100"].map(mbps => (
-                  <button
-                    key={mbps}
-                    onClick={() => setFilterMbps(mbps)}
-                    className={`px-3 py-1 rounded-xl text-[10px] font-black transition-all border ${
-                      filterMbps === mbps
+
+          {/* Filter Mbps & Desa - disembunyikan di tab Data Pelanggan, Dana Desa CSR, dan Analytics */}
+          {activeTab !== "Customers" && activeTab !== "Dana Desa CSR" && activeTab !== "Analytics" && (
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Filter Mbps */}
+              <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
+                <Lucide.Zap size={14} className="text-[#F47920] shrink-0" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Mbps:</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {["", "20", "30", "50", "100"].map(mbps => (
+                    <button
+                      key={mbps}
+                      onClick={() => setFilterMbps(mbps)}
+                      className={`px-3 py-1 rounded-xl text-[10px] font-black transition-all border ${filterMbps === mbps
                         ? "bg-[#F47920] text-white border-[#F47920]"
                         : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#F47920]"
-                    }`}
-                  >
-                    {mbps === "" ? "Semua" : `${mbps} Mbps`}
-                  </button>
-                ))}
+                        }`}
+                    >
+                      {mbps === "" ? "Semua" : `${mbps} Mbps`}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Filter Desa */}
-            <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
-              <Lucide.MapPin size={14} className="text-[#0d1655] shrink-0" />
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Desa:</span>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {[
-                  "",
-                  "GUMELAR", "CIHONJE", "TLAGA", "SAMUDRA",
-                  "SAMUDRA KULON", "CILANGKAP", "PANINGKABAN"
-                ].map(desa => (
-                  <button
-                    key={desa}
-                    onClick={() => setFilterDesa(desa)}
-                    className={`px-3 py-1 rounded-xl text-[10px] font-black transition-all border ${
-                      filterDesa === desa
+              {/* Filter Desa */}
+              <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
+                <Lucide.MapPin size={14} className="text-[#0d1655] shrink-0" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Desa:</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[
+                    "",
+                    "GUMELAR", "CIHONJE", "TLAGA", "SAMUDRA",
+                    "SAMUDRA KULON", "CILANGKAP", "PANINGKABAN"
+                  ].map(desa => (
+                    <button
+                      key={desa}
+                      onClick={() => setFilterDesa(desa)}
+                      className={`px-3 py-1 rounded-xl text-[10px] font-black transition-all border ${filterDesa === desa
                         ? "bg-[#0d1655] text-white border-[#0d1655]"
-                        : desa === "" ? "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#0d1655]" : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#0d1655]"
-                    }`}
-                  >
-                    {desa === "" ? "Semua Desa" : desa}
-                  </button>
-                ))}
+                        : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#0d1655]"
+                        }`}
+                    >
+                      {desa === "" ? "Semua Desa" : desa}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* B: Filter Tanggal */}
-          {(activeTab === "Kelola Pesanan" || activeTab === "Data Pelanggan") && (
+          {/* Filter Tanggal - disembunyikan di tab Data Pelanggan */}
+          {activeTab !== "Customers" && activeTab === "Registrations" && (
             <div className="flex flex-wrap items-center gap-3 bg-white border border-slate-100 rounded-2xl px-4 py-3 shadow-sm">
               <div className="flex items-center gap-2 text-xs font-black text-slate-500 uppercase tracking-wider shrink-0">
                 <Lucide.Calendar size={14} className="text-[#F47920]" />
@@ -768,7 +781,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                 {/* Table Wrapper */}
                 <div className="w-full overflow-x-auto pb-4 custom-scrollbar bg-white rounded-3xl shadow-sm border border-slate-100">
                   <RegistrationTable
-                    data={filteredData}
+                    data={filteredData.filter(d => !["AKTIF", "NON AKTIF"].includes((d.status || "").toUpperCase()))}
                     isDarkMode={isDarkMode}
                     onViewDetails={setSelectedReg}
                     onEdit={setEditingReg}
@@ -788,7 +801,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
 
             {activeTab === "Customers" && (
               <motion.div key="customers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <CustomersView data={filteredData} isDarkMode={isDarkMode} onViewDetails={setSelectedReg} onDelete={setConfirmDelete} onUpdateStatus={handleUpdateStatus} />
+                <CustomersView data={data} isDarkMode={isDarkMode} onViewDetails={setSelectedReg} onDelete={setConfirmDelete} onUpdateStatus={handleUpdateStatus} />
               </motion.div>
             )}
 
@@ -798,23 +811,14 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
               </motion.div>
             )}
 
-            {activeTab === "Manajemen" && (
-              <motion.div key="manajemen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <ManajemenPelanggan 
-                  data={data} 
-                  isDarkMode={isDarkMode} 
-                  onViewDetails={setSelectedReg}
-                  onDelete={setConfirmDelete}
-                  onUpdateStatus={handleUpdateStatus}
-                />
-              </motion.div>
-            )}
-
             {activeTab === "Dana Desa CSR" && (
               <motion.div key="dana-desa" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <VillageFundChart data={data} isDarkMode={isDarkMode} />
               </motion.div>
             )}
+
+
+
           </AnimatePresence>
         </section>
       </main>

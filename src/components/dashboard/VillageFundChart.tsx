@@ -30,15 +30,15 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
     const fundMap = new Map<string, { count: number; rws: Map<string, { rt: Set<string>; customers: string[] }> }>();
     
     // Filter data dengan status AKTIF saja untuk Dana Desa
-    const activeData = data.filter(item => (item.status || "").toUpperCase() === "AKTIF");
+    const activeData = data.filter(item => String(item.status || "").toUpperCase() === "AKTIF");
     
     activeData.forEach(item => {
       // Safeguard: pastikan item ada
       if (!item) return;
       
-      const desa = item.Desa?.toUpperCase() || "GUMELAR";
-      const rw = item.RW || "RW 00";
-      const rt = item.RT || "RT 00";
+      const desa = String(item.Desa || "GUMELAR").toUpperCase();
+      const rw = String(item.RW || "RW 00");
+      const rt = String(item.RT || "RT 00");
       
       if (!fundMap.has(desa)) {
         fundMap.set(desa, { count: 0, rws: new Map() });
@@ -50,7 +50,7 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
         villageData.rws.set(rw, { rt: new Set(), customers: [] });
       }
       villageData.rws.get(rw)!.rt.add(rt);
-      villageData.rws.get(rw)!.customers.push(item["Nama Lengkap"] || "");
+      villageData.rws.get(rw)!.customers.push(String(item["Nama Lengkap"] || ""));
     });
     
     return fundMap;
@@ -80,13 +80,13 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
   const villageRTDetails = useMemo(() => {
     const rtMap = new Map<string, Map<string, Map<string, { count: number; names: string[] }>>>();
     
-    const activeData = data.filter(item => (item.status || "").toUpperCase() === "AKTIF");
+    const activeData = data.filter(item => String(item.status || "").toUpperCase() === "AKTIF");
     
     activeData.forEach(item => {
       if (!item) return;
-      const desa = item.Desa?.toUpperCase() || "GUMELAR";
-      const rw = item.RW || "RW 00";
-      const rt = item.RT || "RT 00";
+      const desa = String(item.Desa || "GUMELAR").toUpperCase();
+      const rw = String(item.RW || "RW 00");
+      const rt = String(item.RT || "RT 00");
       
       if (!rtMap.has(desa)) {
         rtMap.set(desa, new Map());
@@ -103,7 +103,7 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
       }
       const rtData = rwMap.get(rt)!;
       rtData.count++;
-      rtData.names.push(item["Nama Lengkap"] || "");
+      rtData.names.push(String(item["Nama Lengkap"] || ""));
     });
     
     return rtMap;
@@ -139,11 +139,11 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
     const counts = new Map<string, { rwCount: number; rtCount: number; rwList: string[]; rtByRw: Map<string, string[]> }>();
     
     villageFunds.forEach((villageData, desa) => {
-      const rwList = Array.from(villageData.rws.keys());
+      const rwList = Array.from(villageData.rws.keys()).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
       const rtByRw = new Map<string, string[]>();
       
       villageData.rws.forEach((rwData, rw) => {
-        rtByRw.set(rw, Array.from(rwData.rt));
+        rtByRw.set(rw, Array.from(rwData.rt).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })));
       });
       
       counts.set(desa, {
@@ -163,7 +163,7 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
     const fundData = villageFunds.get(selectedVillageId);
     if (!fundData) return [];
     
-    const rwList = Array.from(fundData.rws.keys());
+    const rwList = Array.from(fundData.rws.keys()).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
     if (filterRw) {
       return rwList.filter(rw => rw.toLowerCase().includes(filterRw.toLowerCase()));
     }
@@ -190,6 +190,13 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
           });
         });
       });
+    });
+    
+    // Sort exportData alphanumerically
+    exportData.sort((a, b) => {
+      if (a.desa !== b.desa) return a.desa.localeCompare(b.desa);
+      if (a.rw !== b.rw) return a.rw.localeCompare(b.rw, undefined, { numeric: true });
+      return a.rt.localeCompare(b.rt, undefined, { numeric: true });
     });
     
     // Create CSV content
@@ -332,6 +339,7 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
           </div>
           
           <div className="p-4 space-y-3 max-h-[500px] overflow-y-auto">
+            <AnimatePresence mode="popLayout">
             {villages.map((village) => {
               const fundData = villageFunds.get(village.name);
               const customerCount = fundData?.count || 0;
@@ -340,9 +348,11 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
               
               return (
                 <motion.div
+                  layout
                   key={village.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
                   className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                     selectedVillageId === village.id 
                       ? 'border-[#0d1655] bg-[#0d1655]/5' 
@@ -369,6 +379,7 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
                 </motion.div>
               );
             })}
+            </AnimatePresence>
             
             {villages.length === 0 && (
               <div className="text-center py-8 text-slate-400">
@@ -433,16 +444,19 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
           <div className="p-4 max-h-[500px] overflow-y-auto">
             {selectedVillageId ? (
               <div className="space-y-3">
+                <AnimatePresence mode="popLayout">
                 {filteredRwList.map((rw, rwIndex) => {
                   const rwData = villageFunds.get(selectedVillageId)?.rws.get(rw);
-                  const rtList = Array.from(rwData?.rt || []);
+                  const rtList = Array.from(rwData?.rt || []).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
                   const customerCount = rwData?.customers?.length || 0;
                   
                   return (
                     <motion.div
+                      layout
                       key={rw}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
                       transition={{ delay: rwIndex * 0.05 }}
                       className="p-4 rounded-2xl border border-slate-100 hover:border-blue-200 transition-all"
                     >
@@ -484,6 +498,7 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
                     </motion.div>
                   );
                 })}
+                </AnimatePresence>
                 
                 {filteredRwList.length === 0 && (
                   <div className="text-center py-8 text-slate-400">
@@ -522,7 +537,7 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
               <div className="space-y-4">
                 {filteredRwList.map((rw) => {
                   const rwData = villageFunds.get(selectedVillageId)?.rws.get(rw);
-                  const rtList = Array.from(rwData?.rt || []);
+                  const rtList = Array.from(rwData?.rt || []).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
                   
                   return (
                     <div key={rw}>

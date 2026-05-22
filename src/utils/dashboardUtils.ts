@@ -5,8 +5,43 @@ import autoTable from "jspdf-autotable";
 
 export const getCustomerNo = (timestamp: string) => {
   if (!timestamp) return "AMN-000";
-  const clean = timestamp.replace(/\D/g, "");
+  const clean = String(timestamp).replace(/\D/g, "");
   return `AMN-${clean.slice(-5)}`;
+};
+
+export const calculateProRata = (tanggalAktifStr: string, paketStr: string) => {
+  if (!tanggalAktifStr || !paketStr) return null;
+  
+  // Extract price (e.g., "115.000" -> 115000)
+  const priceMatch = paketStr.match(/Rp\s*([\d.]+)/i) || paketStr.match(/(\d{3}\.\d{3})/);
+  if (!priceMatch) return null;
+  const price = parseInt(priceMatch[1].replace(/\./g, ""));
+
+  // Parse Date
+  const aktifDate = new Date(tanggalAktifStr);
+  if (isNaN(aktifDate.getTime())) return null;
+
+  const year = aktifDate.getFullYear();
+  const month = aktifDate.getMonth(); // 0-indexed
+  const day = aktifDate.getDate();
+
+  // Get total days in that month
+  const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+  
+  // Calculate remaining days (inclusive of activation day)
+  const remainingDays = totalDaysInMonth - day + 1;
+
+  // Pro-rata calculation
+  const proRataPrice = Math.round((price / totalDaysInMonth) * remainingDays);
+
+  return {
+    normalPrice: price,
+    proRataPrice,
+    remainingDays,
+    totalDaysInMonth,
+    day,
+    monthName: aktifDate.toLocaleString('id-ID', { month: 'long', year: 'numeric' })
+  };
 };
 
 export const calculateStats = (data: RegistrationData[]): DashboardStats => {
@@ -68,10 +103,35 @@ export const calculateStats = (data: RegistrationData[]): DashboardStats => {
 };
 
 export const exportToExcel = (data: RegistrationData[]) => {
-  const worksheet = XLSX.utils.json_to_sheet(data);
+  const formattedData = data.map((item, idx) => ({
+    "No.": idx + 1,
+    "ID Pelanggan": getCustomerNo(item.Timestamp),
+    "Status": (item.status || "PENGAJUAN").toUpperCase(),
+    "Nama Lengkap": item["Nama Lengkap"],
+    "No HP / WA": item["No HP / WA"],
+    "Alamat Pemasangan": item["Alamat Pemasangan"],
+    "RW / RT": item["RW / RT"] || "-",
+    "Desa": item.Desa,
+    "Kecamatan": item.Kecamatan,
+    "Paket Layanan": item.Paket,
+    "Titik Koordinat (Maps)": item["Titik Koordinat"],
+    "Catatan Khusus": item.Catatan || "-",
+    "Tanggal Mendaftar": item.Timestamp.split(",")[0],
+    "Foto KTP (Sistem)": item["Foto KTP"] ? "Ada Lampiran" : "Tidak Ada"
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(formattedData);
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
-  XLSX.writeFile(workbook, `Armedia_Registrations_${new Date().toLocaleDateString()}.xlsx`);
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Data_Pesanan");
+  
+  // Set column widths for better readability
+  worksheet['!cols'] = [
+    {wch: 5}, {wch: 15}, {wch: 15}, {wch: 25}, {wch: 18}, 
+    {wch: 40}, {wch: 10}, {wch: 15}, {wch: 15}, {wch: 30}, 
+    {wch: 35}, {wch: 25}, {wch: 15}, {wch: 15}
+  ];
+
+  XLSX.writeFile(workbook, `Armedia_Data_Pesanan_${new Date().toLocaleDateString('id-ID').replace(/\//g, '-')}.xlsx`);
 };
 
 const LOGO_URL = "https://ik.imagekit.io/Gumelar/LogO/logo%20pt.png?updatedAt=1778213993513";
@@ -138,6 +198,31 @@ const appendKtpAttachments = (doc: any, data: RegistrationData[]) => {
   });
 };
 
+const appendNotes = (doc: any) => {
+  const finalY = doc.lastAutoTable?.finalY || 40;
+  
+  doc.setFontSize(10);
+  doc.setTextColor(13, 22, 85);
+  doc.setFont("helvetica", "bold");
+  doc.text("Catatan & Instruksi Kerja:", 14, finalY + 15);
+  
+  doc.setFontSize(9);
+  doc.setTextColor(100, 116, 139);
+  doc.setFont("helvetica", "normal");
+  
+  const notes = [
+    "1. Prioritas Utama: Segera tindak lanjuti pelanggan berstatus 'Pengajuan' yang sudah mendaftar lebih dari 2 hari.",
+    "2. Prosedur Lapangan: Tim teknisi wajib mengecek ketersediaan port ODP terdekat dan mengonfirmasi jadwal via WhatsApp.",
+    "3. Privasi Data: Laporan ini di-generate otomatis oleh sistem. Lampiran identitas (KTP) pendaftar terlampir pada halaman selanjutnya."
+  ];
+  
+  let currentY = finalY + 22;
+  notes.forEach(note => {
+    doc.text(note, 14, currentY);
+    currentY += 6;
+  });
+};
+
 export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
   const doc = new jsPDF("l", "mm", "a4");
   
@@ -155,16 +240,16 @@ export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
   
   doc.text(`Dicetak pada: ${new Date().toLocaleString("id-ID")}`, 280, 20, { align: "right" });
 
-  const headers = [["No.", "Customer ID", "Nama Lengkap", "WhatsApp", "Paket Layanan", "Kecamatan / Desa", "Tanggal Daftar", "KTP"]];
+  const headers = [["No.", "Customer ID", "Nama Lengkap", "Status", "WhatsApp", "Paket Layanan", "Kec/Desa/Alamat", "Tanggal Daftar"]];
   const rows = data.map((item, idx) => [
     idx + 1,
     getCustomerNo(item.Timestamp),
     item["Nama Lengkap"],
+    (item.status || "PENGAJUAN").toUpperCase(),
     item["No HP / WA"],
-    String(item.Paket || "").split("(")[0],
-    `${item.Kecamatan || "-"} / ${item.Desa || "-"}`,
-    item.Timestamp.split(",")[0],
-    item["Foto KTP"] ? "ADA (Lampiran)" : "TIDAK"
+    String(item.Paket || "").split("(")[0].trim(),
+    `${item.Kecamatan || "-"} / ${item.Desa || "-"}\n${item["Alamat Pemasangan"] || "-"}`,
+    item.Timestamp.split(",")[0]
   ]);
 
   autoTable(doc, {
@@ -178,6 +263,7 @@ export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
     margin: { top: 40 }
   });
 
+  appendNotes(doc);
   appendKtpAttachments(doc, data);
 
   return URL.createObjectURL(doc.output("blob"));
@@ -200,16 +286,16 @@ export const downloadPDF = (data: RegistrationData[]) => {
   
   doc.text(`Dicetak pada: ${new Date().toLocaleString("id-ID")}`, 280, 20, { align: "right" });
 
-  const headers = [["No.", "Customer ID", "Nama Lengkap", "WhatsApp", "Paket Layanan", "Kecamatan / Desa", "Tanggal Daftar", "KTP"]];
+  const headers = [["No.", "Customer ID", "Nama Lengkap", "Status", "WhatsApp", "Paket Layanan", "Kec/Desa/Alamat", "Tanggal Daftar"]];
   const rows = data.map((item, idx) => [
     idx + 1,
     getCustomerNo(item.Timestamp),
     item["Nama Lengkap"],
+    (item.status || "PENGAJUAN").toUpperCase(),
     item["No HP / WA"],
-    String(item.Paket || "").split("(")[0],
-    `${item.Kecamatan || "-"} / ${item.Desa || "-"}`,
-    item.Timestamp.split(",")[0],
-    item["Foto KTP"] ? "ADA (Lampiran)" : "TIDAK"
+    String(item.Paket || "").split("(")[0].trim(),
+    `${item.Kecamatan || "-"} / ${item.Desa || "-"}\n${item["Alamat Pemasangan"] || "-"}`,
+    item.Timestamp.split(",")[0]
   ]);
 
   autoTable(doc, {
@@ -223,6 +309,7 @@ export const downloadPDF = (data: RegistrationData[]) => {
     margin: { top: 40 }
   });
 
+  appendNotes(doc);
   appendKtpAttachments(doc, data);
 
   doc.save(`Armedia_Report_${new Date().toLocaleDateString()}.pdf`);

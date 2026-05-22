@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Lucide from "lucide-react";
 import { RegistrationData } from "../../types";
-import { getCustomerNo } from "../../utils/dashboardUtils";
+import { getCustomerNo, calculateProRata } from "../../utils/dashboardUtils";
 
 interface PDFPreviewModalProps {
   url: string | null;
@@ -103,7 +103,34 @@ interface DetailsModalProps {
   onClose: () => void;
 }
 
-export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, onClose }) => (
+export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, onClose }) => {
+  const [copySuccess, setCopySuccess] = useState(false);
+  const proRata = item ? calculateProRata(item["Tanggal Aktif"] || "", item.Paket || "") : null;
+
+  const handleCopyWa = () => {
+    if (!item || !proRata) return;
+    
+    const rp = (num: number) => `Rp ${num.toLocaleString('id-ID')}`;
+    const text = `*INFORMASI TAGIHAN BULAN PERTAMA (PRO-RATA)*\n\n` +
+      `Halo Bapak/Ibu *${item["Nama Lengkap"]}*,\n` +
+      `Layanan internet ARMEDIA.ID Anda telah aktif.\n\n` +
+      `*Rincian Aktivasi:*\n` +
+      `- ID Pelanggan: ${getCustomerNo(item.Timestamp)}\n` +
+      `- Tanggal Aktif: ${new Date(item["Tanggal Aktif"]!).toLocaleDateString('id-ID')}\n` +
+      `- Paket Internet: ${item.Paket?.replace(/\.(\d+\s*Mbps)/i, ' $1')}\n\n` +
+      `*Tagihan Bulan Pertama (Pro-Rata):*\n` +
+      `Karena internet Anda aktif pada tanggal ${proRata.day} ${proRata.monthName}, maka tagihan bulan pertama disesuaikan (Pro-Rata) untuk ${proRata.remainingDays} hari.\n` +
+      `Total Tagihan: *${rp(proRata.proRataPrice)}*\n\n` +
+      `*Catatan:*\n` +
+      `Untuk bulan berikutnya, tagihan akan kembali normal yaitu sebesar *${rp(proRata.normalPrice)}*/bulan.\n\n` +
+      `Terima kasih telah mempercayakan layanan internet Anda kepada ARMEDIA.ID.`;
+      
+    navigator.clipboard.writeText(text);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
+
+  return (
   <AnimatePresence>
     {item && (
       <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
@@ -231,6 +258,51 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
               <p className="font-bold text-emerald-800 text-sm">{item["Persetujuan S&K"] || "SETUJU"}</p>
             </div>
 
+            {/* Pro-Rata Table (Bulan Pertama) */}
+            {item.status === "AKTIF" && item["Tanggal Aktif"] && proRata && (
+              <div className="p-5 rounded-3xl bg-blue-50/50 border border-blue-100 overflow-hidden">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-500 rounded-xl text-white">
+                      <Lucide.Calculator size={16} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-[#0d1655]">Tagihan Pro-Rata (Bulan ke-1)</h4>
+                      <p className="text-[10px] font-bold text-slate-500">Kalkulasi biaya sejak internet aktif</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={handleCopyWa}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${
+                      copySuccess ? "bg-emerald-500 text-white shadow-emerald-500/30" : "bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50"
+                    }`}
+                  >
+                    {copySuccess ? <Lucide.Check size={12} /> : <Lucide.Copy size={12} />}
+                    {copySuccess ? "Tersalin!" : "Copy Pesan WA"}
+                  </button>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden text-xs">
+                  <div className="grid grid-cols-2 p-3 border-b border-slate-100 items-center">
+                    <span className="font-bold text-slate-500">Tanggal Aktif</span>
+                    <span className="font-black text-slate-800 text-right">{new Date(item["Tanggal Aktif"]).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                  </div>
+                  <div className="grid grid-cols-2 p-3 border-b border-slate-100 items-center">
+                    <span className="font-bold text-slate-500">Harga Normal / Bulan</span>
+                    <span className="font-black text-slate-800 text-right">Rp {proRata.normalPrice.toLocaleString('id-ID')}</span>
+                  </div>
+                  <div className="grid grid-cols-2 p-3 border-b border-slate-100 items-center">
+                    <span className="font-bold text-slate-500">Hari Terpakai (Bulan Pertama)</span>
+                    <span className="font-black text-slate-800 text-right">{proRata.remainingDays} dari {proRata.totalDaysInMonth} hari</span>
+                  </div>
+                  <div className="grid grid-cols-2 p-4 bg-orange-50 items-center">
+                    <span className="font-black text-orange-700">Total Tagihan Awal</span>
+                    <span className="font-black text-orange-600 text-right text-lg">Rp {proRata.proRataPrice.toLocaleString('id-ID')}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Catatan */}
             {item.Catatan && (
               <div className="p-4 rounded-2xl border border-amber-100 bg-amber-50/30">
@@ -268,7 +340,8 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
       </div>
     )}
   </AnimatePresence>
-);
+  );
+};
 
 interface ConfirmDeleteModalProps {
   timestamp: string | null;
@@ -498,8 +571,8 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div className="sm:col-span-2 space-y-1.5">
-                  <label className="text-xs font-bold text-slate-800">Alamat Lengkap Rumah (RT/RW)</label>
-                  <input type="text" value={formData["Alamat Pemasangan"] || ""} onChange={e => handleChange("Alamat Pemasangan", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Nama jalan, RT/RW, Banjar" />
+                  <label className="text-xs font-bold text-slate-800">Alamat Lengkap Rumah</label>
+                  <input type="text" value={formData["Alamat Pemasangan"] || ""} onChange={e => handleChange("Alamat Pemasangan", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Nama jalan, nomor rumah, gang..." />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Kecamatan</label>
@@ -508,6 +581,14 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Desa</label>
                   <input type="text" value={formData.Desa || ""} onChange={e => handleChange("Desa", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800">RW</label>
+                  <input type="text" value={formData.RW || ""} onChange={e => handleChange("RW", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0d1655] placeholder:text-slate-400" placeholder="Contoh: RW 01" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800">RT</label>
+                  <input type="text" value={formData.RT || ""} onChange={e => handleChange("RT", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: RT 01" />
                 </div>
                 <div className="sm:col-span-4 space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Link Koordinat GPS (Google Maps)</label>
@@ -531,8 +612,36 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
               {/* Status Pill Buttons - Mobile Friendly */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-800 block">Status Tahapan Progres</label>
-                <StatusPillButtons value={formData.status || "PENGAJUAN"} onChange={(val) => handleChange("status", val)} />
+                <StatusPillButtons 
+                  value={formData.status || "PENGAJUAN"} 
+                  onChange={(val) => {
+                    handleChange("status", val);
+                    if (val === "AKTIF" && !formData["Tanggal Aktif"]) {
+                      const today = new Date();
+                      handleChange("Tanggal Aktif", today.toISOString().split('T')[0]);
+                    }
+                  }} 
+                />
               </div>
+
+              {/* Input Tanggal Aktif (muncul hanya jika AKTIF atau NON AKTIF) */}
+              {(formData.status === "AKTIF" || formData.status === "NON AKTIF") && (
+                <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-100">
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-2 mb-1.5">
+                    <Lucide.Power size={14} className="text-blue-500" />
+                    Tanggal Internet Aktif (Untuk Pro-Rata Tagihan)
+                  </label>
+                  <input 
+                    type="date" 
+                    value={formData["Tanggal Aktif"] || ""} 
+                    onChange={e => handleChange("Tanggal Aktif", e.target.value)} 
+                    className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" 
+                  />
+                  <p className="text-[10px] text-slate-500 mt-2 leading-tight">
+                    *Tentukan tanggal untuk menghitung tagihan awal. Jika dikosongkan, tagihan Pro-Rata tidak akan muncul.
+                  </p>
+                </div>
+              )}
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">

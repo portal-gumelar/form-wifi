@@ -124,14 +124,14 @@ export const SubscriberNotice: React.FC<SubscriberNoticeProps> = ({ isAccepted, 
           </div>
         </div>
 
-        {/* Tombol Buka / Tutup — eksplisit, besar, dan pulsing */}
+        {/* Tombol Buka / Tutup — eksplisit, putih agar tidak menyaingi tombol utama */}
         <button
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
           className={`flex items-center justify-center gap-2 px-7 py-4 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest transition-all shrink-0 active:scale-95 shadow-lg border-2 ${
             isExpanded
               ? "bg-white border-white text-[#0d1655] hover:bg-slate-50"
-              : "bg-[#F47920] border-[#F47920] text-white hover:bg-orange-600 hover:border-orange-600 ring-4 ring-orange-500/20 shadow-orange-500/40"
+              : "bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white/20 hover:border-white/50 ring-4 ring-white/5"
           }`}
         >
           {isExpanded ? (
@@ -360,10 +360,10 @@ export const SubscriberNotice: React.FC<SubscriberNoticeProps> = ({ isAccepted, 
       {/* ── AREA CENTANG — Besar & Jelas ─────────────────────── */}
       <div
         onClick={() => onAcceptChange(!isAccepted)}
-        className={`w-full cursor-pointer select-none rounded-2xl border-2 p-4 sm:p-5 flex items-center gap-4 transition-all duration-300 ${
+        className={`w-full cursor-pointer select-none rounded-[2rem] border-2 p-4 sm:p-5 flex items-center gap-4 transition-all duration-300 mt-2 ${
           isAccepted
             ? "bg-emerald-50 border-emerald-500 shadow-md"
-            : "bg-white border-orange-400 hover:border-orange-500"
+            : "bg-white border-slate-300 hover:border-orange-400"
         }`}
       >
         {/* Kotak centang custom — ukuran besar & jelas */}
@@ -371,7 +371,7 @@ export const SubscriberNotice: React.FC<SubscriberNoticeProps> = ({ isAccepted, 
           className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
             isAccepted
               ? "bg-emerald-500 border-emerald-500 shadow-lg shadow-emerald-200"
-              : "bg-white border-orange-400"
+              : "bg-slate-100 border-slate-300"
           }`}
         >
           {isAccepted && <Lucide.Check size={18} strokeWidth={3.5} className="text-white" />}

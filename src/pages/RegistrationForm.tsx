@@ -17,6 +17,8 @@ const initialForm = {
   namaLengkap: "",
   kecamatan: "GUMELAR",
   desa: "",
+  rw: "",
+  rt: "",
   alamat: "",
   noHp: "",
   paket: "GUYUB_1 (20 Mbps) - Rp 115.000/Bln",
@@ -29,6 +31,24 @@ const initialForm = {
   sumberInfo: "",
   fotoKtp: "",
   catatan: "",
+};
+
+// RW/RT struktur setiap desa. Tambah desa lain di sini nanti.
+const DESA_RW_RT: Record<string, Record<string, string[]>> = {
+  GUMELAR: {
+    "RW 01": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08","RT 09"],
+    "RW 02": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06"],
+    "RW 03": ["RT 01","RT 02","RT 03","RT 04","RT 05"],
+    "RW 04": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07"],
+    "RW 05": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06"],
+    "RW 06": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08","RT 09"],
+    "RW 07": ["RT 01","RT 02","RT 03","RT 04"],
+    "RW 08": ["RT 01","RT 02","RT 03","RT 04","RT 05"],
+    "RW 09": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08"],
+    "RW 10": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07"],
+    "RW 11": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07"],
+  },
+  CIHONJE: {}, // akan diisi nanti
 };
 
 const VILLAGES = [
@@ -85,7 +105,14 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    // Reset RW/RT when desa changes
+    if (name === "desa") {
+      setForm(prev => ({ ...prev, desa: value, rw: "", rt: "" }));
+    } else if (name === "rw") {
+      setForm(prev => ({ ...prev, rw: value, rt: "" }));
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
     setError("");
 
     if (name === "desa") {
@@ -93,10 +120,6 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         setCoverageWarning("mohon maaf desa anda belum terkafer oleh jaringan kami. mohon menunggu");
       } else {
         setCoverageWarning("");
-        // Auto-advance after village selection
-        setTimeout(() => {
-          document.getElementById("inp-alamat")?.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 200);
       }
     }
 
@@ -170,6 +193,13 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
+    // Validasi RW/RT jika desa memiliki data RW
+    const desaHasRwRt = DESA_RW_RT[form.desa] && Object.keys(DESA_RW_RT[form.desa]).length > 0;
+    if (desaHasRwRt && (!form.rw || !form.rt)) {
+      setError("Mohon pilih RW dan RT tempat tinggal Anda.");
+      document.getElementById("sec-rwrt")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
 
     if (!isNoticeAccepted) {
       setError("Anda wajib membuka, membaca, dan menyetujui Ketentuan Biaya Pro-rata di bawah sebelum mengirim data.");
@@ -190,17 +220,19 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
           key === "namaLengkap" ? "Nama Lengkap" :
             key === "kecamatan" ? "Kecamatan" :
               key === "desa" ? "Desa" :
-                key === "alamat" ? "Alamat Pemasangan" :
-                  key === "noHp" ? "No HP / WA" :
-                    key === "paket" ? "Paket" :
-                      key === "tanggalPasang" ? "Tanggal Rencana Pasang" :
-                        key === "bisaGoogleMaps" ? "Bisa Google Maps" :
-                          key === "linkGoogleMaps" ? "Link Google Maps" :
-                            key === "waktuSurvei" ? "Waktu Survei" :
-                              key === "prioritas" ? "Prioritas" :
-                                key === "sumberInfo" ? "Sumber Info" : 
-                                  key === "fotoKtp" ? "Foto KTP" :
-                                    key === "catatan" ? "Catatan" : key;
+                key === "rw" ? "RW" :
+                  key === "rt" ? "RT" :
+                    key === "alamat" ? "Alamat Pemasangan" :
+                      key === "noHp" ? "No HP / WA" :
+                        key === "paket" ? "Paket" :
+                          key === "tanggalPasang" ? "Tanggal Rencana Pasang" :
+                            key === "bisaGoogleMaps" ? "Bisa Google Maps" :
+                              key === "linkGoogleMaps" ? "Link Google Maps" :
+                                key === "waktuSurvei" ? "Waktu Survei" :
+                                  key === "prioritas" ? "Prioritas" :
+                                    key === "sumberInfo" ? "Sumber Info" : 
+                                      key === "fotoKtp" ? "Foto KTP" :
+                                        key === "catatan" ? "Catatan" : key;
         payload.append(apiKey, val);
       }
     });
@@ -498,8 +530,63 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                   )}
                 </div>
 
+                {/* ── CASCADING: RW & RT (muncul setelah pilih desa) ── */}
+                {form.desa && DESA_RW_RT[form.desa] && Object.keys(DESA_RW_RT[form.desa]).length > 0 && (
+                  <div id="sec-rwrt" className="grid grid-cols-1 md:grid-cols-2 gap-5 scroll-mt-24">
+                    {/* RW */}
+                    <div className="w-full">
+                      <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">
+                        Pilih RW <span className="text-red-500">*</span>
+                        <span className="ml-2 text-[#F47920] font-black">{form.desa}</span>
+                      </label>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
+                        {Object.keys(DESA_RW_RT[form.desa]).map((rw) => (
+                          <button
+                            key={rw}
+                            type="button"
+                            onClick={() => handleChange({ target: { name: "rw", value: rw } })}
+                            className={`py-3 px-1 sm:px-2 rounded-2xl text-[11px] sm:text-xs font-black uppercase tracking-tight transition-all border-2 text-center ${
+                              form.rw === rw
+                                ? "bg-[#0d1655] text-white border-[#0d1655] shadow-lg shadow-blue-900/20 scale-105"
+                                : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#0d1655] hover:text-[#0d1655]"
+                            }`}
+                          >
+                            {rw}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* RT — muncul setelah RW dipilih */}
+                    {form.rw && DESA_RW_RT[form.desa][form.rw] && (
+                      <div className="w-full">
+                        <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">
+                          Pilih RT <span className="text-red-500">*</span>
+                          <span className="ml-2 text-[#F47920] font-black">{form.rw}</span>
+                        </label>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
+                          {DESA_RW_RT[form.desa][form.rw].map((rt) => (
+                            <button
+                              key={rt}
+                              type="button"
+                              onClick={() => handleChange({ target: { name: "rt", value: rt } })}
+                              className={`py-3 px-1 sm:px-2 rounded-2xl text-[11px] sm:text-xs font-black uppercase tracking-tight transition-all border-2 text-center ${
+                                form.rt === rt
+                                  ? "bg-[#F47920] text-white border-[#F47920] shadow-lg shadow-orange-500/20 scale-105"
+                                  : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#F47920] hover:text-[#F47920]"
+                              }`}
+                            >
+                              {rt}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div id="inp-alamat" className="w-full">
-                  <InputField label="Alamat Lengkap (RT/RW)" name="alamat" value={form.alamat} onChange={handleChange} placeholder="Nama jalan, nomor rumah, RT/RW..." required textarea />
+                  <InputField label="Alamat Lengkap" name="alamat" value={form.alamat} onChange={handleChange} placeholder="Nama jalan, nomor rumah, gang..." required textarea />
                 </div>
 
                 <div className="w-full">
@@ -676,10 +763,20 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
             </div>
 
             <div id="sec-submit" className="pt-2">
-              <button type="submit" disabled={loading} className="w-full relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#F47920] to-orange-600 rounded-[2rem] blur opacity-40 group-hover:opacity-100 transition duration-500"></div>
-                <div className="relative w-full bg-gradient-to-r from-[#F47920] to-orange-500 text-white font-black text-xl py-6 md:py-8 rounded-[2rem] shadow-2xl hover:shadow-orange-200/50 transition-all flex items-center justify-center gap-4 uppercase tracking-widest active:scale-[0.98]">
-                  {loading ? <RefreshCw className="animate-spin w-6 h-6 md:w-8 md:h-8" /> : "🚀 Kirim Pendaftaran"}
+              <button type="submit" disabled={loading || !isNoticeAccepted} className="w-full relative group">
+                {isNoticeAccepted && (
+                  <div className="absolute -inset-1 bg-gradient-to-r from-[#F47920] to-orange-600 rounded-[2rem] blur opacity-40 group-hover:opacity-100 transition duration-500"></div>
+                )}
+                <div className={`relative w-full text-white font-black text-xl py-6 md:py-8 rounded-[2rem] transition-all flex items-center justify-center gap-4 uppercase tracking-widest ${
+                  isNoticeAccepted
+                    ? "bg-gradient-to-r from-[#F47920] to-orange-500 shadow-2xl hover:shadow-orange-200/50 active:scale-[0.98]"
+                    : "bg-slate-300 shadow-inner cursor-not-allowed text-slate-500"
+                }`}>
+                  {loading ? <RefreshCw className="animate-spin w-6 h-6 md:w-8 md:h-8" /> : (
+                    <>
+                      {isNoticeAccepted ? "🚀 Kirim Pendaftaran" : "🔒 Kunci Dibuka Jika Setuju"}
+                    </>
+                  )}
                 </div>
               </button>
               <p className="text-center text-slate-400 text-[10px] md:text-xs font-bold mt-6 uppercase tracking-widest">Data Anda aman dan hanya digunakan untuk proses instalasi</p>

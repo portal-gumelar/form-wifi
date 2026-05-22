@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart as RePieChart, Pie, Cell, BarChart as ReBarChart, Bar, FunnelChart, Funnel, LabelList
+  ResponsiveContainer, PieChart as RePieChart, Pie, Cell, BarChart as ReBarChart, Bar, 
+  FunnelChart, Funnel, LabelList, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from 'recharts';
 import * as Lucide from "lucide-react";
 import { DashboardStats, RegistrationData } from "../../types";
@@ -248,114 +249,143 @@ export const FullAnalytics: React.FC<AnalyticsChartsProps> = ({ stats, totalCoun
     return { name: desa, total: villageData.length, withKTP, percentage: Math.round((withKTP / (villageData.length || 1)) * 100) };
   }).sort((a, b) => b.total - a.total).slice(0, 5);
 
+  // Custom Tooltip component for premium feel
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white/90 backdrop-blur-md p-3 border border-white/50 shadow-xl rounded-2xl">
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{label || payload[0].name}</p>
+          <p className="text-lg font-black text-[#0d1655]">{payload[0].value}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-6 w-full pb-8">
       {/* Pipeline Funnel + Provider + MoM */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Pipeline Funnel */}
-        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+        {/* Pipeline Funnel - Changed to actual Recharts FunnelChart */}
+        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <h3 className="text-sm sm:text-base font-black text-[#0d1655] flex items-center gap-2">
               <Lucide.Filter size={18} className="text-[#F47920]" /> Pipeline Funnel
             </h3>
             <span className="px-2 py-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase rounded-lg">Status</span>
           </div>
-          <div className="p-4 sm:p-6">
-            <div className="space-y-3">
-              {funnelData.map((stage, idx) => {
-                const maxVal = funnelData[0]?.value || 1;
-                const percentage = Math.round((stage.value / maxVal) * 100);
-                return (
-                  <div key={stage.name} className="relative">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-wider">{stage.name}</span>
-                      <span className="text-xs font-black text-slate-800">{stage.value} <span className="text-slate-400 font-bold">({percentage}%)</span></span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                      <div 
-                        className="h-full rounded-full transition-all duration-700" 
-                        style={{ width: `${percentage}%`, backgroundColor: stage.fill }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+          <div className="p-4 sm:p-6 flex flex-col items-center justify-center">
+            <div className="h-[220px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <FunnelChart>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Funnel
+                    dataKey="value"
+                    data={funnelData}
+                    isAnimationActive
+                  >
+                    <LabelList position="right" fill="#0d1655" stroke="none" dataKey="name" fontSize={10} fontWeight={900} />
+                  </Funnel>
+                </FunnelChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
 
-        {/* Provider Distribution */}
-        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+        {/* Provider Distribution - Changed to Interactive Donut Chart */}
+        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <h3 className="text-sm sm:text-base font-black text-[#0d1655] flex items-center gap-2">
-              <Lucide.Signal size={18} className="text-[#F47920]" /> Provider Saati Ini
+              <Lucide.Signal size={18} className="text-[#F47920]" /> Provider Saat Ini
             </h3>
             <span className="px-2 py-1 bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase rounded-lg">ISP</span>
           </div>
           <div className="p-4 sm:p-6">
             {providerData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-[180px] text-slate-400">
+              <div className="flex flex-col items-center justify-center h-[220px] text-slate-400">
                 <Lucide.Wifi size={40} className="mb-3 opacity-30" />
                 <p className="text-sm font-bold">Belum ada data provider</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {providerData.slice(0, 5).map((prov, idx) => (
-                  <div key={prov.name} className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${BRAND_COLORS[idx % BRAND_COLORS.length]}15` }}>
-                      <Lucide.Router size={18} style={{ color: BRAND_COLORS[idx % BRAND_COLORS.length] }} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-black text-slate-700 truncate">{prov.name}</span>
-                        <span className="text-xs font-bold text-slate-500">{prov.value}</span>
-                      </div>
-                      <div className="w-full bg-slate-100 rounded-full h-1.5">
-                        <div className="h-full rounded-full" style={{ width: `${(prov.value / (totalCount || 1)) * 100}%`, backgroundColor: BRAND_COLORS[idx % BRAND_COLORS.length] }} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="h-[220px] w-full relative group">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RePieChart>
+                    <Pie
+                      data={providerData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={85}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                      isAnimationActive
+                    >
+                      {providerData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={BRAND_COLORS[index % BRAND_COLORS.length]} className="hover:opacity-80 transition-opacity cursor-pointer" />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </RePieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <Lucide.Wifi size={24} className="text-slate-300 mb-1 group-hover:scale-110 transition-transform" />
+                  <span className="text-2xl font-black text-[#0d1655]">{providerData.reduce((acc, curr) => acc + curr.value, 0)}</span>
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Month-over-Month Comparison */}
-        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+        {/* Month-over-Month Comparison - Adding gradient area chart in background */}
+        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 relative">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 relative z-10">
             <h3 className="text-sm sm:text-base font-black text-[#0d1655] flex items-center gap-2">
               <Lucide.Calendar size={18} className="text-[#F47920]" /> Perbandingan Bulan
             </h3>
             <span className="px-2 py-1 bg-purple-50 text-purple-600 text-[9px] font-black uppercase rounded-lg">MoM</span>
           </div>
-          <div className="p-4 sm:p-6">
+          
+          {/* Background area chart */}
+          <div className="absolute bottom-0 left-0 w-full h-[150px] opacity-20 pointer-events-none">
+             <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats?.trendData || []}>
+                  <defs>
+                    <linearGradient id="colorMom" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={momChange >= 0 ? '#10b981' : '#ef4444'} stopOpacity={0.8} />
+                      <stop offset="95%" stopColor={momChange >= 0 ? '#10b981' : '#ef4444'} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Area type="monotone" dataKey="count" stroke="none" fill="url(#colorMom)" />
+                </AreaChart>
+              </ResponsiveContainer>
+          </div>
+
+          <div className="p-4 sm:p-6 relative z-10">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="flex-1 p-4 bg-slate-50 rounded-xl text-center border border-slate-100">
+                <div className="flex-1 p-4 bg-white/60 backdrop-blur-md rounded-2xl text-center border border-slate-100 shadow-sm">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Bulan Ini</p>
-                  <p className="text-2xl font-black text-[#0d1655]">{thisMonthCount}</p>
+                  <p className="text-3xl font-black text-[#0d1655]">{thisMonthCount}</p>
                   <p className="text-[9px] text-slate-400 font-bold">Registrasi</p>
                 </div>
-                <div className="flex-1 p-4 bg-slate-50 rounded-xl text-center border border-slate-100">
+                <div className="flex-1 p-4 bg-white/60 backdrop-blur-md rounded-2xl text-center border border-slate-100 shadow-sm">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Bulan Lalu</p>
-                  <p className="text-2xl font-black text-slate-500">{lastMonthCount}</p>
+                  <p className="text-3xl font-black text-slate-500">{lastMonthCount}</p>
                   <p className="text-[9px] text-slate-400 font-bold">Registrasi</p>
                 </div>
               </div>
-              <div className={`p-4 rounded-xl text-center ${momChange >= 0 ? 'bg-emerald-50 border border-emerald-100' : 'bg-red-50 border border-red-100'}`}>
+              <div className={`p-5 rounded-2xl text-center border shadow-sm backdrop-blur-md bg-white/80 ${momChange >= 0 ? 'border-emerald-100' : 'border-red-100'}`}>
                 <div className="flex items-center justify-center gap-2">
-                  {momChange >= 0 ? (
-                    <Lucide.TrendingUp size={20} className="text-emerald-600" />
-                  ) : (
-                    <Lucide.TrendingDown size={20} className="text-red-600" />
-                  )}
-                  <span className={`text-2xl font-black ${momChange >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+                  <div className={`p-2 rounded-full ${momChange >= 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+                    {momChange >= 0 ? <Lucide.TrendingUp size={20} /> : <Lucide.TrendingDown size={20} />}
+                  </div>
+                  <span className={`text-3xl font-black ${momChange >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                     {momChange >= 0 ? '+' : ''}{momChange}%
                   </span>
                 </div>
-                <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${momChange >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {momChange >= 0 ? 'Peningkatan' : 'Penurunan'} Bulan Ini
+                <p className={`text-[10px] font-black uppercase tracking-widest mt-2 ${momChange >= 0 ? 'text-emerald-600/70' : 'text-red-600/70'}`}>
+                  {momChange >= 0 ? 'Peningkatan' : 'Penurunan'} Pertumbuhan
                 </p>
               </div>
             </div>
@@ -366,8 +396,8 @@ export const FullAnalytics: React.FC<AnalyticsChartsProps> = ({ stats, totalCoun
       {/* KTP Coverage per Village + Region + Source */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* KTP Coverage per Village */}
-        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <h3 className="text-sm sm:text-base font-black text-[#0d1655] flex items-center gap-2">
               <Lucide.IdCard size={18} className="text-[#F47920]" /> Cakupan KTP per Desa
             </h3>
@@ -375,30 +405,30 @@ export const FullAnalytics: React.FC<AnalyticsChartsProps> = ({ stats, totalCoun
           </div>
           <div className="p-4 sm:p-6">
             {ktpByVillage.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-[180px] text-slate-400">
+              <div className="flex flex-col items-center justify-center h-[240px] text-slate-400">
                 <Lucide.ImageOff size={40} className="mb-3 opacity-30" />
                 <p className="text-sm font-bold">Belum ada data KTP</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {ktpByVillage.map((village, idx) => (
-                  <div key={village.name} className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${village.percentage >= 50 ? 'bg-emerald-50' : village.percentage >= 25 ? 'bg-amber-50' : 'bg-red-50'}`}>
-                      <Lucide.MapPin size={18} className={village.percentage >= 50 ? 'text-emerald-600' : village.percentage >= 25 ? 'text-amber-600' : 'text-red-600'} />
+                  <div key={village.name} className="flex items-center gap-4 group">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 shadow-sm ${village.percentage >= 50 ? 'bg-emerald-50 border-emerald-100' : village.percentage >= 25 ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100'} border`}>
+                      <Lucide.MapPin size={20} className={village.percentage >= 50 ? 'text-emerald-600' : village.percentage >= 25 ? 'text-amber-600' : 'text-red-600'} />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-black text-slate-700 truncate">{village.name}</span>
-                        <span className="text-xs font-bold text-slate-500">{village.withKTP}/{village.total}</span>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-black text-slate-800 truncate">{village.name}</span>
+                        <span className="text-xs font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">{village.withKTP}/{village.total}</span>
                       </div>
-                      <div className="w-full bg-slate-100 rounded-full h-2">
+                      <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
                         <div 
-                          className={`h-full rounded-full ${village.percentage >= 50 ? 'bg-emerald-500' : village.percentage >= 25 ? 'bg-amber-500' : 'bg-red-500'}`}
+                          className={`h-full rounded-full transition-all duration-1000 ${village.percentage >= 50 ? 'bg-emerald-500' : village.percentage >= 25 ? 'bg-amber-500' : 'bg-red-500'}`}
                           style={{ width: `${village.percentage}%` }} 
                         />
                       </div>
-                      <p className={`text-[9px] font-bold mt-0.5 ${village.percentage >= 50 ? 'text-emerald-600' : village.percentage >= 25 ? 'text-amber-600' : 'text-red-600'}`}>
-                        {village.percentage}% lengkap
+                      <p className={`text-[9px] font-black uppercase tracking-widest mt-1.5 ${village.percentage >= 50 ? 'text-emerald-600' : village.percentage >= 25 ? 'text-amber-600' : 'text-red-600'}`}>
+                        {village.percentage}% data lengkap
                       </p>
                     </div>
                   </div>
@@ -408,44 +438,50 @@ export const FullAnalytics: React.FC<AnalyticsChartsProps> = ({ stats, totalCoun
           </div>
         </div>
 
-        {/* Region Coverage */}
-        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+        {/* Region Coverage - Changed to Radar Chart */}
+        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <h3 className="text-sm sm:text-base font-black text-[#0d1655] flex items-center gap-2">
-              <Lucide.Globe size={18} className="text-[#F47920]" /> Cakupan Teratas Wilayah
+              <Lucide.Globe size={18} className="text-[#F47920]" /> Jaringan Wilayah
             </h3>
+            <span className="px-2 py-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase rounded-lg">Radar</span>
           </div>
           <div className="p-4 sm:p-6">
-            <div className="h-[220px] w-full">
+            <div className="h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <ReBarChart data={stats?.regionalData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 700 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 700 }} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: '#f8fafc' }} />
-                  <Bar dataKey="value" fill="#0d1655" radius={[6, 6, 0, 0]} barSize={30} />
-                </ReBarChart>
+                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={stats?.regionalData || []}>
+                  <PolarGrid stroke="#e2e8f0" />
+                  <PolarAngleAxis dataKey="name" tick={{ fill: '#0d1655', fontSize: 9, fontWeight: 900 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={false} axisLine={false} />
+                  <Radar name="Pelanggan" dataKey="value" stroke="#F47920" strokeWidth={2} fill="#F47920" fillOpacity={0.5} />
+                  <Tooltip content={<CustomTooltip />} />
+                </RadarChart>
               </ResponsiveContainer>
             </div>
           </div>
         </div>
 
         {/* Source of Information */}
-        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <h3 className="text-sm sm:text-base font-black text-[#0d1655] flex items-center gap-2">
               <Lucide.Search size={18} className="text-[#F47920]" /> Sumber Informasi
             </h3>
+            <span className="px-2 py-1 bg-slate-100 text-slate-600 text-[9px] font-black uppercase rounded-lg">Media</span>
           </div>
           <div className="p-4 sm:p-6">
-            <div className="h-[220px] w-full">
+            <div className="h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <ReBarChart data={stats?.sourceData || []} layout="vertical" margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
+                <ReBarChart data={stats?.sourceData || []} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                   <XAxis type="number" hide />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 700 }} width={80} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: '#f8fafc' }} />
-                  <Bar dataKey="value" fill="#F47920" radius={[0, 6, 6, 0]} barSize={20} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#64748b', fontWeight: 900 }} width={85} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
+                  <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={24}>
+                    {(stats?.sourceData || []).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={BRAND_COLORS[index % BRAND_COLORS.length]} />
+                    ))}
+                  </Bar>
                 </ReBarChart>
               </ResponsiveContainer>
             </div>
