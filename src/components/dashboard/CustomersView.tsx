@@ -153,6 +153,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   data, isDarkMode, onViewDetails, onEdit, onDelete, onUpdateStatus
 }) => {
   const [filterStatus, setFilterStatus] = useState("All");
+  const [filterPackage, setFilterPackage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
@@ -192,8 +193,16 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
       });
     }
 
+    // Package Filter
+    if (filterPackage) {
+      result = result.filter(item => {
+        const pkg = String(item.Paket || "Tanpa Paket").split("(")[0].trim();
+        return pkg === filterPackage;
+      });
+    }
+
     return result;
-  }, [activeAndInactiveData, filterStatus, searchQuery]);
+  }, [activeAndInactiveData, filterStatus, searchQuery, filterPackage]);
 
   const countAktif    = activeAndInactiveData.filter(d => String(d.status || "").toUpperCase() === "AKTIF").length;
   const countNonAktif = activeAndInactiveData.filter(d => {
@@ -243,18 +252,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* ── Header ───────────────────────────────────────────── */}
+      {/* ── Header Stats (Title removed to prevent duplication) ───────────────── */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <div>
-          <h3 className="text-2xl font-black italic tracking-tight text-[#0d1655]">
-            Data Pelanggan
-          </h3>
-          <p className="text-sm font-bold text-slate-400">
-            Pelanggan aktif &amp; non-aktif — otomatis dari Kelola Pesanan
-          </p>
-        </div>
-
-        {/* Stats pill */}
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
@@ -267,19 +266,34 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
         </div>
       </div>
 
-      {/* ── Package Stats (Top 3) ────────────────────────────── */}
+      {/* ── Package Stats (Top 4) ────────────────────────────── */}
       {packageStats.length > 0 && (
         <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1">
           <span className="text-[10px] font-black uppercase text-slate-400 shrink-0">Distribusi Paket:</span>
-          {packageStats.slice(0, 4).map(([pkgName, count], idx) => (
-            <div key={pkgName} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold shrink-0 shadow-sm ${
-              idx === 0 ? "bg-[#0d1655] text-white border-[#0d1655]" : "bg-white text-slate-600 border-slate-200"
-            }`}>
-              {idx === 0 && <Lucide.Trophy size={10} className="text-yellow-400" />}
-              <span>{pkgName}</span>
-              <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black ${idx === 0 ? "bg-white/20" : "bg-slate-100 text-slate-500"}`}>{count}</span>
-            </div>
-          ))}
+          <button 
+            onClick={() => setFilterPackage(null)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold shrink-0 shadow-sm transition-all ${
+              filterPackage === null ? "bg-[#0d1655] text-white border-[#0d1655]" : "bg-white text-slate-600 border-slate-200 hover:border-[#0d1655]"
+            }`}
+          >
+            Semua Paket
+          </button>
+          {packageStats.slice(0, 4).map(([pkgName, count], idx) => {
+            const isActive = filterPackage === pkgName;
+            return (
+              <button 
+                key={pkgName} 
+                onClick={() => setFilterPackage(isActive ? null : pkgName)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold shrink-0 shadow-sm transition-all active:scale-95 ${
+                  isActive ? "bg-[#F47920] text-white border-[#F47920]" : "bg-white text-slate-600 border-slate-200 hover:border-[#F47920]"
+                }`}
+              >
+                {idx === 0 && <Lucide.Trophy size={10} className={isActive ? "text-yellow-200" : "text-yellow-500"} />}
+                <span>{pkgName}</span>
+                <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black ${isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>{count}</span>
+              </button>
+            );
+          })}
         </div>
       )}
 
