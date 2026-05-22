@@ -181,7 +181,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             />
           </button>
           
-          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center p-1 shrink-0 ml-2">
+          <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center p-0.5 shrink-0 ml-2">
             <img 
               src="https://ik.imagekit.io/Gumelar/LogO/logo%20pt.png?updatedAt=1778213993513" 
               alt="Logo" 
@@ -190,7 +190,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           
           <span className={`text-base font-black uppercase tracking-wider ml-3 text-white transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
-            Armedia <span className="text-[#FDB913]">Net</span>
+            Armedia <span className="text-[#FDB913]">ID</span>
           </span>
         </div>
 
