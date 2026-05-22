@@ -87,9 +87,13 @@ export const ManajemenPelanggan: React.FC<ManajemenPelangganProps> = ({
 
   // Statistics
   const stats = useMemo(() => {
+    const pengajuan = data.filter(d => (d.status || "").toUpperCase() === "PENGAJUAN").length;
+    const survei = data.filter(d => (d.status || "").toUpperCase() === "SURVEY").length;
+    const proses = data.filter(d => (d.status || "").toUpperCase() === "PROSES").length;
     const aktif = data.filter(d => (d.status || "").toUpperCase() === "AKTIF").length;
     const nonAktif = data.filter(d => (d.status || "").toUpperCase() === "NON AKTIF").length;
-    return { aktif, nonAktif, total: data.length };
+    const berhenti = data.filter(d => (d.status || "").toUpperCase() === "BERHENTI BERLANGGANAN").length;
+    return { pengajuan, survei, proses, aktif, nonAktif, berhenti, total: data.length };
   }, [data]);
 
   const getStatusConfig = (status: string) => {
@@ -99,30 +103,51 @@ export const ManajemenPelanggan: React.FC<ManajemenPelangganProps> = ({
 
   return (
     <div className="space-y-5">
-      {/* Header Stats - Compact Grid */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-4 text-white shadow-lg shadow-emerald-500/20">
-          <div className="flex items-center gap-2 mb-2">
-            <Lucide.CheckCircle2 size={18} />
-            <span className="text-[10px] font-black uppercase tracking-wider opacity-80">Aktif</span>
+      {/* Header Stats - 5 Status Cards */}
+      <div className="grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
+        {/* Pengajuan */}
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-3 md:p-4 text-white shadow-lg shadow-blue-500/20">
+          <div className="flex items-center gap-1.5 md:gap-2 mb-1 md:mb-2">
+            <Lucide.PlusCircle size={16} />
+            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider opacity-80">Pengajuan</span>
           </div>
-          <p className="text-2xl font-black">{stats.aktif}</p>
+          <p className="text-xl md:text-2xl font-black">{stats.pengajuan}</p>
         </div>
         
-        <div className="bg-gradient-to-br from-slate-400 to-slate-500 rounded-2xl p-4 text-white shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <Lucide.PauseCircle size={18} />
-            <span className="text-[10px] font-black uppercase tracking-wider opacity-80">Non-Aktif</span>
+        {/* Survei */}
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-3 md:p-4 text-white shadow-lg shadow-orange-500/20">
+          <div className="flex items-center gap-1.5 md:gap-2 mb-1 md:mb-2">
+            <Lucide.Search size={16} />
+            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider opacity-80">Survei</span>
           </div>
-          <p className="text-2xl font-black">{stats.nonAktif}</p>
+          <p className="text-xl md:text-2xl font-black">{stats.survei}</p>
         </div>
-
-        <div className="bg-gradient-to-br from-[#0d1655] to-[#1a2a7a] rounded-2xl p-4 text-white shadow-lg shadow-blue-900/20">
-          <div className="flex items-center gap-2 mb-2">
-            <Lucide.Users size={18} />
-            <span className="text-[10px] font-black uppercase tracking-wider opacity-80">Total</span>
+        
+        {/* Proses */}
+        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-3 md:p-4 text-white shadow-lg shadow-yellow-500/20">
+          <div className="flex items-center gap-1.5 md:gap-2 mb-1 md:mb-2">
+            <Lucide.Loader2 size={16} />
+            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider opacity-80">Proses</span>
           </div>
-          <p className="text-2xl font-black">{stats.total}</p>
+          <p className="text-xl md:text-2xl font-black">{stats.proses}</p>
+        </div>
+        
+        {/* Aktif */}
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-3 md:p-4 text-white shadow-lg shadow-emerald-500/20">
+          <div className="flex items-center gap-1.5 md:gap-2 mb-1 md:mb-2">
+            <Lucide.CheckCircle2 size={16} />
+            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider opacity-80">Aktif</span>
+          </div>
+          <p className="text-xl md:text-2xl font-black">{stats.aktif}</p>
+        </div>
+        
+        {/* Non-Aktif */}
+        <div className="bg-gradient-to-br from-slate-400 to-slate-500 rounded-2xl p-3 md:p-4 text-white shadow-lg col-span-3 md:col-span-1">
+          <div className="flex items-center gap-1.5 md:gap-2 mb-1 md:mb-2">
+            <Lucide.PauseCircle size={16} />
+            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider opacity-80">Non-Aktif</span>
+          </div>
+          <p className="text-xl md:text-2xl font-black">{stats.nonAktif}</p>
         </div>
       </div>
 
@@ -327,7 +352,7 @@ export const ManajemenPelanggan: React.FC<ManajemenPelangganProps> = ({
                           </button>
                           {filterSubTab === "AKTIF" ? (
                             <button
-                              onClick={() => onUpdateStatus(item.Timestamp, "NON AKTIF")}
+                              onClick={() => item.Timestamp && onUpdateStatus(item.Timestamp, "NON AKTIF")}
                               className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 transition-all"
                               title="Jadikan Non-Aktif"
                             >
@@ -335,7 +360,7 @@ export const ManajemenPelanggan: React.FC<ManajemenPelangganProps> = ({
                             </button>
                           ) : filterSubTab === "NON AKTIF" ? (
                             <button
-                              onClick={() => onUpdateStatus(item.Timestamp, "AKTIF")}
+                              onClick={() => item.Timestamp && onUpdateStatus(item.Timestamp, "AKTIF")}
                               className="p-2 rounded-lg hover:bg-emerald-50 text-emerald-600 transition-all"
                               title="Jadikan Aktif"
                             >
@@ -343,7 +368,7 @@ export const ManajemenPelanggan: React.FC<ManajemenPelangganProps> = ({
                             </button>
                           ) : (
                             <button
-                              onClick={() => onDelete(item.Timestamp)}
+                              onClick={() => item.Timestamp && onDelete(item.Timestamp)}
                               className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-all"
                               title="Hapus"
                             >

@@ -66,7 +66,7 @@ export const KPICards: React.FC<KPICardsProps> = ({ totalRegistrants, statusCoun
     { label: "Total Pesanan",    value: totalRegistrants,                                                                                          icon: Lucide.ClipboardList, color: "text-[#0d1655]",   bg: "bg-blue-50 border-blue-100" },
     { label: "Pelanggan Aktif",  value: statusCounts["AKTIF"]  || 0,                                                                              icon: Lucide.UserCheck,     color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-100" },
     { label: "Survei / Proses",  value: (statusCounts["SURVEY"] || 0) + (statusCounts["PROSES"] || 0),                                            icon: Lucide.Search,        color: "text-[#F47920]",   bg: "bg-orange-50 border-orange-100" },
-    { label: "Pengajuan Baru",   value: (statusCounts["PENGAJUAN"] || 0) + (statusCounts["BARU"] || 0),                                          icon: Lucide.PlusCircle,    color: "text-blue-600",    bg: "bg-indigo-50 border-indigo-100" },
+    { label: "Belum Aktif",      value: (statusCounts["NON AKTIF"] || 0) + (statusCounts["BERHENTI BERLANGGANAN"] || 0),                         icon: Lucide.PauseCircle,   color: "text-slate-500",   bg: "bg-slate-50 border-slate-100" },
   ];
 
   return (

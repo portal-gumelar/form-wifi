@@ -143,6 +143,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
     aktif: data.filter(d => d.status === 'AKTIF').length,
     proses: data.filter(d => d.status === 'PROSES').length,
     survey: data.filter(d => d.status === 'SURVEY').length,
+    belumAktif: data.filter(d => d.status === 'NON AKTIF' || d.status === 'BERHENTI BERLANGGANAN').length,
     ktp: data.filter(d => d["Foto KTP"]).length
   }), [data]);
 
@@ -269,6 +270,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
               <span className="px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-lg text-[9px] font-black text-emerald-600">Aktif: {quickStats.aktif}</span>
               <span className="px-2.5 py-1 bg-amber-50 border border-amber-100 rounded-lg text-[9px] font-black text-amber-600">Proses: {quickStats.proses}</span>
               <span className="px-2.5 py-1 bg-indigo-50 border border-indigo-100 rounded-lg text-[9px] font-black text-indigo-600">Survey: {quickStats.survey}</span>
+              <span className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-black text-slate-500">Belum Aktif: {quickStats.belumAktif}</span>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
