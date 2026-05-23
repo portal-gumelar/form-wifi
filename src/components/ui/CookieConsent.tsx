@@ -41,7 +41,7 @@ export function CookieConsent() {
               Pengaturan Privasi & Cookies
             </h3>
             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-2xl">
-              Kami menggunakan cookie untuk meningkatkan pengalaman navigasi Anda, menyajikan konten yang disesuaikan, dan menganalisis trafik situs web ARMEDIA Net. Dengan mengklik "Terima Semua", Anda menyetujui penggunaan cookie kami.
+              Kami menggunakan cookie untuk meningkatkan pengalaman navigasi Anda, menyajikan konten yang disesuaikan, dan menganalisis trafik situs web armedia.id. Dengan mengklik "Terima Semua", Anda menyetujui penggunaan cookie kami.
             </p>
           </div>
         </div>
