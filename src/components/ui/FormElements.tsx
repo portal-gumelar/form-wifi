@@ -60,7 +60,7 @@ export const InputField: React.FC<{ label?: string; name: string; value: string;
   const baseClass = "w-full border-2 border-gray-100 rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-[13px] sm:text-sm text-gray-800 focus:outline-none focus:border-[#F47920] focus:ring-4 focus:ring-orange-100 transition-all placeholder-gray-400 bg-white shadow-sm";
   return (
     <div>
-      {label && <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">{label}{required && <span className="text-red-500 ml-1">*</span>}</label>}
+      {label && <label className="block text-[11px] sm:text-xs font-black text-black uppercase tracking-widest mb-1.5 ml-1">{label}{required && <span className="text-red-500 ml-1">*</span>}</label>}
       {textarea ? (
         <textarea name={name} value={value} onChange={onChange} placeholder={placeholder} rows={3} required={required} className={baseClass} />
       ) : (
@@ -76,7 +76,7 @@ export const SelectField: React.FC<{ label?: string; name: string; value: string
   const baseClass = "w-full border-2 border-gray-100 rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-[13px] sm:text-sm text-gray-800 focus:outline-none focus:border-[#F47920] focus:ring-4 focus:ring-orange-100 transition-all bg-white shadow-sm appearance-none cursor-pointer";
   return (
     <div className="relative">
-      {label && <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">{label}{required && <span className="text-red-500 ml-1">*</span>}</label>}
+      {label && <label className="block text-[11px] sm:text-xs font-black text-black uppercase tracking-widest mb-1.5 ml-1">{label}{required && <span className="text-red-500 ml-1">*</span>}</label>}
       <div className="relative">
         <select name={name} value={value} onChange={onChange} required={required} className={baseClass}>
           <option value="" disabled>Pilih {label}</option>

@@ -48,7 +48,23 @@ const DESA_RW_RT: Record<string, Record<string, string[]>> = {
     "RW 10": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07"],
     "RW 11": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07"],
   },
-  CIHONJE: {}, // akan diisi nanti
+  CIHONJE: {
+    "RW 01": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08","RT 09","RT 10"],
+    "RW 02": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08"],
+    "RW 03": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07"],
+    "RW 04": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08","RT 09"],
+    "RW 05": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08"],
+    "RW 06": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08","RT 09","RT 10","RT 11"],
+    "RW 07": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08"],
+    "RW 08": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07"],
+    "RW 09": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08","RT 09","RT 10"],
+    "RW 10": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08","RT 09"],
+    "RW 11": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08"],
+    "RW 12": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07"],
+    "RW 13": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08","RT 09"],
+    "RW 14": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08"],
+    "RW 15": ["RT 01","RT 02","RT 03","RT 04","RT 05","RT 06","RT 07","RT 08","RT 09","RT 10"],
+  },
 };
 
 const VILLAGES = [
@@ -423,7 +439,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                 </div>
 
                 <div className="w-full relative" ref={dropdownRef}>
-                  <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">
+                  <label className="block text-[11px] sm:text-xs font-black text-black uppercase tracking-widest mb-3 ml-1">
                     Pilih Desa Domisili <span className="text-red-500">*</span>
                   </label>
                       <button
@@ -535,7 +551,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                   <div id="sec-rwrt" className="grid grid-cols-1 md:grid-cols-2 gap-5 scroll-mt-24">
                     {/* RW */}
                     <div className="w-full">
-                      <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">
+                      <label className="block text-[11px] sm:text-xs font-black text-black uppercase tracking-widest mb-3 ml-1">
                         Pilih RW <span className="text-red-500">*</span>
                         <span className="ml-2 text-[#F47920] font-black">{form.desa}</span>
                       </label>
@@ -548,7 +564,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                             className={`py-3 px-1 sm:px-2 rounded-2xl text-[11px] sm:text-xs font-black uppercase tracking-tight transition-all border-2 text-center ${
                               form.rw === rw
                                 ? "bg-[#0d1655] text-white border-[#0d1655] shadow-lg shadow-blue-900/20 scale-105"
-                                : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#0d1655] hover:text-[#0d1655]"
+                                : "bg-blue-50/50 text-[#0d1655] border-blue-200/60 hover:border-[#0d1655] hover:bg-blue-50"
                             }`}
                           >
                             {rw}
@@ -560,7 +576,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                     {/* RT — muncul setelah RW dipilih */}
                     {form.rw && DESA_RW_RT[form.desa][form.rw] && (
                       <div className="w-full">
-                        <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">
+                        <label className="block text-[11px] sm:text-xs font-black text-black uppercase tracking-widest mb-3 ml-1">
                           Pilih RT <span className="text-red-500">*</span>
                           <span className="ml-2 text-[#F47920] font-black">{form.rw}</span>
                         </label>
@@ -573,7 +589,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                               className={`py-3 px-1 sm:px-2 rounded-2xl text-[11px] sm:text-xs font-black uppercase tracking-tight transition-all border-2 text-center ${
                                 form.rt === rt
                                   ? "bg-[#F47920] text-white border-[#F47920] shadow-lg shadow-orange-500/20 scale-105"
-                                  : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#F47920] hover:text-[#F47920]"
+                                  : "bg-orange-50/50 text-[#F47920] border-orange-200/60 hover:border-[#F47920] hover:bg-orange-50"
                               }`}
                             >
                               {rt}
@@ -590,7 +606,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                 </div>
 
                 <div className="w-full">
-                  <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">
+                  <label className="block text-[11px] sm:text-xs font-black text-black uppercase tracking-widest mb-3 ml-1">
                     Upload Foto KTP <span className="text-red-500">*</span>
                   </label>
                   
@@ -703,7 +719,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                 <InputField label="Link Google Maps (Opsional)" name="linkGoogleMaps" value={form.linkGoogleMaps} onChange={handleChange} placeholder="https://maps.app.goo.gl/..." type="url" />
 
                 <div className="w-full">
-                  <label className="block text-[11px] sm:text-xs font-black text-slate-500 uppercase tracking-widest mb-4 ml-1">Waktu Survei Yang Pas <span className="text-red-500">*</span></label>
+                  <label className="block text-[11px] sm:text-xs font-black text-black uppercase tracking-widest mb-4 ml-1">Waktu Survei Yang Pas <span className="text-red-500">*</span></label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
                       { label: "Pagi", time: "08:00 - 11:00" },
