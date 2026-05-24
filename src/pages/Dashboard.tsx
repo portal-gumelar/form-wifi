@@ -563,7 +563,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                 <Lucide.Zap size={14} className="text-[#F47920] shrink-0" />
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Mbps:</span>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  {["", "20", "30", "50", "100"].map(mbps => (
+                  {["", "20", "30", "50", "75", "100"].map(mbps => (
                     <button
                       key={mbps}
                       onClick={() => setFilterMbps(mbps)}
@@ -586,7 +586,8 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                   {[
                     "",
                     "GUMELAR", "CIHONJE", "TLAGA", "SAMUDRA",
-                    "SAMUDRA KULON", "CILANGKAP", "PANINGKABAN"
+                    "SAMUDRA KULON", "CILANGKAP", "PANINGKABAN",
+                    "KARANG KEMOJING", "GANCANG", "KEDUNG URANG"
                   ].map(desa => (
                     <button
                       key={desa}
