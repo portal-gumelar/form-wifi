@@ -1,6 +1,7 @@
 // Last update: 2026-05-18 23:55 - Clean Split RegistrationForm Flow
 import React, { useState, useRef, useEffect } from "react";
 import { RefreshCw, AlertCircle, ChevronDown } from "lucide-react";
+import { parseKTPText } from "../utils/ktpParser";
 
 // UI Components
 import { Section, RadioCard, InputField } from "../components/ui/FormElements";
@@ -90,6 +91,8 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
   const [isVillageDropdownOpen, setIsVillageDropdownOpen] = useState(false);
   const [isNoticeAccepted, setIsNoticeAccepted] = useState(false);
   const [showEthicModal, setShowEthicModal]     = useState(false); // ETIKA & SILATURAHMI
+  const [isScanningKtp, setIsScanningKtp] = useState(false);
+  const [ocrSuccessMessage, setOcrSuccessMessage] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isSelectedCovered = form.desa ? COVERED_VILLAGES.includes(form.desa) : false;
@@ -117,6 +120,48 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         setTimeout(() => el.classList.remove("ring-4", "ring-[#F47920]/20"), 1500);
       }
     }, 300);
+  };
+
+  const handleKtpOcr = async (imageSrc: string) => {
+    setIsScanningKtp(true);
+    setOcrSuccessMessage("");
+    try {
+      const { createWorker } = await import("tesseract.js");
+      const worker = await createWorker("ind");
+      
+      const ret = await worker.recognize(imageSrc);
+      const text = ret.data.text;
+      await worker.terminate();
+
+      console.log("📝 OCR Text Result:\n", text);
+
+      const parsedData = parseKTPText(text);
+      console.log("🧩 Parsed KTP Data:\n", parsedData);
+
+      setForm(prev => {
+        const updated = { ...prev };
+        if (parsedData.nama) updated.namaLengkap = parsedData.nama;
+        if (parsedData.alamat) updated.alamat = parsedData.alamat;
+        if (parsedData.desa) {
+          updated.desa = parsedData.desa;
+          updated.rw = "";
+          updated.rt = "";
+        }
+        if (parsedData.rw) updated.rw = parsedData.rw;
+        if (parsedData.rt) updated.rt = parsedData.rt;
+        return updated;
+      });
+
+      if (parsedData.nama || parsedData.alamat || parsedData.desa || parsedData.rt || parsedData.rw) {
+        setOcrSuccessMessage("✓ KTP berhasil dipindai! Beberapa kolom formulir telah diisi otomatis. Mohon periksa kembali data Anda.");
+      } else {
+        setOcrSuccessMessage("⚠️ KTP terunggah, namun sistem kesulitan membaca tulisan secara otomatis. Silakan isi data secara manual.");
+      }
+    } catch (err) {
+      console.error("❌ OCR Error:", err);
+    } finally {
+      setIsScanningKtp(false);
+    }
   };
 
   const handleChange = (e: any) => {
@@ -655,6 +700,9 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                               
                               setForm(prev => ({ ...prev, fotoKtp: compressed }));
                               setError("");
+                              
+                              // Trigger OCR pemindaian KTP
+                              handleKtpOcr(compressed);
                             };
                             img.src = evt.target?.result as string;
                           };
@@ -670,18 +718,49 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                         alt="Preview KTP" 
                         className="w-full h-full object-contain"
                       />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <button
-                          type="button"
-                          onClick={() => setForm(prev => ({ ...prev, fotoKtp: "" }))}
-                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-1.5"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                          </svg>
-                          Hapus Foto
-                        </button>
-                      </div>
+                      {isScanningKtp && (
+                        <div className="absolute inset-0 bg-[#0d1655]/60 flex flex-col items-center justify-center text-white z-10 backdrop-blur-[2px]">
+                          <style>{`
+                            @keyframes scan {
+                              0% { top: 0%; }
+                              50% { top: 100%; }
+                              100% { top: 0%; }
+                            }
+                          `}</style>
+                          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent animate-[scan_2s_ease-in-out_infinite] shadow-[0_0_10px_#F47920]"></div>
+                          <RefreshCw className="animate-spin w-8 h-8 text-orange-400 mb-2" />
+                          <p className="text-[10px] font-black uppercase tracking-widest text-center px-4">Memindai KTP...</p>
+                          <p className="text-[8px] font-bold text-slate-300 mt-1 uppercase tracking-tighter">Membaca data secara otomatis</p>
+                        </div>
+                      )}
+                      {!isScanningKtp && (
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setForm(prev => ({ ...prev, fotoKtp: "" }));
+                              setOcrSuccessMessage("");
+                            }}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                            Hapus Foto
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {ocrSuccessMessage && (
+                    <div className={`mt-4 p-4 rounded-2xl text-[11px] font-black border flex items-start gap-2.5 ${
+                      ocrSuccessMessage.startsWith("✓")
+                        ? "bg-emerald-50 border-emerald-100 text-emerald-800"
+                        : "bg-amber-50 border-amber-100 text-amber-800"
+                    }`}>
+                      <span className="text-sm shrink-0">{ocrSuccessMessage.startsWith("✓") ? "❇️" : "⚠️"}</span>
+                      <p className="leading-normal">{ocrSuccessMessage}</p>
                     </div>
                   )}
                 </div>
