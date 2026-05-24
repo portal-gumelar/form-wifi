@@ -292,6 +292,18 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
     return allPackages.map(pkg => [pkg, counts[pkg] || 0] as [string, number]);
   }, [activeAndInactiveData]);
 
+  const villageStats = React.useMemo(() => {
+    const activeData = activeAndInactiveData.filter(d => String(d.status || "").toUpperCase() === "AKTIF");
+    const counts: Record<string, number> = {};
+    activeData.forEach(item => {
+      if (item.Desa) {
+        const d = item.Desa.toUpperCase().trim();
+        counts[d] = (counts[d] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [activeAndInactiveData]);
+
   const filterLabel = [
     filterStatus === "Active" ? "Aktif" : filterStatus === "Inactive" ? "Non-Aktif" : "Semua Status",
     filterDesa ? `Desa ${filterDesa}` : "Semua Desa",
@@ -338,39 +350,6 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
           </div>
         </div>
       </div>
-
-      {/* ── Package Stats (Top 4) ────────────────────────────── */}
-      {packageStats.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1">
-          <span className="text-[10px] font-black uppercase text-slate-400 shrink-0">Distribusi Paket:</span>
-          <button 
-            onClick={() => setFilterPackage(null)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold shrink-0 shadow-sm transition-all ${
-              filterPackage === null ? "bg-[#0d1655] text-white border-[#0d1655]" : "bg-white text-slate-600 border-slate-200 hover:border-[#0d1655]"
-            }`}
-          >
-            Semua Paket
-          </button>
-          {packageStats.map(([pkgName, count]) => {
-            const isActive = filterPackage === pkgName;
-            const maxCount = Math.max(...packageStats.map(item => item[1]));
-            const isMostPopular = count > 0 && count === maxCount;
-            return (
-              <button 
-                key={pkgName} 
-                onClick={() => setFilterPackage(isActive ? null : pkgName)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold shrink-0 shadow-sm transition-all active:scale-95 ${
-                  isActive ? "bg-[#F47920] text-white border-[#F47920]" : "bg-white text-slate-600 border-slate-200 hover:border-[#F47920]"
-                }`}
-              >
-                {isMostPopular && <Lucide.Trophy size={10} className={isActive ? "text-yellow-200" : "text-yellow-500"} />}
-                <span>{pkgName}</span>
-                <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black ${isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>{count}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
 
       {/* ── Filter Tabs + Search + Export Buttons ──────────────── */}
       <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
@@ -423,54 +402,6 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
             />
           </div>
 
-          {/* Desa Filter Dropdown */}
-          <div className="relative w-full md:w-40 shrink-0">
-            <select
-              value={filterDesa || ""}
-              onChange={(e) => setFilterDesa(e.target.value || null)}
-              className={`w-full pl-3 pr-8 py-2 rounded-xl text-xs font-black outline-none transition-all shadow-sm appearance-none cursor-pointer border-2 ${
-                filterDesa
-                  ? "bg-blue-50/60 border-blue-400 text-[#0d1655]"
-                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 focus:border-[#0d1655]"
-              }`}
-            >
-              <option value="" className="font-bold text-slate-500 bg-white">Semua Desa</option>
-              {uniqueVillages.map(v => (
-                <option key={v} value={v} className="font-bold text-slate-700 bg-white">Desa {v}</option>
-              ))}
-            </select>
-            <Lucide.ChevronDown
-              size={12}
-              className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${
-                filterDesa ? "text-blue-500" : "text-slate-400"
-              }`}
-            />
-          </div>
-
-          {/* Paket Filter Dropdown */}
-          <div className="relative w-full md:w-44 shrink-0">
-            <select
-              value={filterPackage || ""}
-              onChange={(e) => setFilterPackage(e.target.value || null)}
-              className={`w-full pl-3 pr-8 py-2 rounded-xl text-xs font-black outline-none transition-all shadow-sm appearance-none cursor-pointer border-2 ${
-                filterPackage
-                  ? "bg-orange-50/60 border-orange-400 text-orange-950"
-                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 focus:border-[#0d1655]"
-              }`}
-            >
-              <option value="" className="font-bold text-slate-500 bg-white">Semua Paket</option>
-              {uniquePackages.map(p => (
-                <option key={p} value={p} className="font-bold text-slate-700 bg-white">{p}</option>
-              ))}
-            </select>
-            <Lucide.ChevronDown
-              size={12}
-              className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${
-                filterPackage ? "text-orange-500" : "text-slate-400"
-              }`}
-            />
-          </div>
-
           {/* Reset Filters Button */}
           {(filterStatus !== "All" || filterPackage !== null || filterDesa !== null || searchQuery.trim() !== "") && (
             <button
@@ -516,6 +447,78 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
             )}
             <span>{isExportingPdf ? "Menyiapkan PDF..." : "Export PDF"}</span>
           </button>
+        </div>
+      </div>
+
+      {/* ── Filter Mbps & Desa (Unified style matching Dashboard.tsx) ── */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Filter Mbps */}
+        <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
+          <Lucide.Zap size={14} className="text-[#F47920] shrink-0" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Mbps:</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {["", "20", "30", "50", "75", "100"].map((mbps) => {
+              const pkgName = mbps === "" ? "" : `${mbps} Mbps`;
+              const isActive = mbps === "" ? filterPackage === null : filterPackage === pkgName;
+              
+              // find count from packageStats
+              let count = 0;
+              if (mbps !== "") {
+                const found = packageStats.find(([name]) => name === pkgName);
+                if (found) count = found[1];
+              }
+
+              return (
+                <button
+                  key={mbps}
+                  onClick={() => setFilterPackage(mbps === "" ? null : pkgName)}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black transition-all border ${
+                    isActive
+                      ? "bg-[#F47920] text-white border-[#F47920]"
+                      : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#F47920]"
+                  }`}
+                >
+                  <span>{mbps === "" ? "Semua" : `${mbps} Mbps`}</span>
+                  {mbps !== "" && (
+                    <span className={`px-1 rounded text-[8px] font-black ${isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Filter Desa */}
+        <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
+          <Lucide.MapPin size={14} className="text-[#0d1655] shrink-0" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Desa:</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {["", "GUMELAR", "CIHONJE", "TLAGA", "SAMUDRA", "SAMUDRA KULON", "CILANGKAP", "PANINGKABAN", "KARANG KEMOJING", "GANCANG", "KEDUNG URANG"].map((desa) => {
+              const isActive = desa === "" ? filterDesa === null : filterDesa === desa;
+              const count = desa === "" ? 0 : (villageStats[desa] || 0);
+
+              return (
+                <button
+                  key={desa}
+                  onClick={() => setFilterDesa(desa === "" ? null : desa)}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black transition-all border ${
+                    isActive
+                      ? "bg-[#0d1655] text-white border-[#0d1655]"
+                      : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#0d1655]"
+                  }`}
+                >
+                  <span>{desa === "" ? "Semua Desa" : desa}</span>
+                  {desa !== "" && count > 0 && (
+                    <span className={`px-1 rounded text-[8px] font-black ${isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
