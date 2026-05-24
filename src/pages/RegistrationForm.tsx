@@ -94,7 +94,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
   const isSelectedCovered = form.desa ? COVERED_VILLAGES.includes(form.desa) : false;
 
-  const progress = Math.round((["currentProvider", "namaLengkap", "desa", "alamat", "noHp", "paket", "tanggalPasang", "sumberInfo"].filter(f => form[f as keyof typeof form]).length / 8) * 100);
+  const progress = Math.round((["currentProvider", "namaLengkap", "desa", "alamat", "noHp", "paket", "sumberInfo"].filter(f => form[f as keyof typeof form]).length / 7) * 100);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -169,11 +169,11 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     else if (name === "alamat" && value.length > 5) {
       // After address, scroll to KTP upload
       setTimeout(() => {
-        document.getElementById("sec-jadwal")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        document.getElementById("sec-lokasi")?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 300);
     }
     else if (name === "paket") {
-      scrollTo("sec-jadwal");
+      scrollTo("sec-lokasi");
     }
     else if (name === "tanggalPasang") {
       scrollTo("sec-lokasi");
@@ -204,7 +204,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.currentProvider || !form.namaLengkap || !form.kecamatan || !form.desa || !form.alamat || !form.noHp || !form.paket || !form.tanggalPasang || !form.sumberInfo || !form.fotoKtp) {
+    if (!form.currentProvider || !form.namaLengkap || !form.kecamatan || !form.desa || !form.alamat || !form.noHp || !form.paket || !form.sumberInfo || !form.fotoKtp) {
       setError("Mohon lengkapi semua field yang wajib diisi (*), termasuk mengunggah foto KTP.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -688,6 +688,8 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
               </div>
             </Section>
 
+            {/* Hiden dulu sesuai request: Pilih Tanggal Pemasangan */}
+            {/* 
             <Section id="sec-jadwal" title="Pilih Tanggal Pemasangan" icon="📅" required>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
@@ -713,6 +715,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                 </div>
               )}
             </Section>
+            */}
 
             <Section id="sec-lokasi" title="Detail Tambahan" icon="📍">
               <div className="grid grid-cols-1 gap-8 md:gap-10">

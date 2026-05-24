@@ -360,14 +360,13 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                 <div className="flex items-center gap-1.5 whitespace-nowrap">Alamat {getSortIcon('Alamat Pemasangan')}</div>
               </th>
               <th className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest text-center">Status</th>
-              <th className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest whitespace-nowrap text-center hidden md:table-cell">Progress</th>
               <th className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest text-right">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 sm:px-6 py-12 text-center">
+                <td colSpan={5} className="px-4 sm:px-6 py-12 text-center">
                   <div className="flex flex-col items-center text-slate-400">
                     <Lucide.Inbox size={48} className="mb-3 opacity-30" />
                     <p className="text-sm font-bold">Tidak ada data yang cocok</p>
@@ -464,11 +463,6 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                         </div>
                       </div>
                     )}
-                  </td>
-                  <td className="px-4 sm:px-6 py-3.5 text-center hidden md:table-cell">
-                    <div className="w-16 sm:w-20 bg-slate-100 h-1.5 rounded-full overflow-hidden inline-block">
-                      <div className="bg-[#F47920] h-full transition-all duration-1000 ease-out" style={{ width: item.status === 'AKTIF' ? '100%' : item.status === 'PROSES' ? '70%' : item.status === 'SURVEY' ? '40%' : '15%' }}></div>
-                    </div>
                   </td>
                   <td className="px-4 sm:px-6 py-3.5 text-right">
                     <div className="flex items-center gap-1.5 sm:gap-2 justify-end">

@@ -26,6 +26,29 @@ const getCustomerNo = (timestamp: string) => {
   return `AMN-${clean.slice(-5)}`;
 };
 
+const standardizePackageName = (rawPaket: string): string => {
+  if (!rawPaket) return "Tanpa Paket";
+  const clean = rawPaket.toUpperCase().replace(/\s/g, "");
+  
+  if (clean.includes("20MBPS") || clean.includes("20.MBPS") || clean.includes("GUYUB_1") || clean === "20") {
+    return "20 Mbps";
+  }
+  if (clean.includes("30MBPS") || clean.includes("30.MBPS") || clean.includes("GUYUB_2") || clean === "30") {
+    return "30 Mbps";
+  }
+  if (clean.includes("50MBPS") || clean.includes("50.MBPS") || clean.includes("GUYUB_3") || clean === "50") {
+    return "50 Mbps";
+  }
+  if (clean.includes("75MBPS") || clean.includes("75.MBPS") || clean.includes("GUYUB_4") || clean === "75") {
+    return "75 Mbps";
+  }
+  if (clean.includes("100MBPS") || clean.includes("100.MBPS") || clean.includes("GUYUB_5") || clean === "100") {
+    return "100 Mbps";
+  }
+  
+  return rawPaket; // fallback
+};
+
 const generateCustomersPDFDoc = async (data: RegistrationData[], filterLabel: string) => {
   const doc = new jsPDF("l", "mm", "a4");
 
@@ -154,6 +177,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
 }) => {
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterPackage, setFilterPackage] = useState<string | null>(null);
+  const [filterDesa, setFilterDesa] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
@@ -196,13 +220,20 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
     // Package Filter
     if (filterPackage) {
       result = result.filter(item => {
-        const pkg = String(item.Paket || "Tanpa Paket").split("(")[0].trim();
-        return pkg === filterPackage;
+        return standardizePackageName(item.Paket || "") === filterPackage;
+      });
+    }
+
+    // Desa Filter
+    if (filterDesa) {
+      result = result.filter(item => {
+        const d = String(item.Desa || "").toUpperCase().trim();
+        return d === filterDesa;
       });
     }
 
     return result;
-  }, [activeAndInactiveData, filterStatus, searchQuery, filterPackage]);
+  }, [activeAndInactiveData, filterStatus, searchQuery, filterPackage, filterDesa]);
 
   const countAktif    = activeAndInactiveData.filter(d => String(d.status || "").toUpperCase() === "AKTIF").length;
   const countNonAktif = activeAndInactiveData.filter(d => {
@@ -210,20 +241,62 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
     return s === "NON AKTIF" || s === "BERHENTI BERLANGGANAN";
   }).length;
 
-  const packageStats = React.useMemo(() => {
-    const activeData = activeAndInactiveData.filter(d => String(d.status || "").toUpperCase() === "AKTIF");
-    const counts: Record<string, number> = {};
-    activeData.forEach(item => {
-      const pkg = String(item.Paket || "Tanpa Paket").split("(")[0].trim();
-      counts[pkg] = (counts[pkg] || 0) + 1;
+  const uniqueVillages = React.useMemo(() => {
+    const vSet = new Set<string>([
+      "GUMELAR",
+      "CIHONJE",
+      "TLAGA",
+      "SAMUDRA KULON",
+      "SAMUDRA",
+      "CILANGKAP",
+      "PANINGKABAN",
+      "KARANG KEMOJING",
+      "GANCANG",
+      "KEDUNG URANG"
+    ]);
+    activeAndInactiveData.forEach(item => {
+      if (item.Desa) {
+        vSet.add(item.Desa.toUpperCase().trim());
+      }
     });
-    // Sort by count descending
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    return Array.from(vSet).sort();
   }, [activeAndInactiveData]);
 
-  const filterLabel =
-    filterStatus === "Active" ? "Aktif" :
-    filterStatus === "Inactive" ? "Non-Aktif" : "Semua";
+  const uniquePackages = React.useMemo(() => {
+    return [
+      "20 Mbps",
+      "30 Mbps",
+      "50 Mbps",
+      "75 Mbps",
+      "100 Mbps"
+    ];
+  }, []);
+
+  const packageStats = React.useMemo(() => {
+    const activeData = activeAndInactiveData.filter(d => String(d.status || "").toUpperCase() === "AKTIF");
+    const counts: Record<string, number> = {
+      "20 Mbps": 0,
+      "30 Mbps": 0,
+      "50 Mbps": 0,
+      "75 Mbps": 0,
+      "100 Mbps": 0
+    };
+    activeData.forEach(item => {
+      const pkg = standardizePackageName(item.Paket || "");
+      counts[pkg] = (counts[pkg] || 0) + 1;
+    });
+    
+    const standardPackages = ["20 Mbps", "30 Mbps", "50 Mbps", "75 Mbps", "100 Mbps"];
+    const allPackages = Array.from(new Set([...standardPackages, ...Object.keys(counts)]));
+    
+    return allPackages.map(pkg => [pkg, counts[pkg] || 0] as [string, number]);
+  }, [activeAndInactiveData]);
+
+  const filterLabel = [
+    filterStatus === "Active" ? "Aktif" : filterStatus === "Inactive" ? "Non-Aktif" : "Semua Status",
+    filterDesa ? `Desa ${filterDesa}` : "Semua Desa",
+    filterPackage ? `Paket ${filterPackage}` : "Semua Paket"
+  ].join(" - ");
 
   const tabs = [
     { id: "All",      label: "Semua",     count: activeAndInactiveData.length, icon: Lucide.Users,        activeClass: "bg-[#1a2d8f] text-white shadow-lg shadow-blue-500/20" },
@@ -278,8 +351,10 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
           >
             Semua Paket
           </button>
-          {packageStats.slice(0, 4).map(([pkgName, count], idx) => {
+          {packageStats.map(([pkgName, count]) => {
             const isActive = filterPackage === pkgName;
+            const maxCount = Math.max(...packageStats.map(item => item[1]));
+            const isMostPopular = count > 0 && count === maxCount;
             return (
               <button 
                 key={pkgName} 
@@ -288,7 +363,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                   isActive ? "bg-[#F47920] text-white border-[#F47920]" : "bg-white text-slate-600 border-slate-200 hover:border-[#F47920]"
                 }`}
               >
-                {idx === 0 && <Lucide.Trophy size={10} className={isActive ? "text-yellow-200" : "text-yellow-500"} />}
+                {isMostPopular && <Lucide.Trophy size={10} className={isActive ? "text-yellow-200" : "text-yellow-500"} />}
                 <span>{pkgName}</span>
                 <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black ${isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>{count}</span>
               </button>
@@ -328,16 +403,89 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
           </div>
 
           {/* Search Bar */}
-          <div className="relative w-full md:w-64 shrink-0">
-            <Lucide.Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="relative w-full md:w-48 shrink-0">
+            <Lucide.Search
+              size={14}
+              className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${
+                searchQuery.trim() ? "text-blue-500" : "text-slate-400"
+              }`}
+            />
             <input
               type="text"
               placeholder="Cari nama, ID, WA..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0d1655] transition-all shadow-sm"
+              className={`w-full pl-9 pr-4 py-2 border rounded-xl text-xs font-bold outline-none transition-all shadow-sm ${
+                searchQuery.trim()
+                  ? "bg-blue-50/40 border-blue-400 text-[#0d1655] font-black"
+                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 focus:border-[#0d1655]"
+              }`}
             />
           </div>
+
+          {/* Desa Filter Dropdown */}
+          <div className="relative w-full md:w-40 shrink-0">
+            <select
+              value={filterDesa || ""}
+              onChange={(e) => setFilterDesa(e.target.value || null)}
+              className={`w-full pl-3 pr-8 py-2 rounded-xl text-xs font-black outline-none transition-all shadow-sm appearance-none cursor-pointer border-2 ${
+                filterDesa
+                  ? "bg-blue-50/60 border-blue-400 text-[#0d1655]"
+                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 focus:border-[#0d1655]"
+              }`}
+            >
+              <option value="" className="font-bold text-slate-500 bg-white">Semua Desa</option>
+              {uniqueVillages.map(v => (
+                <option key={v} value={v} className="font-bold text-slate-700 bg-white">Desa {v}</option>
+              ))}
+            </select>
+            <Lucide.ChevronDown
+              size={12}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${
+                filterDesa ? "text-blue-500" : "text-slate-400"
+              }`}
+            />
+          </div>
+
+          {/* Paket Filter Dropdown */}
+          <div className="relative w-full md:w-44 shrink-0">
+            <select
+              value={filterPackage || ""}
+              onChange={(e) => setFilterPackage(e.target.value || null)}
+              className={`w-full pl-3 pr-8 py-2 rounded-xl text-xs font-black outline-none transition-all shadow-sm appearance-none cursor-pointer border-2 ${
+                filterPackage
+                  ? "bg-orange-50/60 border-orange-400 text-orange-950"
+                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 focus:border-[#0d1655]"
+              }`}
+            >
+              <option value="" className="font-bold text-slate-500 bg-white">Semua Paket</option>
+              {uniquePackages.map(p => (
+                <option key={p} value={p} className="font-bold text-slate-700 bg-white">{p}</option>
+              ))}
+            </select>
+            <Lucide.ChevronDown
+              size={12}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${
+                filterPackage ? "text-orange-500" : "text-slate-400"
+              }`}
+            />
+          </div>
+
+          {/* Reset Filters Button */}
+          {(filterStatus !== "All" || filterPackage !== null || filterDesa !== null || searchQuery.trim() !== "") && (
+            <button
+              onClick={() => {
+                setFilterStatus("All");
+                setFilterPackage(null);
+                setFilterDesa(null);
+                setSearchQuery("");
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-black transition-all border border-rose-100 active:scale-95 shrink-0"
+              title="Reset Semua Filter"
+            >
+              <Lucide.RotateCcw size={12} /> Reset
+            </button>
+          )}
         </div>
 
         {/* Export Buttons */}
