@@ -170,32 +170,53 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
     return () => clearInterval(interval);
   }, []);
 
-  // H: Silent refresh tanpa loading screen
-  // H: Silent refresh tanpa loading screen
   const silentRefresh = async () => {
     setIsRefreshing(true);
     try {
-      const { data: rows, error } = await supabase
-        .from("registrations")
-        .select("*")
-        .order("id", { ascending: false });
+      let fetchedData: RegistrationData[] = [];
+      
+      try {
+        const { data: rows, error } = await supabase
+          .from("registrations")
+          .select("*")
+          .order("id", { ascending: false });
+        if (!error && rows && rows.length > 0) {
+          fetchedData = rows;
+        }
+      } catch (err) {
+        console.warn("Supabase refresh failed", err);
+      }
 
-      if (error) throw error;
+      if (fetchedData.length === 0 && googleScriptUrl) {
+        try {
+          const response = await fetch(googleScriptUrl);
+          if (response.ok) {
+            const result = await response.json();
+            if (Array.isArray(result) && result.length > 0) {
+              fetchedData = result.map(normalizeRow);
+            } else if (result && Array.isArray(result.data) && result.data.length > 0) {
+              fetchedData = result.data.map(normalizeRow);
+            }
+          }
+        } catch (err) {
+          console.warn("Apps Script refresh failed", err);
+        }
+      }
 
-      if (rows && rows.length > 0) {
+      if (fetchedData.length > 0) {
         // D: Deteksi pendaftar baru
         setData(prev => {
-          if (rows.length > prev.length) {
-            const newEntries = rows.slice(0, rows.length - prev.length);
+          if (fetchedData.length > prev.length) {
+            const newEntries = fetchedData.slice(0, fetchedData.length - prev.length);
             const notifs = newEntries.map((e: RegistrationData) => ({
               id: e.Timestamp,
               name: e["Nama Lengkap"],
               time: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
             }));
-            setNotifications(prev => [...notifs, ...prev].slice(0, 10));
-            setLastCount(rows.length);
+            setNotifications(prevNotif => [...notifs, ...prevNotif].slice(0, 10));
+            setLastCount(fetchedData.length);
           }
-          return rows;
+          return fetchedData;
         });
         setLastRefresh(new Date());
       }
@@ -209,18 +230,44 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Fetch live data dari Supabase
-      const { data: rows, error } = await supabase
-        .from("registrations")
-        .select("*")
-        .order("id", { ascending: false });
-
-      if (error) throw error;
       
-      if (rows && rows.length > 0) {
-        setData(rows);
+      let fetchedData: RegistrationData[] = [];
+      
+      // 1. Fetch live data dari Supabase
+      try {
+        const { data: rows, error } = await supabase
+          .from("registrations")
+          .select("*")
+          .order("id", { ascending: false });
+
+        if (!error && rows && rows.length > 0) {
+          fetchedData = rows;
+        }
+      } catch (err) {
+        console.warn("Supabase fetch failed", err);
+      }
+      
+      // 2. Jika Supabase kosong, fetch dari Google Apps Script
+      if (fetchedData.length === 0 && googleScriptUrl) {
+        try {
+          const response = await fetch(googleScriptUrl);
+          if (response.ok) {
+            const result = await response.json();
+            if (Array.isArray(result) && result.length > 0) {
+              fetchedData = result.map(normalizeRow);
+            } else if (result && Array.isArray(result.data) && result.data.length > 0) {
+              fetchedData = result.data.map(normalizeRow);
+            }
+          }
+        } catch (err) {
+          console.warn("Apps Script fetch failed", err);
+        }
+      }
+
+      if (fetchedData.length > 0) {
+        setData(fetchedData);
       } else {
-        // Fallback data lokal dummy jika tabel kosong
+        // 3. Fallback data lokal dummy jika tabel kosong
         try {
           const localResponse = await fetch("/data/dummy_data.json");
           if (localResponse.ok) {

@@ -313,10 +313,8 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         finalKtpUrl = urlData.publicUrl;
         console.log("📸 KTP successfully uploaded to Storage:", finalKtpUrl);
       } catch (uploadErr: any) {
-        console.error("Gagal mengunggah foto KTP ke Storage:", uploadErr);
-        setError(`Gagal mengunggah foto KTP: ${uploadErr.message || uploadErr}`);
-        setLoading(false);
-        return;
+        console.warn("⚠️ Gagal mengunggah foto KTP ke Storage, beralih ke mode Base64 fallback:", uploadErr);
+        finalKtpUrl = form.fotoKtp;
       }
     }
     
