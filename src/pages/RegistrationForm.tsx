@@ -9,6 +9,7 @@ import { Section, RadioCard, InputField } from "../components/ui/FormElements";
 import { LogoMark } from "../components/ui/LogoMark";
 import { PackageSelection } from "../components/registration/PackageSelection";
 import { SubscriberNotice } from "../components/registration/SubscriberNotice";
+import { FomoNotifications, FloatingWhatsAppButton } from "../components/registration/FomoWidgets";
 
 
 
@@ -940,6 +941,10 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
           <button onClick={() => setShowAdminModal(true)} className="hover:text-[#F47920] transition-colors cursor-default">© {new Date().getFullYear()} ARMEDIA.ID</button>
         </footer>
       </main>
+      
+      {/* FOMO Widgets & Floating WhatsApp CS */}
+      <FomoNotifications />
+      <FloatingWhatsAppButton />
     </div>
   );
 };
