@@ -194,6 +194,47 @@ const appendKtpAttachments = (doc: any, data: RegistrationData[]) => {
         doc.setFont("helvetica", "bold");
         doc.text("[Foto KTP tidak dapat ditampilkan secara visual - Format file korup atau tidak didukung]", 20, 60);
       }
+    } else if (ktpData && String(ktpData).startsWith("http")) {
+      doc.addPage();
+      
+      // Frame
+      doc.setDrawColor(244, 121, 32); // Brand Orange
+      doc.setLineWidth(1);
+      doc.rect(14, 14, 269, 182);
+      
+      // Header Info
+      doc.setFontSize(16);
+      doc.setTextColor(13, 22, 85); // Navy
+      doc.setFont("helvetica", "bold");
+      doc.text(`LAMPIRAN FOTO KTP - ${String(item["Nama Lengkap"] || "").toUpperCase()}`, 20, 26);
+      
+      doc.setFontSize(9);
+      doc.setTextColor(100, 116, 139);
+      doc.setFont("helvetica", "normal");
+      doc.text(`ID Pelanggan: ${getCustomerNo(item.Timestamp)} | No. WA: ${item["No HP / WA"] || "-"}`, 20, 32);
+      doc.text(`Alamat: ${item["Alamat Pemasangan"] || "-"} (${item.Desa || "-"}, ${item.Kecamatan || "-"}) | Paket: ${item.Paket || "-"}`, 20, 37);
+      
+      // Thin line divider
+      doc.setDrawColor(226, 232, 240);
+      doc.line(20, 41, 277, 41);
+      
+      // Text indicating file location
+      doc.setFontSize(11);
+      doc.setTextColor(13, 22, 85);
+      doc.setFont("helvetica", "bold");
+      doc.text("Foto KTP diunggah ke Cloud Storage (Supabase):", 20, 60);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(244, 121, 32);
+      doc.setFont("helvetica", "normal");
+      
+      const splitUrl = doc.splitTextToSize(ktpData, 240);
+      doc.text(splitUrl, 20, 70);
+      
+      // Footer signature watermark
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      doc.text("Arsip pendaftaran digital resmi PT. AKSES ARTHA MEDIA (ARMEDIA.ID).", 20, 188);
     }
   });
 };

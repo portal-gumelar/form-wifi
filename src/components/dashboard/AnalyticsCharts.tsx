@@ -64,7 +64,7 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ stats, totalCo
   // KTP per village data
   const ktpByVillage = [...new Set(data.map(item => item.Desa || "Lainnya"))].map(desa => {
     const villageData = data.filter(item => item.Desa === desa);
-    const withKTP = villageData.filter(item => item["Foto KTP"] && String(item["Foto KTP"]).startsWith("data:image/")).length;
+    const withKTP = villageData.filter(item => item["Foto KTP"] && (String(item["Foto KTP"]).startsWith("data:image/") || String(item["Foto KTP"]).startsWith("http"))).length;
     return { name: desa, total: villageData.length, withKTP, percentage: Math.round((withKTP / (villageData.length || 1)) * 100) };
   }).sort((a, b) => b.total - a.total).slice(0, 5);
 
@@ -245,7 +245,7 @@ export const FullAnalytics: React.FC<AnalyticsChartsProps> = ({ stats, totalCoun
   // KTP per village data
   const ktpByVillage = [...new Set(data.map(item => item.Desa || "Lainnya"))].map(desa => {
     const villageData = data.filter(item => item.Desa === desa);
-    const withKTP = villageData.filter(item => item["Foto KTP"] && String(item["Foto KTP"]).startsWith("data:image/")).length;
+    const withKTP = villageData.filter(item => item["Foto KTP"] && (String(item["Foto KTP"]).startsWith("data:image/") || String(item["Foto KTP"]).startsWith("http"))).length;
     return { name: desa, total: villageData.length, withKTP, percentage: Math.round((withKTP / (villageData.length || 1)) * 100) };
   }).sort((a, b) => b.total - a.total).slice(0, 5);
 

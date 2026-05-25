@@ -276,6 +276,50 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     setLoading(true);
     const timestampStr = new Date().toLocaleString("id-ID");
     
+    let finalKtpUrl = "";
+    if (form.fotoKtp) {
+      try {
+        // Convert base64 data URL to Blob
+        const response = await fetch(form.fotoKtp);
+        const blob = await response.blob();
+        
+        // Generate a unique filename using timestamp and name (sluggified)
+        const cleanName = form.namaLengkap.toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 30);
+        const randomString = Math.random().toString(36).substring(2, 8);
+        const fileName = `ktp-${Date.now()}-${cleanName}-${randomString}.jpg`;
+        
+        // Upload to bucket 'dokumen-ktp'
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("dokumen-ktp")
+          .upload(fileName, blob, {
+            contentType: "image/jpeg",
+            cacheControl: "3600",
+            upsert: false
+          });
+          
+        if (uploadError) {
+          throw uploadError;
+        }
+        
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from("dokumen-ktp")
+          .getPublicUrl(fileName);
+          
+        if (!urlData || !urlData.publicUrl) {
+          throw new Error("Gagal mendapatkan public URL untuk foto KTP");
+        }
+        
+        finalKtpUrl = urlData.publicUrl;
+        console.log("📸 KTP successfully uploaded to Storage:", finalKtpUrl);
+      } catch (uploadErr: any) {
+        console.error("Gagal mengunggah foto KTP ke Storage:", uploadErr);
+        setError(`Gagal mengunggah foto KTP: ${uploadErr.message || uploadErr}`);
+        setLoading(false);
+        return;
+      }
+    }
+    
     const newRecord = {
       "Timestamp": timestampStr,
       "Nama Lengkap": form.namaLengkap,
@@ -290,7 +334,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
       "Provider Saat Ini": form.currentProvider || "Belum Pernah Pasang",
       "Sumber Info": form.sumberInfo || "Rekomendasi Teman",
       "Link Google Maps": form.linkGoogleMaps || "",
-      "Foto KTP": form.fotoKtp || "",
+      "Foto KTP": finalKtpUrl || "",
       "Persetujuan S&K": "SETUJU (Sudah Dibaca & Disetujui)",
       "Catatan": form.catatan || "",
       "Tanggal Rencana Pasang": form.tanggalPasang || "",
@@ -324,7 +368,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         survei: form.waktuSurvei,
         prioritas: form.prioritas === "lain" ? form.prioritasLain : form.prioritas,
         sumber: form.sumberInfo,
-        fotoKtp: form.fotoKtp,
+        fotoKtp: finalKtpUrl,
         catatan: form.catatan
       };
       localStorage.setItem('adminData', JSON.stringify([newEntry, ...localData]));

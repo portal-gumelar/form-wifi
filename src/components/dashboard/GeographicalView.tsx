@@ -20,7 +20,7 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
   const filteredData = data;
 
   // Stats
-  const withKTP = filteredData.filter(item => item["Foto KTP"] && String(item["Foto KTP"]).startsWith("data:image/")).length;
+  const withKTP = filteredData.filter(item => item["Foto KTP"] && (String(item["Foto KTP"]).startsWith("data:image/") || String(item["Foto KTP"]).startsWith("http"))).length;
   const withoutKTP = filteredData.length - withKTP;
 
   const extractCoords = (url: string) => {
@@ -59,7 +59,7 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
     const bounds = L.latLngBounds([]);
     geoData.forEach(point => {
       if (point.coords) {
-        const hasKTP = point["Foto KTP"] && String(point["Foto KTP"]).startsWith("data:image/");
+        const hasKTP = point["Foto KTP"] && (String(point["Foto KTP"]).startsWith("data:image/") || String(point["Foto KTP"]).startsWith("http"));
         
         // Enhance marker based on status
         const status = (point.status || "").toUpperCase();
@@ -196,7 +196,7 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
               </div>
             ) : (
               filteredData.map((item) => {
-                const hasKTP = item["Foto KTP"] && String(item["Foto KTP"]).startsWith("data:image/");
+                const hasKTP = item["Foto KTP"] && (String(item["Foto KTP"]).startsWith("data:image/") || String(item["Foto KTP"]).startsWith("http"));
                 return (
                   <div 
                     key={item.Timestamp}

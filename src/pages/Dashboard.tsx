@@ -299,10 +299,45 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
     const isNewRecord = !updatedItem.Timestamp || updatedItem.Timestamp.includes("baru") || !data.some(d => d.Timestamp === updatedItem.Timestamp);
     const finalTimestamp = isNewRecord ? new Date().toLocaleString("id-ID") : updatedItem.Timestamp;
 
+    let finalKtpUrl = updatedItem["Foto KTP"] || "";
+
+    // Upload to Supabase Storage if the image is a base64 string
+    if (finalKtpUrl && finalKtpUrl.startsWith("data:image/")) {
+      try {
+        const response = await fetch(finalKtpUrl);
+        const blob = await response.blob();
+        const cleanName = (updatedItem["Nama Lengkap"] || "admin-upload").toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 30);
+        const randomString = Math.random().toString(36).substring(2, 8);
+        const fileName = `ktp-${Date.now()}-${cleanName}-${randomString}.jpg`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("dokumen-ktp")
+          .upload(fileName, blob, {
+            contentType: "image/jpeg",
+            cacheControl: "3600",
+            upsert: false
+          });
+          
+        if (uploadError) throw uploadError;
+        
+        const { data: urlData } = supabase.storage
+          .from("dokumen-ktp")
+          .getPublicUrl(fileName);
+          
+        if (urlData && urlData.publicUrl) {
+          finalKtpUrl = urlData.publicUrl;
+          console.log("📸 KTP successfully uploaded from admin panel:", finalKtpUrl);
+        }
+      } catch (uploadErr) {
+        console.error("Gagal mengunggah KTP baru ke storage:", uploadErr);
+      }
+    }
+
     const finalItem: RegistrationData = {
       ...updatedItem,
       Timestamp: finalTimestamp,
-      status: updatedItem.status || "PENGAJUAN"
+      status: updatedItem.status || "PENGAJUAN",
+      "Foto KTP": finalKtpUrl
     };
 
     // 1. Optimistic Update (Manipulasi State lokal agar UI langsung sinkron)
@@ -324,7 +359,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
         "Provider Saat Ini": updatedItem["Provider Saat Ini"] || "Belum Pernah Pasang",
         "Sumber Info": updatedItem["Sumber Info"] || "",
         "Link Google Maps": updatedItem["Link Google Maps"] || "",
-        "Foto KTP": updatedItem["Foto KTP"] || "",
+        "Foto KTP": finalKtpUrl,
         "Persetujuan S&K": updatedItem["Persetujuan S&K"] || "SETUJU (Manual Admin)",
         "Catatan": updatedItem.Catatan || "",
         "Tanggal Aktif": updatedItem["Tanggal Aktif"] || "",
