@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { RefreshCw, AlertCircle, ChevronDown } from "lucide-react";
 import { parseKTPText } from "../utils/ktpParser";
+import { supabase } from "../utils/supabaseClient";
 
 // UI Components
 import { Section, RadioCard, InputField } from "../components/ui/FormElements";
@@ -273,41 +274,43 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
   const processSubmission = async () => {
     setLoading(true);
-    const payload = new URLSearchParams();
-    Object.entries(form).forEach(([key, val]) => {
-      if (key === "prioritas" && val === "lain") payload.append("Prioritas", form.prioritasLain);
-      else if (key !== "prioritasLain") {
-        const apiKey = key === "currentProvider" ? "Provider Saat Ini" :
-          key === "namaLengkap" ? "Nama Lengkap" :
-            key === "kecamatan" ? "Kecamatan" :
-              key === "desa" ? "Desa" :
-                key === "rw" ? "RW" :
-                  key === "rt" ? "RT" :
-                    key === "alamat" ? "Alamat Pemasangan" :
-                      key === "noHp" ? "No HP / WA" :
-                        key === "paket" ? "Paket" :
-                          key === "tanggalPasang" ? "Tanggal Rencana Pasang" :
-                            key === "bisaGoogleMaps" ? "Bisa Google Maps" :
-                              key === "linkGoogleMaps" ? "Link Google Maps" :
-                                key === "waktuSurvei" ? "Waktu Survei" :
-                                  key === "prioritas" ? "Prioritas" :
-                                    key === "sumberInfo" ? "Sumber Info" : 
-                                      key === "fotoKtp" ? "Foto KTP" :
-                                        key === "catatan" ? "Catatan" : key;
-        payload.append(apiKey, val);
-      }
-    });
-    payload.append("Timestamp", new Date().toLocaleString("id-ID"));
-    payload.append("status", "PENGAJUAN"); // SOP: setiap form masuk = PENGAJUAN
-    payload.append("Persetujuan S&K", "SETUJU (Sudah Dibaca & Disetujui)");
+    const timestampStr = new Date().toLocaleString("id-ID");
+    
+    const newRecord = {
+      "Timestamp": timestampStr,
+      "Nama Lengkap": form.namaLengkap,
+      "No HP / WA": form.noHp,
+      "Alamat Pemasangan": form.alamat,
+      "Kecamatan": form.kecamatan,
+      "Desa": form.desa,
+      "RW": form.rw,
+      "RT": form.rt,
+      "Paket": form.paket,
+      "status": "PENGAJUAN",
+      "Provider Saat Ini": form.currentProvider || "Belum Pernah Pasang",
+      "Sumber Info": form.sumberInfo || "Rekomendasi Teman",
+      "Link Google Maps": form.linkGoogleMaps || "",
+      "Foto KTP": form.fotoKtp || "",
+      "Persetujuan S&K": "SETUJU (Sudah Dibaca & Disetujui)",
+      "Catatan": form.catatan || "",
+      "Tanggal Rencana Pasang": form.tanggalPasang || "",
+      "Waktu Survei": form.waktuSurvei || "",
+      "Tanggal Aktif": ""
+    };
 
     try {
-      await fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: payload, mode: "no-cors" });
+      // 1. Simpan ke database Supabase
+      const { error: supabaseError } = await supabase
+        .from("registrations")
+        .insert([newRecord]);
 
+      if (supabaseError) throw supabaseError;
+
+      // 2. Backup ke localData untuk indikator lokal
       const localData = JSON.parse(localStorage.getItem('adminData') || '[]');
       const newEntry = {
         id: localData.length + 1,
-        timestamp: new Date().toLocaleString("id-ID"),
+        timestamp: timestampStr,
         provider: form.currentProvider,
         nama: form.namaLengkap,
         kecamatan: form.kecamatan,
@@ -324,11 +327,19 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         fotoKtp: form.fotoKtp,
         catatan: form.catatan
       };
-
       localStorage.setItem('adminData', JSON.stringify([newEntry, ...localData]));
+
+      // 3. Backup sekunder ke Google Sheets secara asinkron (fire-and-forget)
+      const payload = new URLSearchParams();
+      Object.entries(newRecord).forEach(([key, val]) => {
+        payload.append(key, val);
+      });
+      fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: payload, mode: "no-cors" }).catch(() => {});
+
       setSubmitted({ name: form.namaLengkap, desa: form.desa });
       window.scrollTo(0, 0);
     } catch (err) {
+      console.error("Gagal mengirim ke Supabase:", err);
       setError("Koneksi gagal. Silakan coba lagi.");
     } finally {
       setLoading(false);

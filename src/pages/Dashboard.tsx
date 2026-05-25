@@ -18,6 +18,7 @@ import { VillageFundChart } from "../components/dashboard/VillageFundChart";
 // Utils & Types
 import { RegistrationData, DashboardStats } from "../types";
 import { calculateStats, exportToExcel, generatePDFBlobUrl, downloadPDF } from "../utils/dashboardUtils";
+import { supabase } from "../utils/supabaseClient";
 
 // --- Komponen Custom Dropdown ---
 const CustomPaketDropdown = ({ value, onChange, options }: { value: string, onChange: (v: string) => void, options: { name: string }[] }) => {
@@ -170,35 +171,31 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
   }, []);
 
   // H: Silent refresh tanpa loading screen
+  // H: Silent refresh tanpa loading screen
   const silentRefresh = async () => {
-    if (!googleScriptUrl) return;
     setIsRefreshing(true);
     try {
-      const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout")), 15000)
-      );
-      const response = await Promise.race([fetch(googleScriptUrl), timeout]) as Response;
-      const json = await response.json();
-      const rawData = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : null);
-      if (rawData && rawData.length > 0) {
-        const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
-        const normalized = rawData.map((item: any) => ({
-          ...normalizeRow(item),
-          status: localStatuses[item.Timestamp] || item.status || item.Status || "PENGAJUAN"
-        }));
+      const { data: rows, error } = await supabase
+        .from("registrations")
+        .select("*")
+        .order("id", { ascending: false });
+
+      if (error) throw error;
+
+      if (rows && rows.length > 0) {
         // D: Deteksi pendaftar baru
         setData(prev => {
-          if (normalized.length > prev.length) {
-            const newEntries = normalized.slice(0, normalized.length - prev.length);
+          if (rows.length > prev.length) {
+            const newEntries = rows.slice(0, rows.length - prev.length);
             const notifs = newEntries.map((e: RegistrationData) => ({
               id: e.Timestamp,
               name: e["Nama Lengkap"],
               time: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
             }));
             setNotifications(prev => [...notifs, ...prev].slice(0, 10));
-            setLastCount(normalized.length);
+            setLastCount(rows.length);
           }
-          return normalized;
+          return rows;
         });
         setLastRefresh(new Date());
       }
@@ -212,52 +209,29 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      let combinedData: RegistrationData[] = [];
-      try {
-        const localResponse = await fetch("/data/dummy_data.json");
-        if (localResponse.ok) {
-          const localJson = await localResponse.json();
-          if (Array.isArray(localJson)) combinedData = localJson;
-        }
-      } catch (e) {
-        console.warn("Link Local: No cached data found.");
-      }
+      // Fetch live data dari Supabase
+      const { data: rows, error } = await supabase
+        .from("registrations")
+        .select("*")
+        .order("id", { ascending: false });
 
-      // Guard: jika googleScriptUrl tidak tersedia, skip fetch live
-      if (googleScriptUrl) {
-        try {
-          const timeout = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("Timeout")), 15000)
-          );
-          const response = await Promise.race([fetch(googleScriptUrl), timeout]) as Response;
-          const json = await response.json();
-          const rawData = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : null);
-          if (rawData) {
-            const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
-            const applyStatuses = (list: any[]) => list.map(item => ({
-              ...normalizeRow(item),
-              status: localStatuses[item.Timestamp] || item.status || item.Status || "PENGAJUAN"
-            }));
-
-            if (rawData.length > 0) {
-              setData(applyStatuses(rawData));
-              return;
-            }
-            if (combinedData.length > 0) setData(applyStatuses(combinedData));
-          }
-        } catch (err) {
-          console.error("Failed to fetch live data:", err);
-          if (combinedData.length > 0) {
-            const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
-            setData(combinedData.map(item => ({
-              ...item,
-              status: localStatuses[item.Timestamp] || item.status || "PENGAJUAN"
-            })));
-          }
-        }
+      if (error) throw error;
+      
+      if (rows && rows.length > 0) {
+        setData(rows);
       } else {
-        // Tidak ada URL — langsung pakai data lokal jika ada
-        if (combinedData.length > 0) setData(combinedData);
+        // Fallback data lokal dummy jika tabel kosong
+        try {
+          const localResponse = await fetch("/data/dummy_data.json");
+          if (localResponse.ok) {
+            const localJson = await localResponse.json();
+            if (Array.isArray(localJson)) {
+              setData(localJson.map(normalizeRow));
+            }
+          }
+        } catch (e) {
+          console.warn("No dummy data found.");
+        }
       }
     } catch (err) {
       console.error("Dashboard init failed", err);
@@ -271,39 +245,52 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
     // 1. Update UI Lokal secara Instan
     setData(prev => prev.map(item => item.Timestamp === timestamp ? { ...item, status: newStatus } : item));
 
-    // 2. Simpan di cache lokal browser
-    const localStatuses = JSON.parse(localStorage.getItem("registration_statuses") || "{}");
-    localStatuses[timestamp] = newStatus;
-    localStorage.setItem("registration_statuses", JSON.stringify(localStatuses));
-
-    // 3. Sinkronisasikan perubahan status langsung ke basis data Google Sheets
+    // 2. Simpan di database Supabase
     try {
-      const targetItem = data.find(item => item.Timestamp === timestamp);
-      if (targetItem) {
-        const params = new URLSearchParams();
-        params.append("action", "update");
-        params.append("Timestamp", timestamp);
-        params.append("status", newStatus);
+      const { error } = await supabase
+        .from("registrations")
+        .update({ status: newStatus })
+        .eq("Timestamp", timestamp);
 
-        await fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: params });
-      }
+      if (error) throw error;
     } catch (err) {
-      console.error("Gagal memperbarui status ke server:", err);
+      console.error("Gagal memperbarui status ke Supabase:", err);
     }
+
+    // 3. Backup asinkron ke Google Sheets
+    try {
+      const params = new URLSearchParams();
+      params.append("action", "update");
+      params.append("Timestamp", timestamp);
+      params.append("status", newStatus);
+      fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: params }).catch(() => {});
+    } catch (err) {}
   };
 
   const handleDelete = async (timestamp: string) => {
     setConfirmDelete(null);
+    // 1. Update UI Lokal
+    setData(prev => prev.filter(item => item.Timestamp !== timestamp));
+
+    // 2. Hapus di database Supabase
     try {
-      await fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: new URLSearchParams({ action: "delete", timestamp }) });
-      setData(prev => prev.filter(item => item.Timestamp !== timestamp));
-      setTimeout(fetchData, 2000);
+      const { error } = await supabase
+        .from("registrations")
+        .delete()
+        .eq("Timestamp", timestamp);
+
+      if (error) throw error;
     } catch (err) {
-      console.error("Delete failed:", err);
+      console.error("Gagal menghapus dari Supabase:", err);
     }
+
+    // 3. Backup asinkron ke Google Sheets
+    try {
+      fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: new URLSearchParams({ action: "delete", timestamp }) }).catch(() => {});
+    } catch (err) {}
   };
 
-  // --- REVISI TOTAL: IMPLEMENTASI SEKUENSAL INPUT FULL CRUD KE GOOGLE SHEETS ---
+  // --- REVISI TOTAL: IMPLEMENTASI SEKUENSAL INPUT FULL CRUD KE SUPABASE ---
   const handleSaveEdit = async (updatedItem: RegistrationData) => {
     setEditingReg(null);
     setIsAddingNew(false);
@@ -318,11 +305,51 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
       status: updatedItem.status || "PENGAJUAN"
     };
 
-    // 1. Optimistic Update (Manipulasi State lokal agar UI langsung sinkron tanpa loading delay)
+    // 1. Optimistic Update (Manipulasi State lokal agar UI langsung sinkron)
     setData(prev => isNewRecord ? [finalItem, ...prev] : prev.map(item => item.Timestamp === updatedItem.Timestamp ? finalItem : item));
 
     try {
-      // 2. Racik Paket Data Pencocokan Header Google Sheets
+      // 2. Simpan atau Update ke Supabase
+      const supabaseRecord = {
+        "Timestamp": finalTimestamp,
+        "Nama Lengkap": updatedItem["Nama Lengkap"] || "",
+        "No HP / WA": updatedItem["No HP / WA"] || "",
+        "Alamat Pemasangan": updatedItem["Alamat Pemasangan"] || "",
+        "Kecamatan": updatedItem.Kecamatan || "GUMELAR",
+        "Desa": updatedItem.Desa || "GUMELAR",
+        "RW": updatedItem.RW || "",
+        "RT": updatedItem.RT || "",
+        "Paket": updatedItem.Paket || "",
+        "status": updatedItem.status || "PENGAJUAN",
+        "Provider Saat Ini": updatedItem["Provider Saat Ini"] || "Belum Pernah Pasang",
+        "Sumber Info": updatedItem["Sumber Info"] || "",
+        "Link Google Maps": updatedItem["Link Google Maps"] || "",
+        "Foto KTP": updatedItem["Foto KTP"] || "",
+        "Persetujuan S&K": updatedItem["Persetujuan S&K"] || "SETUJU (Manual Admin)",
+        "Catatan": updatedItem.Catatan || "",
+        "Tanggal Aktif": updatedItem["Tanggal Aktif"] || "",
+        "Tanggal Rencana Pasang": updatedItem["Tanggal Rencana Pasang"] || "",
+        "Waktu Survei": updatedItem["Waktu Survei"] || ""
+      };
+
+      if (isNewRecord) {
+        const { error } = await supabase
+          .from("registrations")
+          .insert([supabaseRecord]);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("registrations")
+          .update(supabaseRecord)
+          .eq("Timestamp", updatedItem.Timestamp);
+        if (error) throw error;
+      }
+    } catch (err) {
+      console.error("Gagal menyimpan ke Supabase:", err);
+    }
+
+    try {
+      // 3. Backup asinkron ke Google Sheets
       const params = new URLSearchParams();
       params.append("action", isNewRecord ? "add" : "update");
       params.append("Timestamp", finalTimestamp);
@@ -338,25 +365,14 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
       params.append("Tanggal Rencana Pasang", updatedItem["Tanggal Rencana Pasang"] || "");
       params.append("Waktu Survei", updatedItem["Waktu Survei"] || "");
       params.append("status", updatedItem.status || "PENGAJUAN");
-      if (updatedItem["Link Google Maps"]) {
-        params.append("Link Google Maps", updatedItem["Link Google Maps"]);
-      }
-      if (updatedItem["Foto KTP"]) {
-        params.append("Foto KTP", updatedItem["Foto KTP"]);
-      }
+      if (updatedItem["Link Google Maps"]) params.append("Link Google Maps", updatedItem["Link Google Maps"]);
+      if (updatedItem["Foto KTP"]) params.append("Foto KTP", updatedItem["Foto KTP"]);
 
-      // 3. Tembak Payload via POST Method ke Jembatan API GAS Anda
-      await fetch(googleScriptUrl, {
-        method: "POST",
-        mode: "no-cors",
-        body: params
-      });
+      fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: params }).catch(() => {});
+    } catch (err) {}
 
-      // 4. Background refresh senyap untuk memverifikasi struktur baris
-      setTimeout(fetchData, 2000);
-    } catch (err) {
-      console.error("Koneksi CRUD Server Gagal:", err);
-    }
+    // 4. Background refresh senyap untuk memverifikasi struktur baris
+    setTimeout(fetchData, 2000);
   };
 
   const handleAddNew = () => {
