@@ -401,7 +401,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                 <span className="text-3xl">🤝</span>
               </div>
               <div>
-                <p className="text-white/80 text-[10px] font-black uppercase tracking-widest">Prinsip Harmoni Armedia_Net</p>
+                <p className="text-white/80 text-[10px] font-black uppercase tracking-widest">Prinsip Harmoni ARMEDIA.ID</p>
                 <h2 className="text-white font-black text-xl leading-tight">ETIKA & SILATURAHMI</h2>
               </div>
             </div>
@@ -636,7 +636,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                       <div>
                         <p className="text-xs font-black text-orange-800 uppercase tracking-tight">Wilayah Prioritas Ekspansi</p>
                         <p className="text-[11px] font-bold text-orange-700/80 leading-relaxed mt-0.5">
-                          Jaringan Armedia Net belum aktif di <span className="font-black text-orange-900 underline decoration-orange-300 decoration-2">{form.desa}</span>.
+                          Jaringan ARMEDIA.ID belum aktif di <span className="font-black text-orange-900 underline decoration-orange-300 decoration-2">{form.desa}</span>.
                           Silakan <span className="font-black text-orange-900">LANJUTKAN</span> pendaftaran Anda agar kami mencatat permintaan di wilayah ini.
                         </p>
                       </div>

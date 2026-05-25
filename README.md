@@ -1,6 +1,6 @@
-# 🌐 Armedia Net Registration Portal
+# 🌐 ARMEDIA.ID Registration Portal
 
-A premium, modern customer registration system and administrative dashboard for **PT. Akses Artha Media (Armedia Net)**. Built with high-performance technologies to provide a seamless user experience.
+A premium, modern customer registration system and administrative dashboard for **PT. Akses Artha Media (ARMEDIA.ID)**. Built with high-performance technologies to provide a seamless user experience.
 
 ---
 
@@ -46,7 +46,7 @@ A premium, modern customer registration system and administrative dashboard for 
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/[username]/armedia-net-registration-form.git
+   git clone https://github.com/[username]/armedia-id-registration-form.git
    ```
 2. Install dependencies:
    ```bash

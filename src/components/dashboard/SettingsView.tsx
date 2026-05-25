@@ -63,7 +63,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ isDarkMode, setIsDar
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0d1655] to-blue-600 flex items-center justify-center text-white text-xl font-black shadow-lg">AD</div>
             <div>
               <p className="font-black text-sm text-[#0d1655]">Administrator</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Master Admin · Armedia Net</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Master Admin · ARMEDIA.ID</p>
             </div>
           </div>
 

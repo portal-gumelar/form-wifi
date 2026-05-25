@@ -1,12 +1,12 @@
-# 🌐 BLUEPRINT ARSITEKTUR DIGITAL ARMEDIA NET
+# 🌐 BLUEPRINT ARSITEKTUR DIGITAL ARMEDIA.ID
 ## Migrasi VPS Coolify, Supabase Database, n8n Workflow, & Otomatisasi Billing MikroTik
 
 ---
 
 ## 1. PENDAHULUAN & TUJUAN STRATEGIS
-Dokumen ini disusun sebagai panduan teknis resmi (*blueprint*) untuk meningkatkan infrastruktur **PT. Akses Artha Media (ARMEDIA Net)** ke tingkat korporat (*enterprise scale*). 
+Dokumen ini disusun sebagai panduan teknis resmi (*blueprint*) untuk meningkatkan infrastruktur **PT. Akses Artha Media (ARMEDIA.ID)** ke tingkat korporat (*enterprise scale*). 
 
-Dengan memindahkan ekosistem dari Vercel/Google Sheets ke **VPS Mandiri (via Coolify PaaS)**, menggunakan **Supabase** sebagai database, **n8n** sebagai pusat otomasi, dan **MikroTik** sebagai pengontrol akses fisik (PPPoE), ARMEDIA Net akan memiliki sistem operasional **100% Autopilot** yang hemat biaya, super cepat, aman, dan mandiri.
+Dengan memindahkan ekosistem dari Vercel/Google Sheets ke **VPS Mandiri (via Coolify PaaS)**, menggunakan **Supabase** sebagai database, **n8n** sebagai pusat otomasi, dan **MikroTik** sebagai pengontrol akses fisik (PPPoE), ARMEDIA.ID akan memiliki sistem operasional **100% Autopilot** yang hemat biaya, super cepat, aman, dan mandiri.
 
 ---
 
@@ -80,7 +80,7 @@ n8n bertindak sebagai "asisten robot" di latar belakang yang menghubungkan aplik
 * **Aksi n8n**:
   1. Menerima data pendaftaran baru.
   2. Mengunggah gambar KTP ke Supabase Storage dan menyimpan data teks lengkap ke tabel database.
-  3. Mengirim bot notifikasi otomatis ke **Grup Telegram/Discord Tim Teknis ARMEDIA Net**:
+  3. Mengirim bot notifikasi otomatis ke **Grup Telegram/Discord Tim Teknis ARMEDIA.ID**:
      *"🚨 PENDAFTAR BARU! Nama: Budi, Desa: Gumelar, Paket: Guyub 1. Mohon jadwalkan survei lapangan."*
   4. Mengirim WhatsApp ucapan terima kasih ke nomor HP pelanggan secara instan.
 
@@ -104,12 +104,12 @@ n8n bertindak sebagai "asisten robot" di latar belakang yang menghubungkan aplik
        `/ppp secret set [find name="budi_gumelar"] profile="NORMAL_20Mbps"`
      * Memutus koneksi PPPoE aktif agar modem pelanggan login ulang dan langsung mendapatkan internet kecepatan penuh kembali:
        `/interface pppoe-server active remove [find user="budi_gumelar"]`
-  3. Mengirim WhatsApp terima kasih: *"Terima kasih Kak Budi! Pembayaran Anda telah terverifikasi. Layanan internet ARMEDIA Net Anda telah aktif kembali secara otomatis. Selamat berinternet!"*
+  3. Mengirim WhatsApp terima kasih: *"Terima kasih Kak Budi! Pembayaran Anda telah terverifikasi. Layanan internet ARMEDIA.ID Anda telah aktif kembali secara otomatis. Selamat berinternet!"*
 
 ---
 
 ## 5. KEAMANAN INTEGRASI MIKROTIK & VPS
-Untuk memastikan router utama MikroTik ARMEDIA Net aman dari upaya peretasan pihak luar:
+Untuk memastikan router utama MikroTik ARMEDIA.ID aman dari upaya peretasan pihak luar:
 1. **IP Whitelisting**: Port REST API MikroTik (`8729`) atau SSH (`22`) dikonfigurasi di menu `/ip service` MikroTik agar **hanya menerima koneksi dari alamat IP VPS Coolify** Anda. Koneksi dari IP lain akan otomatis ditolak.
 2. **Kredensial Terenkripsi**: Username dan password administrator MikroTik disimpan dengan aman di dalam fitur *Vault Credentials* n8n yang terenkripsi penuh (AES-256).
 3. **Write-Only Permissions**: Akun user di MikroTik yang dibuat khusus untuk n8n hanya diberikan izin akses *read* dan *write* pada modul PPP, tanpa izin untuk mengubah konfigurasi core router lainnya.

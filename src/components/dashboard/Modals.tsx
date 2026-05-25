@@ -496,7 +496,7 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-black tracking-tight">Manajemen Formulir Pelanggan</h2>
-                <p className="text-[9px] font-bold text-blue-200 uppercase tracking-widest">Armedia Net Arsitektur</p>
+                <p className="text-[9px] font-bold text-blue-200 uppercase tracking-widest">ARMEDIA.ID Arsitektur</p>
               </div>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-all"><Lucide.X size={18} /></button>

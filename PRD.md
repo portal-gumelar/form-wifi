@@ -1,10 +1,10 @@
-# 🌐 ARMEDIA NET REGISTRATION PORTAL & ADMIN SYSTEM
+# 🌐 ARMEDIA.ID REGISTRATION PORTAL & ADMIN SYSTEM
 ## Product Requirements Document (PRD) & Specifications
 
 ---
 
 ## 1. PENDAHULUAN & TUJUAN UTAMA
-Dokumen Persyaratan Produk (PRD) ini mendefinisikan arsitektur teknis, standar operasional (SOP), dan spesifikasi fitur premium dari **Sistem Pendaftaran & Portal Administrasi ARMEDIA Net** yang dikembangkan khusus untuk **PT. Akses Artha Media**. 
+Dokumen Persyaratan Produk (PRD) ini mendefinisikan arsitektur teknis, standar operasional (SOP), dan spesifikasi fitur premium dari **Sistem Pendaftaran & Portal Administrasi ARMEDIA.ID** yang dikembangkan khusus untuk **PT. Akses Artha Media**. 
 
 Tujuan utama dari platform ini adalah menyediakan jalur akuisisi pelanggan (sales conversion) yang ramah pengguna, berwawasan etika moralitas, serta didukung oleh portal rekapitulasi data yang kuat, aman, dan dapat dicetak sebagai arsip digital resmi.
 

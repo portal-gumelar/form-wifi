@@ -14,7 +14,7 @@ interface AnalyticsChartsProps {
   data?: RegistrationData[];
 }
 
-// Palet Warna Resmi Armedia Net Luxury
+// Palet Warna Resmi ARMEDIA.ID Luxury
 const BRAND_COLORS = ['#0d1655', '#F47920', '#FDB913', '#3b82f6', '#ef4444', '#10b981'];
 
 // Funnel stages colors

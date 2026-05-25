@@ -1,5 +1,5 @@
 # 🎨 PROPOSAL DESAIN: LANDING PAGE INFOGRAFIS INTERAKTIF
-## Visualisasi Sistem Autopilot ARMEDIA Net (Coolify, Supabase, n8n, & MikroTik)
+## Visualisasi Sistem Autopilot ARMEDIA.ID (Coolify, Supabase, n8n, & MikroTik)
 
 ---
 
@@ -70,7 +70,7 @@ Fitur unggulan utama agar landing page ini sangat menarik dan mudah dipahami ada
    * **Tahap 1**: Pulsa bergerak dari form registrasi ➡️ mengeluarkan suara ketikan halus.
    * **Tahap 2**: Pulsa masuk ke ikon n8n ➡️ robot berputar & ikon WhatsApp berkedip menyala.
    * **Tahap 3**: Pulsa bercabang ➡️ satu masuk ke server Supabase (lampu database berkedip), satu masuk ke MikroTik (port menyala hijau terang).
-3. **Efek Edukasi**: Pengguna atau investor yang melihat langsung mengerti alur sistem ARMEDIA Net tanpa perlu membaca dokumen teknis berlembar-lembar!
+3. **Efek Edukasi**: Pengguna atau investor yang melihat langsung mengerti alur sistem ARMEDIA.ID tanpa perlu membaca dokumen teknis berlembar-lembar!
 
 ---
 *Desain ini dijamin akan memberikan impresi yang sangat modern, canggih, dan profesional bagi siapa saja yang melihatnya!*

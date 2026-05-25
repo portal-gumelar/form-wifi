@@ -1,7 +1,7 @@
-# 🌐 DOKUMENTASI SISTEM PORTAL REGISTRASI & DASHBOARD ARMEDIA NET
+# 🌐 DOKUMENTASI SISTEM PORTAL REGISTRASI & DASHBOARD ARMEDIA.ID
 ## Panduan Komprehensif Arsitektur & Fitur Aplikasi Web (gumelar.armedia.id)
 
-Dokumen ini mendeskripsikan seluruh halaman, antarmuka, tata letak, logika bisnis, dan fitur operasional yang aktif di aplikasi web **ARMEDIA Net (gumelar.armedia.id)** milik **PT. Akses Artha Media**. Dokumen ini dirancang sebagai panduan lengkap (*blueprint*) untuk dimasukkan ke model AI (seperti Gemini Pro/Nano) guna menghasilkan visualisasi infografis interaktif.
+Dokumen ini mendeskripsikan seluruh halaman, antarmuka, tata letak, logika bisnis, dan fitur operasional yang aktif di aplikasi web **ARMEDIA.ID (gumelar.armedia.id)** milik **PT. Akses Artha Media**. Dokumen ini dirancang sebagai panduan lengkap (*blueprint*) untuk dimasukkan ke model AI (seperti Gemini Pro/Nano) guna menghasilkan visualisasi infografis interaktif.
 
 ---
 
@@ -15,9 +15,9 @@ Aplikasi web ini memiliki arsitektur modular yang membagi sistem menjadi dua bag
 ## 2. PORTAL PENDAFTARAN PELANGGAN (FRONTEND CUSTOMER PORTAL)
 
 ### 2.1. Desain Visual & Branding
-* **Tema Warna**: Dominan Navy Gelap (`#0D1655`) yang melambangkan keamanan dan profesionalisme, dipadukan dengan aksen Oranye Terang (`#F47920`) dan Kuning Emas (`#FDB913`) khas ARMEDIA Net.
+* **Tema Warna**: Dominan Navy Gelap (`#0D1655`) yang melambangkan keamanan dan profesionalisme, dipadukan dengan aksen Oranye Terang (`#F47920`) dan Kuning Emas (`#FDB913`) khas ARMEDIA.ID.
 * **Header Halaman**: 
-  * Logo resmi horizontal **PT. Akses Artha Media** terpasang presisi berdampingan dengan teks judul **ARMEDIA_NET** yang tebal dan modern.
+  * Logo resmi horizontal **PT. Akses Artha Media** terpasang presisi berdampingan dengan teks judul **ARMEDIA.ID** yang tebal dan modern.
   * Dilengkapi tombol navigasi melayang untuk menggulir otomatis ke bagian form.
 * **Banner Promo Interaktif**: Kotak promosi mencolok dengan efek gradasi merah-oranye bercahaya (*glowing animation*): *"PROMO CUKUP MBAYAR WULANANE: Mbayar 115,000 langsung aktif kecepatan 20Mbps."*
 
@@ -28,7 +28,7 @@ Form dirancang interaktif untuk memandu pengguna awam di desa dengan input yang 
 * **Nama Lengkap**: Input nama sesuai dokumen resmi.
 * **Nomor HP / WhatsApp**: Input nomor aktif pelanggan.
 * **Provider Saat Ini**: Pilihan provider internet yang sedang digunakan saat ini (Indihome, RT/RW Net, None/Belum Pasang) untuk kebutuhan riset pasar tim sales.
-* **Sumber Info**: Pilihan dari mana pelanggan mengetahui ARMEDIA Net (Brosur, Teman, Sosial Media, dll).
+* **Sumber Info**: Pilihan dari mana pelanggan mengetahui ARMEDIA.ID (Brosur, Teman, Sosial Media, dll).
 
 #### 2. 🏠 Lokasi & Alamat Pemasangan
 * **Kecamatan**: Dropdown pilihan wilayah kecamatan aktif.
@@ -60,7 +60,7 @@ Form dirancang interaktif untuk memandu pengguna awam di desa dengan input yang 
 * Sandi dienkripsi secara satu arah di sisi klien menggunakan algoritme kriptografi tingkat militer **SHA-256 Web Crypto API** sebelum dicocokkan, mencegah kebocoran kredensial.
 
 ### 3.2. Panel Statistik Data (Bento Analytics Grid)
-Kumpulan grafik dan kartu data analitik performa bisnis ARMEDIA Net secara visual:
+Kumpulan grafik dan kartu data analitik performa bisnis ARMEDIA.ID secara visual:
 * **Statistik Utama**: Total pelanggan terdaftar, jumlah pendaftar berstatus "PENGAJUAN", grafik pertumbuhan tren pendaftaran harian.
 * **Distribusi Pasar**: Grafik donat (*pie chart*) interaktif yang memvisualisasikan paket Mbps terpopuler, rasio persaingan provider kompetitor, dan peta persentase wilayah kecamatan/desa teraktif.
 * **Estimasi Pendapatan**: Kalkulasi potensi pendapatan bulanan dan proyeksi biaya instalasi awal.
@@ -92,7 +92,7 @@ Aksi sekali klik pada baris pelanggan untuk membuka template pesan WhatsApp otom
 * **Ekspor Excel**: Mengunduh seluruh database pendaftar secara rapi ke file `.xlsx`.
 * **PDF Dossier Pelanggan (Premium)**: Menghasilkan dokumen laporan profesional A4 Landscape:
   * **Halaman 1**: Tabel rekapitulasi utama daftar pelanggan.
-  * **Halaman Lampiran**: Secara otomatis menyisipkan halaman lampiran baru untuk setiap pelanggan yang berisi foto dokumen KTP asli mereka yang dibingkai elegan beserta tanda validitas resmi ARMEDIA Net.
+  * **Halaman Lampiran**: Secara otomatis menyisipkan halaman lampiran baru untuk setiap pelanggan yang berisi foto dokumen KTP asli mereka yang dibingkai elegan beserta tanda validitas resmi ARMEDIA.ID.
 
 ---
 *Dokumen spesifikasi arsitektur sistem ini 100% akurat sesuai kode sumber aktif aplikasi web gumelar.armedia.id.*

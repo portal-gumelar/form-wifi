@@ -1,8 +1,8 @@
 {
-  "name": "armedia-net-registration",
+  "name": "armedia-id-registration",
   "private": true,
   "version": "1.0.0",
-  "description": "Customer Registration Portal & Admin Dashboard for Armedia Net",
+  "description": "Customer Registration Portal & Admin Dashboard for ARMEDIA.ID",
   "type": "module",
   "scripts": {
     "dev": "vite",
