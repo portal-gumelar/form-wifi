@@ -553,6 +553,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
           setIsSidebarOpen={setIsSidebarOpen}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
+          userRole={userRole}
         />
 
         {/* Content Header */}

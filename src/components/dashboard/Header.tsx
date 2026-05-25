@@ -8,10 +8,11 @@ interface HeaderProps {
   setIsSidebarOpen: (val: boolean) => void;
   searchTerm: string;
   setSearchTerm: (val: string) => void;
+  userRole?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
-  isSidebarOpen, setIsSidebarOpen, searchTerm, setSearchTerm, activeTab
+  isSidebarOpen, setIsSidebarOpen, searchTerm, setSearchTerm, activeTab, userRole = "admin"
 }) => {
   return (
     <header className="h-[75px] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 w-full shrink-0">
@@ -43,6 +44,16 @@ export const Header: React.FC<HeaderProps> = ({
 
       <div className="flex items-center gap-3 text-sm">
         <div className="flex items-center gap-2">
+          {/* Role Indicator Badge */}
+          <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${
+            userRole === 'superadmin' 
+              ? 'bg-amber-50 border-amber-200 text-amber-700' 
+              : 'bg-blue-50 border-blue-200 text-blue-700'
+          }`}>
+            {userRole === 'superadmin' ? <Lucide.ShieldAlert size={14} /> : <Lucide.ShieldCheck size={14} />}
+            <span className="text-[10px] font-black uppercase tracking-widest">{userRole}</span>
+          </div>
+
           <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-400 border border-slate-100 flex items-center justify-center relative shadow-sm">
             <Lucide.Bell size={16} />
             <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
