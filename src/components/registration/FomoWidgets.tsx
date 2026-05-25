@@ -153,7 +153,7 @@ export const FomoNotifications: React.FC = () => {
                 </span>
               </div>
               <p className="text-white text-xs font-bold leading-normal">
-                <span className="text-[#FDB913] font-black">{currentEvent.name}</span> dari{" "}
+                <span className="text-[#FDB913] font-black">Seseorang</span> dari{" "}
                 <span className="text-white font-black uppercase">Desa {currentEvent.desa}</span>{" "}
                 {currentEvent.type === "daftar" && (
                   <>
