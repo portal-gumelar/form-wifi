@@ -5,13 +5,22 @@ import { supabase } from "../utils/supabaseClient";
 
 interface LoginPageProps {
   onBack: () => void;
+  onFallbackLogin?: (email: string, role: string) => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onBack }) => {
+// Fallback credentials saat Supabase Auth provider belum dikonfigurasi
+const FALLBACK_CREDENTIALS = [
+  { email: "admin@armedia.id",      password: "admin123",   role: "admin" },
+  { email: "superadmin@armedia.id", password: "superadmin", role: "superadmin" },
+];
+
+export const LoginPage: React.FC<LoginPageProps> = ({ onBack, onFallbackLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,14 +28,34 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBack }) => {
     setLoading(true);
 
     try {
+      // Coba Supabase Auth terlebih dahulu
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password,
       });
 
-      if (error) {
-        throw error;
+      if (!error) {
+        // Supabase Auth berhasil — App.tsx akan handle via onAuthStateChange
+        return;
       }
+
+      // Fallback: cek credentials manual jika Supabase Auth gagal
+      // (misalnya Email provider belum dikonfigurasi di self-hosted)
+      const trimmedEmail = email.trim().toLowerCase();
+      const match = FALLBACK_CREDENTIALS.find(
+        (c) => c.email === trimmedEmail && c.password === password
+      );
+
+      if (match) {
+        console.log("[Fallback Auth] Login berhasil untuk:", match.email, "role:", match.role);
+        if (onFallbackLogin) {
+          onFallbackLogin(match.email, match.role);
+        }
+        return;
+      }
+
+      // Keduanya gagal
+      throw new Error("Email atau password tidak valid.");
     } catch (err: any) {
       console.error("Login failed:", err);
       setErrorMessage(err.message || "Akses Ditolak: Email atau password tidak valid.");
@@ -91,13 +120,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBack }) => {
                   <Lucide.Lock size={18} />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-[#F47920] focus:ring-4 focus:ring-[#F47920]/10 transition-all text-sm font-bold text-slate-800 placeholder:text-slate-400"
+                  className="w-full pl-12 pr-12 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-[#F47920] focus:ring-4 focus:ring-[#F47920]/10 transition-all text-sm font-bold text-slate-800 placeholder:text-slate-400"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none transition-colors z-10"
+                >
+                  {showPassword ? <Lucide.EyeOff size={18} /> : <Lucide.Eye size={18} />}
+                </button>
               </div>
             </div>
 

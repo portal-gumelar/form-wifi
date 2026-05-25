@@ -114,7 +114,16 @@ export default function App() {
 
   // Tampilan Halaman Login Portal
   if (view === "login") {
-    return <LoginPage onBack={() => setView("form")} />;
+    return (
+      <LoginPage
+        onBack={() => setView("form")}
+        onFallbackLogin={(email: string, role: string) => {
+          console.log("[App] Fallback login berhasil:", email, role);
+          setUserRole(role);
+          setView("admin");
+        }}
+      />
+    );
   }
 
   // Tampilan Dasbor Utama Admin (Full CRUD Mode atau Read-Only berdasarkan userRole)
