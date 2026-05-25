@@ -14,6 +14,7 @@ interface CustomersViewProps {
   onEdit?: (item: RegistrationData) => void;
   onDelete: (timestamp: string) => void;
   onUpdateStatus: (timestamp: string, status: string) => void;
+  userRole?: string;
 }
 
 const LOGO_URL = "https://ik.imagekit.io/Gumelar/LogO/logo%20pt.png?updatedAt=1778213993513";
@@ -172,8 +173,8 @@ const exportCustomersExcel = (data: RegistrationData[], filterLabel: string) => 
   XLSX.writeFile(wb, `Armedia_DataPelanggan_${filterLabel}_${new Date().toLocaleDateString("id-ID").replace(/\//g, "-")}.xlsx`);
 };
 
-export const CustomersView: React.FC<CustomersViewProps> = ({
-  data, isDarkMode, onViewDetails, onEdit, onDelete, onUpdateStatus
+export const CustomersView: React.FC<CustomersViewProps> = ({ 
+  data, isDarkMode, onViewDetails, onEdit, onDelete, onUpdateStatus, userRole = "admin"
 }) => {
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterPackage, setFilterPackage] = useState<string | null>(null);
@@ -548,6 +549,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
           onUpdateStatus={onUpdateStatus}
           hideHeader={true}
           allowedStatuses={["AKTIF", "NON AKTIF"]}
+          userRole={userRole}
         />
       )}
       

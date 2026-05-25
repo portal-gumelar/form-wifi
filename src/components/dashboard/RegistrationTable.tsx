@@ -14,6 +14,7 @@ interface RegistrationTableProps {
   mini?: boolean;
   hideHeader?: boolean;
   allowedStatuses?: string[];
+  userRole?: string;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
@@ -29,11 +30,13 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 const StatusDropdown = ({ 
   currentStatus, 
   onSelect,
-  allowedStatuses
+  allowedStatuses,
+  disabled = false
 }: { 
   currentStatus: string; 
   onSelect: (status: string) => void;
   allowedStatuses?: string[];
+  disabled?: boolean;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -52,12 +55,13 @@ const StatusDropdown = ({
   return (
     <div className="relative inline-block" ref={dropdownRef}>
       <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className={`px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-2 ${activeConfig.bg} ${activeConfig.color} border-transparent hover:border-current/10 shadow-sm`}
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all border-2 ${activeConfig.bg} ${activeConfig.color} border-transparent ${disabled ? 'cursor-default' : 'hover:border-current/10 shadow-sm'}`}
       >
         <activeConfig.icon size={12} className={currentStatus === 'PROSES' ? 'animate-spin' : ''} />
         <span className="truncate max-w-[70px] sm:max-w-none">{activeConfig.label}</span>
-        <Lucide.ChevronDown size={10} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        {!disabled && <Lucide.ChevronDown size={10} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />}
       </button>
 
       <AnimatePresence>
@@ -99,7 +103,7 @@ const StatusDropdown = ({
 };
 
 export const RegistrationTable: React.FC<RegistrationTableProps> = ({ 
-  data, isDarkMode, onViewDetails, onEdit, onDelete, onUpdateStatus, mini = false, hideHeader = false, allowedStatuses 
+  data, isDarkMode, onViewDetails, onEdit, onDelete, onUpdateStatus, mini = false, hideHeader = false, allowedStatuses, userRole = "admin"
 }) => {
   const [sortConfig, setSortConfig] = useState<{ key: keyof RegistrationData | 'status'; direction: 'asc' | 'desc' } | null>({ key: 'Timestamp', direction: 'asc' });
   const [selectedWaCustomer, setSelectedWaCustomer] = useState<RegistrationData | null>(null);
@@ -255,7 +259,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                     </div>
                   </td>
                   <td className="px-4 sm:px-6 py-3.5 text-center">
-                    <StatusDropdown currentStatus={item.status || "PENGAJUAN"} onSelect={(newStatus) => onUpdateStatus(item.Timestamp, newStatus)} />
+                    <StatusDropdown currentStatus={item.status || "PENGAJUAN"} onSelect={(newStatus) => onUpdateStatus(item.Timestamp, newStatus)} disabled={userRole !== "superadmin"} />
                   </td>
                   <td className="px-4 sm:px-6 py-3.5 text-right">
                     <button onClick={() => onViewDetails(item)} className="p-2 rounded-xl text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all border border-blue-100">
@@ -335,7 +339,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
               <button onClick={exportToCSV} className="flex-1 sm:flex-initial justify-center px-3 py-2 bg-emerald-50 border border-emerald-100 rounded-xl text-xs font-black text-emerald-600 hover:bg-emerald-100 transition-all flex items-center gap-1.5">
                 <Lucide.FileDown size={14} /> Export
               </button>
-              {selectedRows.size > 0 && (
+              {userRole === "superadmin" && selectedRows.size > 0 && (
                 <button onClick={bulkDelete} className="flex-1 sm:flex-initial justify-center px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl text-xs font-black text-rose-600 hover:bg-rose-100 transition-all flex items-center gap-1.5">
                   <Lucide.Trash2 size={14} /> Hapus ({selectedRows.size})
                 </button>
@@ -350,9 +354,11 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
         <table className="w-full text-left border-collapse table-auto text-xs sm:text-sm">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50/50">
-              <th className="px-3 sm:px-4 py-3.5 w-10">
-                <input type="checkbox" checked={selectedRows.size === paginatedData.length && paginatedData.length > 0} onChange={toggleSelectAll} className="w-4 h-4 rounded border-slate-300 text-[#0d1655] focus:ring-[#0d1655]" />
-              </th>
+              {userRole === "superadmin" && (
+                <th className="px-3 sm:px-4 py-3.5 w-10">
+                  <input type="checkbox" checked={selectedRows.size === paginatedData.length && paginatedData.length > 0} onChange={toggleSelectAll} className="w-4 h-4 rounded border-slate-300 text-[#0d1655] focus:ring-[#0d1655]" />
+                </th>
+              )}
               <th className="px-4 sm:px-6 py-3.5 font-black text-[#0d1655] uppercase text-[10px] sm:text-xs tracking-widest cursor-pointer hover:text-[#F47920]" onClick={() => requestSort('Nama Lengkap')}>
                 <div className="flex items-center gap-1.5 whitespace-nowrap">Pelanggan {getSortIcon('Nama Lengkap')}</div>
               </th>
@@ -385,9 +391,11 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                 
                 return (
                 <tr key={idx} className={`transition-colors ${selectedRows.has(item.Timestamp) ? 'bg-emerald-50/60' : getRowBg(item.status || '')}`}>
-                  <td className="px-3 sm:px-4 py-3.5">
-                    <input type="checkbox" checked={selectedRows.has(item.Timestamp)} onChange={() => toggleSelectRow(item.Timestamp)} className="w-4 h-4 rounded border-slate-300 text-[#0d1655]" />
-                  </td>
+                  {userRole === "superadmin" && (
+                    <td className="px-3 sm:px-4 py-3.5">
+                      <input type="checkbox" checked={selectedRows.has(item.Timestamp)} onChange={() => toggleSelectRow(item.Timestamp)} className="w-4 h-4 rounded border-slate-300 text-[#0d1655]" />
+                    </td>
+                  )}
                   <td className="px-4 sm:px-6 py-3.5">
                     <div className="flex items-center gap-2.5 sm:gap-3">
                       <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-100 flex items-center justify-center font-black text-[#0d1655] text-xs sm:text-sm shrink-0 border border-slate-200 shadow-sm">
@@ -452,6 +460,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                       currentStatus={item.status || "PENGAJUAN"} 
                       onSelect={(newStatus) => onUpdateStatus(item.Timestamp, newStatus)} 
                       allowedStatuses={allowedStatuses}
+                      disabled={userRole !== "superadmin"}
                     />
                     {item.status === "AKTIF" && item["Tanggal Aktif"] && !isNaN(new Date(item["Tanggal Aktif"]).getTime()) && (
                       <div className="mt-2 flex flex-col gap-1 items-start">
@@ -471,17 +480,21 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                         <Lucide.Eye size={14} strokeWidth={2.5} />
                       </button>
                       {/* Tombol Edit */}
-                      <button onClick={() => onEdit(item)} className="p-2 rounded-xl text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all border border-blue-100" title="Edit Data">
-                        <Lucide.Edit3 size={14} strokeWidth={2.5} />
-                      </button>
+                      {userRole === "superadmin" && (
+                        <button onClick={() => onEdit(item)} className="p-2 rounded-xl text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all border border-blue-100" title="Edit Data">
+                          <Lucide.Edit3 size={14} strokeWidth={2.5} />
+                        </button>
+                      )}
                       {/* Tombol WhatsApp */}
                       <button onClick={() => setSelectedWaCustomer(item)} className="p-2 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all border border-emerald-100" title="Kirim WhatsApp">
                         <Lucide.MessageCircle size={14} strokeWidth={2.5} />
                       </button>
                       {/* Tombol Hapus */}
-                      <button onClick={() => onDelete(item.Timestamp)} className="p-2 rounded-xl text-rose-600 bg-rose-50 hover:bg-rose-100 transition-all border border-rose-100" title="Hapus">
-                        <Lucide.Trash2 size={14} strokeWidth={2.5} />
-                      </button>
+                      {userRole === "superadmin" && (
+                        <button onClick={() => onDelete(item.Timestamp)} className="p-2 rounded-xl text-rose-600 bg-rose-50 hover:bg-rose-100 transition-all border border-rose-100" title="Hapus">
+                          <Lucide.Trash2 size={14} strokeWidth={2.5} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

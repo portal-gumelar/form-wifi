@@ -1,34 +1,38 @@
 import React, { useState } from "react";
 import * as Lucide from "lucide-react";
 import { motion } from "framer-motion";
+import { supabase } from "../utils/supabaseClient";
 
 interface LoginPageProps {
-  onLogin: (password: string) => void;
   onBack: () => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBack }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onBack }) => {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
-
-  // G: Password dicek dengan SHA-256 hash — tidak hardcode di kode
-  const DEFAULT_HASH = "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"; // admin123
-
-  const hashPassword = async (pwd: string): Promise<string> => {
-    const msgBuffer = new TextEncoder().encode(pwd);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
-    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
-  };
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const hashed = await hashPassword(password);
-    const storedHash = localStorage.getItem("armedia_admin_hash") || DEFAULT_HASH;
-    if (hashed === storedHash) {
-      onLogin(password);
-    } else {
-      setError(true);
-      setTimeout(() => setError(false), 2500);
+    setErrorMessage("");
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password,
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (err: any) {
+      console.error("Login failed:", err);
+      setErrorMessage(err.message || "Akses Ditolak: Email atau password tidak valid.");
+      setTimeout(() => setErrorMessage(""), 4000);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -58,41 +62,70 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBack }) => {
         </div>
 
         {/* Card Form - Mobile Optimized & Glassmorphism */}
-        <div className="bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/20 p-6 sm:p-10">
+        <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/20 p-6 sm:p-10">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-3">
-              <label className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Kunci Akses Keamanan</label>
+            
+            {/* Input Email */}
+            <div className="space-y-2">
+              <label className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Email Administrator</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#F47920] transition-colors">
-                  <Lucide.Lock size={20} />
+                  <Lucide.Mail size={18} />
+                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@armedia.id"
+                  required
+                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-[#F47920] focus:ring-4 focus:ring-[#F47920]/10 transition-all text-sm font-bold text-slate-800 placeholder:text-slate-400"
+                />
+              </div>
+            </div>
+
+            {/* Input Password */}
+            <div className="space-y-2">
+              <label className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Password</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#F47920] transition-colors">
+                  <Lucide.Lock size={18} />
                 </div>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Masukkan password..."
-                  className="w-full pl-12 pr-4 py-4 sm:py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-[#F47920] focus:ring-4 focus:ring-[#F47920]/10 transition-all text-base font-bold text-slate-800 placeholder:text-slate-400"
+                  placeholder="••••••••"
+                  required
+                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-[#F47920] focus:ring-4 focus:ring-[#F47920]/10 transition-all text-sm font-bold text-slate-800 placeholder:text-slate-400"
                 />
               </div>
             </div>
 
-            {error && (
+            {errorMessage && (
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="text-red-600 text-xs font-black flex items-center gap-2 bg-red-50 p-4 rounded-xl border-2 border-red-100"
+                className="text-red-600 text-xs font-black flex items-start gap-2 bg-red-50 p-4 rounded-xl border-2 border-red-100"
               >
-                <Lucide.AlertCircle size={16} /> Akses Ditolak: Password tidak valid.
+                <Lucide.AlertCircle size={16} className="shrink-0 mt-0.5" /> 
+                <span className="leading-tight">{errorMessage}</span>
               </motion.div>
             )}
 
             <button
               type="submit"
+              disabled={loading}
               className="w-full relative group"
             >
               <div className="absolute -inset-1 bg-gradient-to-r from-[#F47920] to-orange-600 rounded-[1.5rem] blur opacity-40 group-hover:opacity-100 transition duration-500"></div>
-              <div className="relative w-full bg-gradient-to-r from-[#F47920] to-orange-500 text-white font-black py-4 sm:py-5 rounded-[1.5rem] shadow-xl hover:shadow-orange-200/50 flex items-center justify-center gap-2 uppercase tracking-widest active:scale-[0.98] transition-all">
-                Sign In to Dashboard <Lucide.ArrowRight size={18} />
+              <div className="relative w-full bg-gradient-to-r from-[#F47920] to-orange-500 text-white font-black py-4 sm:py-5 rounded-[1.5rem] shadow-xl hover:shadow-orange-200/50 flex items-center justify-center gap-2 uppercase tracking-widest active:scale-[0.98] transition-all disabled:opacity-75 disabled:cursor-not-allowed">
+                {loading ? (
+                  <Lucide.RefreshCw className="animate-spin w-5 h-5 text-white" />
+                ) : (
+                  <>
+                    Sign In to Dashboard <Lucide.ArrowRight size={18} />
+                  </>
+                )}
               </div>
             </button>
           </form>

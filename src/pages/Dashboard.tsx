@@ -133,7 +133,7 @@ const extractPrice = (paket: string, packages: typeof PACKAGES): number => {
 };
 
 // --- Komponen Utama Dashboard ---
-export default function Dashboard({ googleScriptUrl, onLogout }: any) {
+export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin" }: any) {
   const [data, setData] = useState<RegistrationData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -242,6 +242,10 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
 
 
   const handleUpdateStatus = async (timestamp: string, newStatus: string) => {
+    if (userRole !== "superadmin") {
+      alert("Akses ditolak: Hanya Superadmin yang bisa mengubah status.");
+      return;
+    }
     // 1. Update UI Lokal secara Instan
     setData(prev => prev.map(item => item.Timestamp === timestamp ? { ...item, status: newStatus } : item));
 
@@ -268,6 +272,10 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
   };
 
   const handleDelete = async (timestamp: string) => {
+    if (userRole !== "superadmin") {
+      alert("Akses ditolak: Hanya Superadmin yang bisa menghapus data.");
+      return;
+    }
     setConfirmDelete(null);
     // 1. Update UI Lokal
     setData(prev => prev.filter(item => item.Timestamp !== timestamp));
@@ -292,6 +300,10 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
 
   // --- REVISI TOTAL: IMPLEMENTASI SEKUENSAL INPUT FULL CRUD KE SUPABASE ---
   const handleSaveEdit = async (updatedItem: RegistrationData) => {
+    if (userRole !== "superadmin") {
+      alert("Akses ditolak: Hanya Superadmin yang bisa menyimpan perubahan.");
+      return;
+    }
     setEditingReg(null);
     setIsAddingNew(false);
 
@@ -760,15 +772,22 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                     <Lucide.Zap size={14} className="text-[#F47920]" /> Aksi Cepat
                   </h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <button onClick={handleAddNew} className="flex items-center gap-2 px-4 py-3 bg-[#0d1655] hover:bg-[#1a2a7a] text-white rounded-xl transition-all">
-                      <Lucide.PlusCircle size={16} />
-                      <span className="text-xs font-black">Tambah Data</span>
-                    </button>
+                    {userRole === "superadmin" ? (
+                      <button onClick={handleAddNew} className="flex items-center gap-2 px-4 py-3 bg-[#0d1655] hover:bg-[#1a2a7a] text-white rounded-xl transition-all">
+                        <Lucide.PlusCircle size={16} />
+                        <span className="text-xs font-black">Tambah Data</span>
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 text-slate-400 rounded-xl border border-slate-200 cursor-not-allowed">
+                        <Lucide.Lock size={16} />
+                        <span className="text-xs font-bold">Admin Read-Only</span>
+                      </div>
+                    )}
                     <button onClick={() => exportToExcel(filteredData)} className="flex items-center gap-2 px-4 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-xl transition-all border border-emerald-100">
                       <Lucide.FileSpreadsheet size={16} />
                       <span className="text-xs font-black">Export Excel</span>
                     </button>
-                    <button onClick={() => setActiveTab("Analytics")} className="flex items-center gap-2 px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl transition-all border border-blue-100">
+                    <button onClick={() => setActiveTab("Analytics")} className="flex items-center gap-2 px-4 py-3 bg-blue-50 hover:bg-blue-100 text-[#0d1655] rounded-xl transition-all border border-blue-100">
                       <Lucide.PieChart size={16} />
                       <span className="text-xs font-black">Lihat Analytics</span>
                     </button>
@@ -796,6 +815,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                       onDelete={setConfirmDelete}
                       onUpdateStatus={handleUpdateStatus}
                       mini={true}
+                      userRole={userRole}
                     />
                   </div>
                 </div>
@@ -825,9 +845,11 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                       </button>
                     </div>
                   </div>
-                  <button onClick={handleAddNew} className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-[#F47920] hover:bg-[#d86617] text-white rounded-2xl shadow-xl shadow-orange-500/20 text-sm font-black uppercase tracking-widest transition-all">
-                    <Lucide.PlusCircle size={20} /> Tambah Data
-                  </button>
+                  {userRole === "superadmin" && (
+                    <button onClick={handleAddNew} className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-[#F47920] hover:bg-[#d86617] text-white rounded-2xl shadow-xl shadow-orange-500/20 text-sm font-black uppercase tracking-widest transition-all">
+                      <Lucide.PlusCircle size={20} /> Tambah Data
+                    </button>
+                  )}
                 </div>
 
                 {/* Table Wrapper */}
@@ -839,6 +861,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
                     onEdit={setEditingReg}
                     onDelete={setConfirmDelete}
                     onUpdateStatus={handleUpdateStatus}
+                    userRole={userRole}
                   />
                 </div>
               </motion.div>
@@ -853,7 +876,7 @@ export default function Dashboard({ googleScriptUrl, onLogout }: any) {
 
             {activeTab === "Customers" && (
               <motion.div key="customers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <CustomersView data={data} isDarkMode={isDarkMode} onViewDetails={setSelectedReg} onDelete={setConfirmDelete} onUpdateStatus={handleUpdateStatus} />
+                <CustomersView data={data} isDarkMode={isDarkMode} onViewDetails={setSelectedReg} onDelete={setConfirmDelete} onUpdateStatus={handleUpdateStatus} onEdit={setEditingReg} userRole={userRole} />
               </motion.div>
             )}
 
