@@ -129,24 +129,46 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
   const handleKtpFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
+    // Target output: 600x380px = rasio 1.578:1 (sama persis dengan grid PDF 60mm x 38mm)
+    const TARGET_W = 600;
+    const TARGET_H = 380;
+    const TARGET_RATIO = TARGET_W / TARGET_H; // 1.578...
+
     const reader = new FileReader();
     reader.onload = (evt) => {
-      const img = new Image();
+      const img = new globalThis.Image();
       img.onload = () => {
-        const maxWidth = 600;
-        const scale = Math.min(1, maxWidth / img.width);
-        const width = img.width * scale;
-        const height = img.height * scale;
-        
+        const srcRatio = img.width / img.height;
+
+        // Hitung area sumber (crop center) agar rasionya cocok
+        let srcX = 0, srcY = 0, srcW = img.width, srcH = img.height;
+        if (srcRatio > TARGET_RATIO) {
+          // Foto terlalu lebar → crop kiri & kanan
+          srcW = img.height * TARGET_RATIO;
+          srcX = (img.width - srcW) / 2;
+        } else {
+          // Foto terlalu tinggi → crop atas & bawah
+          srcH = img.width / TARGET_RATIO;
+          srcY = (img.height - srcH) / 2;
+        }
+
         const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = TARGET_W;
+        canvas.height = TARGET_H;
         const ctx = canvas.getContext('2d')!;
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        const compressed = canvas.toDataURL('image/jpeg', 0.6);
-        
+
+        // Latar putih sebelum draw (antisipasi foto PNG transparan)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, TARGET_W, TARGET_H);
+
+        // Gambar dengan center-crop ke TARGET_W x TARGET_H
+        ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, TARGET_W, TARGET_H);
+
+        // JPEG quality 0.75 — cukup tajam untuk teks KTP, ukuran tetap kecil
+        const compressed = canvas.toDataURL('image/jpeg', 0.75);
+        console.log(`📷 KTP auto-crop: ${img.width}x${img.height} → ${TARGET_W}x${TARGET_H} (${(compressed.length/1024).toFixed(0)}KB)`);
+
         setForm(prev => ({ ...prev, fotoKtp: compressed }));
         setError("");
         handleKtpOcr(compressed);
