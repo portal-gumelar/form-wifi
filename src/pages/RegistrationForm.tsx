@@ -703,18 +703,17 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                       <input 
                         type="file" 
                         accept="image/*" 
-                        capture="environment"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (!file) return;
                           
-                          // Kompresi gambar sebelum upload
+                          // Kompresi ekstrim agar proses upload sangat cepat
                           const reader = new FileReader();
                           reader.onload = (evt) => {
                             const img = new Image();
                             img.onload = () => {
-                              // Resize ke max 800px width (lebih dari cukup untuk KTP)
-                              const maxWidth = 800;
+                              // Resize ke max 600px width untuk efisiensi
+                              const maxWidth = 600;
                               const scale = Math.min(1, maxWidth / img.width);
                               const width = img.width * scale;
                               const height = img.height * scale;
@@ -725,8 +724,8 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                               const ctx = canvas.getContext('2d')!;
                               ctx.drawImage(img, 0, 0, width, height);
                               
-                              // Compress to JPEG 80% quality (hampir tidak terlihat bedanya)
-                              const compressed = canvas.toDataURL('image/jpeg', 0.8);
+                              // Compress to JPEG 60% quality untuk ukuran file sangat kecil (biasanya cuma puluhan KB)
+                              const compressed = canvas.toDataURL('image/jpeg', 0.6);
                               
                               const originalSize = (file.size / 1024).toFixed(0);
                               const compressedSize = (compressed.length / 1024).toFixed(0);
