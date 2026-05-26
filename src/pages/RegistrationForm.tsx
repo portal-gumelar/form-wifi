@@ -186,7 +186,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
       }
     }
 
-    // Auto-advance flow based on filled fields
+    // Auto-advance flow based on filled fields (Hanya untuk Radio Buttons/Pilihan, bukan input teks)
     if (name === "currentProvider") {
       if (value === "Internet Lokal (RT/RW NET)") {
         setShowEthicModal(true); // tampilkan modal etika
@@ -198,26 +198,6 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
           namaInput?.focus();
         }, 500);
       }
-    }
-    else if (name === "namaLengkap" && value) {
-      // Auto-advance to next field after name
-      setTimeout(() => {
-        const noHpInput = document.querySelector('input[name="noHp"]') as HTMLInputElement;
-        noHpInput?.focus();
-      }, 300);
-    }
-    else if (name === "noHp" && value) {
-      // After HP filled, village dropdown is visible - highlight it
-      setTimeout(() => {
-        const villageBtn = document.querySelector('[data-village-dropdown]') as HTMLElement;
-        villageBtn?.click();
-      }, 300);
-    }
-    else if (name === "alamat" && value.length > 5) {
-      // After address, scroll to KTP upload
-      setTimeout(() => {
-        document.getElementById("sec-lokasi")?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 300);
     }
     else if (name === "paket") {
       scrollTo("sec-lokasi");
@@ -381,9 +361,9 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
       setSubmitted({ name: form.namaLengkap, desa: form.desa });
       window.scrollTo(0, 0);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Gagal mengirim ke Supabase:", err);
-      setError("Koneksi gagal. Silakan coba lagi.");
+      setError(`Gagal menyimpan data: ${err.message || "Koneksi gagal. Silakan coba lagi."}`);
     } finally {
       setLoading(false);
     }

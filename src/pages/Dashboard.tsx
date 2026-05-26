@@ -173,7 +173,8 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
   const silentRefresh = async () => {
     setIsRefreshing(true);
     try {
-      let fetchedData: RegistrationData[] = [];
+      let supabaseData: RegistrationData[] = [];
+      let sheetsData: RegistrationData[] = [];
       
       try {
         const { data: rows, error } = await supabase
@@ -181,27 +182,39 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
           .select("*")
           .order("id", { ascending: false });
         if (!error && rows && rows.length > 0) {
-          fetchedData = rows;
+          supabaseData = rows;
         }
       } catch (err) {
         console.warn("Supabase refresh failed", err);
       }
 
-      if (fetchedData.length === 0 && googleScriptUrl) {
+      if (googleScriptUrl) {
         try {
           const response = await fetch(googleScriptUrl);
           if (response.ok) {
             const result = await response.json();
             if (Array.isArray(result) && result.length > 0) {
-              fetchedData = result.map(normalizeRow);
+              sheetsData = result.map(normalizeRow);
             } else if (result && Array.isArray(result.data) && result.data.length > 0) {
-              fetchedData = result.data.map(normalizeRow);
+              sheetsData = result.data.map(normalizeRow);
             }
           }
         } catch (err) {
           console.warn("Apps Script refresh failed", err);
         }
       }
+
+      const mergedDataMap = new Map();
+      sheetsData.forEach(item => {
+        if (item.Timestamp) mergedDataMap.set(item.Timestamp, item);
+      });
+      supabaseData.forEach(item => {
+        if (item.Timestamp) mergedDataMap.set(item.Timestamp, item);
+      });
+
+      let fetchedData = Array.from(mergedDataMap.values());
+      fetchedData.sort((a, b) => new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime());
+
 
       if (fetchedData.length > 0) {
         // D: Deteksi pendaftar baru
@@ -231,7 +244,8 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
     try {
       setLoading(true);
       
-      let fetchedData: RegistrationData[] = [];
+      let supabaseData: RegistrationData[] = [];
+      let sheetsData: RegistrationData[] = [];
       
       // 1. Fetch live data dari Supabase
       try {
@@ -241,28 +255,42 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
           .order("id", { ascending: false });
 
         if (!error && rows && rows.length > 0) {
-          fetchedData = rows;
+          supabaseData = rows;
         }
       } catch (err) {
         console.warn("Supabase fetch failed", err);
       }
       
-      // 2. Jika Supabase kosong, fetch dari Google Apps Script
-      if (fetchedData.length === 0 && googleScriptUrl) {
+      // 2. Fetch dari Google Apps Script
+      if (googleScriptUrl) {
         try {
           const response = await fetch(googleScriptUrl);
           if (response.ok) {
             const result = await response.json();
             if (Array.isArray(result) && result.length > 0) {
-              fetchedData = result.map(normalizeRow);
+              sheetsData = result.map(normalizeRow);
             } else if (result && Array.isArray(result.data) && result.data.length > 0) {
-              fetchedData = result.data.map(normalizeRow);
+              sheetsData = result.data.map(normalizeRow);
             }
           }
         } catch (err) {
           console.warn("Apps Script fetch failed", err);
         }
       }
+
+      // Gabungkan (Merge) data dari Google Sheets dan Supabase
+      const mergedDataMap = new Map();
+      sheetsData.forEach(item => {
+        if (item.Timestamp) mergedDataMap.set(item.Timestamp, item);
+      });
+      // Supabase menimpa Google Sheets (lebih prioritas)
+      supabaseData.forEach(item => {
+        if (item.Timestamp) mergedDataMap.set(item.Timestamp, item);
+      });
+
+      let fetchedData = Array.from(mergedDataMap.values());
+      fetchedData.sort((a, b) => new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime());
+
 
       if (fetchedData.length > 0) {
         setData(fetchedData);
@@ -432,14 +460,31 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
           .insert([supabaseRecord]);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        // Karena mungkin data baru di-fetch dari Google Sheets dan belum ada di Supabase,
+        // kita cek dulu apakah sudah ada di Supabase berdasarkan Timestamp
+        const { data: existingData } = await supabase
           .from("registrations")
-          .update(supabaseRecord)
-          .eq("Timestamp", updatedItem.Timestamp);
-        if (error) throw error;
+          .select("Timestamp")
+          .eq("Timestamp", finalTimestamp);
+
+        if (existingData && existingData.length > 0) {
+          // Data ada di Supabase, lakukan Update
+          const { error } = await supabase
+            .from("registrations")
+            .update(supabaseRecord)
+            .eq("Timestamp", finalTimestamp);
+          if (error) throw error;
+        } else {
+          // Data belum ada di Supabase (hanya di Sheets/Local), lakukan Insert
+          const { error } = await supabase
+            .from("registrations")
+            .insert([supabaseRecord]);
+          if (error) throw error;
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Gagal menyimpan ke Supabase:", err);
+      alert(`Gagal menyimpan ke database: ${err.message || "Unknown error"}\nSilakan cek RLS Policy tabel registrations!`);
     }
 
     try {
@@ -460,7 +505,9 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       params.append("Waktu Survei", updatedItem["Waktu Survei"] || "");
       params.append("status", updatedItem.status || "PENGAJUAN");
       if (updatedItem["Link Google Maps"]) params.append("Link Google Maps", updatedItem["Link Google Maps"]);
-      if (updatedItem["Foto KTP"]) params.append("Foto KTP", updatedItem["Foto KTP"]);
+      
+      // PERBAIKAN PENTING: Gunakan finalKtpUrl (URL publik dari Supabase), bukan base64!
+      if (finalKtpUrl) params.append("Foto KTP", finalKtpUrl);
 
       fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: params }).catch(() => {});
     } catch (err) {}

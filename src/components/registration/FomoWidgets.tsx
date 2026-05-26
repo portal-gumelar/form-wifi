@@ -20,7 +20,15 @@ const FALLBACK_EVENTS: FomoEvent[] = [
   { id: "f5", name: "Joko W.", desa: "GUMELAR", type: "daftar", paket: "GUYUB_3 (50 Mbps)", time: "2 jam yang lalu" },
   { id: "f6", name: "Budi P.", desa: "CIHONJE", type: "daftar", paket: "GUYUB_1 (20 Mbps)", time: "5 menit yang lalu" },
   { id: "f7", name: "Lina M.", desa: "GUMELAR", type: "lihat", paket: "GUYUB_5 (100 Mbps)", time: "Baru saja" },
-  { id: "f8", name: "Ahmad F.", desa: "CIHONJE", type: "konsultasi", time: "12 menit yang lalu" }
+  { id: "f8", name: "Ahmad F.", desa: "CIHONJE", type: "konsultasi", time: "12 menit yang lalu" },
+  { id: "f9", name: "Rina K.", desa: "GUMELAR", type: "daftar", paket: "GUYUB_2 (30 Mbps)", time: "8 menit yang lalu" },
+  { id: "f10", name: "Dani T.", desa: "CIHONJE", type: "lihat", paket: "GUYUB_1 (20 Mbps)", time: "2 menit yang lalu" },
+  { id: "f11", name: "Eko S.", desa: "GUMELAR", type: "konsultasi", time: "Baru saja" },
+  { id: "f12", name: "Maya D.", desa: "CIHONJE", type: "daftar", paket: "GUYUB_4 (70 Mbps)", time: "15 menit yang lalu" },
+  { id: "f13", name: "Putri N.", desa: "GUMELAR", type: "lihat", paket: "GUYUB_3 (50 Mbps)", time: "Baru saja" },
+  { id: "f14", name: "Agus R.", desa: "CIHONJE", type: "konsultasi", time: "20 menit yang lalu" },
+  { id: "f15", name: "Bambang M.", desa: "GUMELAR", type: "daftar", paket: "GUYUB_1 (20 Mbps)", time: "1 jam yang lalu" },
+  { id: "f16", name: "Siska P.", desa: "CIHONJE", type: "lihat", paket: "GUYUB_2 (30 Mbps)", time: "5 menit yang lalu" }
 ];
 
 export const FomoNotifications: React.FC = () => {
@@ -67,7 +75,11 @@ export const FomoNotifications: React.FC = () => {
             { id: "mix-1", name: "Hendra K.", desa: "GUMELAR", type: "konsultasi", time: "Baru saja" },
             { id: "mix-2", name: "Siti M.", desa: "CIHONJE", type: "lihat", paket: "GUYUB_2 (30 Mbps)", time: "1 menit yang lalu" },
             { id: "mix-3", name: "Novi A.", desa: "CIHONJE", type: "konsultasi", time: "4 menit yang lalu" },
-            { id: "mix-4", name: "Taufik H.", desa: "GUMELAR", type: "lihat", paket: "GUYUB_1 (20 Mbps)", time: "Baru saja" }
+            { id: "mix-4", name: "Taufik H.", desa: "GUMELAR", type: "lihat", paket: "GUYUB_1 (20 Mbps)", time: "Baru saja" },
+            { id: "mix-5", name: "Ratna D.", desa: "CIHONJE", type: "konsultasi", time: "2 menit yang lalu" },
+            { id: "mix-6", name: "Rizky F.", desa: "GUMELAR", type: "daftar", paket: "GUYUB_3 (50 Mbps)", time: "10 menit yang lalu" },
+            { id: "mix-7", name: "Dina L.", desa: "CIHONJE", type: "lihat", paket: "GUYUB_1 (20 Mbps)", time: "Baru saja" },
+            { id: "mix-8", name: "Aris S.", desa: "GUMELAR", type: "konsultasi", time: "7 menit yang lalu" }
           ];
 
           // Blend them alternatively
@@ -87,18 +99,20 @@ export const FomoNotifications: React.FC = () => {
 
   // Cycle through events
   useEffect(() => {
-    // Initial delay before showing
+    // Initial delay before showing the very first time (wait 30 seconds)
     const initialTimeout = setTimeout(() => {
       setIsVisible(true);
-    }, 4000);
+      // Hide it after 5 seconds
+      setTimeout(() => setIsVisible(false), 5000);
+    }, 30000);
 
+    // After that, show a new one every 60 seconds (1 menit)
     const interval = setInterval(() => {
-      setIsVisible(false);
-      setTimeout(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % events.length);
-        setIsVisible(true);
-      }, 1000); // Time to slide out before sliding next in
-    }, 15000); // Show next notification every 15 seconds
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % events.length);
+      setIsVisible(true);
+      // Hide it after 5 seconds
+      setTimeout(() => setIsVisible(false), 5000);
+    }, 60000);
 
     return () => {
       clearTimeout(initialTimeout);
@@ -111,18 +125,18 @@ export const FomoNotifications: React.FC = () => {
   if (!currentEvent) return null;
 
   return (
-    <div className="fixed bottom-24 left-4 z-[90] pointer-events-none max-w-[90%] sm:max-w-sm">
+    <div className="fixed top-4 left-0 right-0 flex justify-center px-4 z-[100] pointer-events-none">
       <AnimatePresence>
         {isVisible && (
           <motion.div
-            initial={{ x: -100, opacity: 0, scale: 0.9 }}
-            animate={{ x: 0, opacity: 1, scale: 1 }}
-            exit={{ x: -100, opacity: 0, scale: 0.9 }}
+            initial={{ y: -50, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -50, opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 100, damping: 15 }}
-            className="pointer-events-auto bg-[#0d1655]/95 backdrop-blur-xl border border-white/10 p-4 rounded-3xl shadow-2xl flex items-center gap-3.5 select-none"
+            className="pointer-events-auto bg-[#0d1655]/95 backdrop-blur-xl border border-white/10 p-1.5 pr-4 rounded-full shadow-2xl flex items-center gap-2 sm:gap-3 select-none w-max max-w-full"
           >
             {/* Visual Indicator Icon */}
-            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${
+            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-inner ${
               currentEvent.type === "daftar"
                 ? "bg-orange-500/10 text-[#F47920] border border-orange-500/20"
                 : currentEvent.type === "konsultasi"
@@ -130,46 +144,30 @@ export const FomoNotifications: React.FC = () => {
                 : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
             }`}>
               {currentEvent.type === "daftar" && (
-                <Lucide.Zap size={20} className="animate-pulse" />
+                <Lucide.Zap className="w-3 h-3 sm:w-4 sm:h-4 animate-pulse" />
               )}
               {currentEvent.type === "konsultasi" && (
-                <Lucide.MessageCircle size={20} className="animate-pulse" />
+                <Lucide.MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 animate-pulse" />
               )}
               {currentEvent.type === "lihat" && (
-                <Lucide.Eye size={20} className="animate-pulse" />
+                <Lucide.Eye className="w-3 h-3 sm:w-4 sm:h-4 animate-pulse" />
               )}
             </div>
 
             {/* Notification Text */}
-            <div className="flex-1 min-w-0 pr-1">
-              <div className="flex items-center justify-between gap-2 mb-0.5">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FDB913]">
-                  {currentEvent.type === "daftar" && "Pendaftaran Baru"}
-                  {currentEvent.type === "konsultasi" && "Konsultasi CS"}
-                  {currentEvent.type === "lihat" && "Melihat Promo"}
-                </span>
-                <span className="text-[9px] text-white/40 font-bold whitespace-nowrap">
-                  {currentEvent.time}
-                </span>
-              </div>
-              <p className="text-white text-xs font-bold leading-normal">
-                <span className="text-[#FDB913] font-black">Seseorang</span> dari{" "}
-                <span className="text-white font-black uppercase">Desa {currentEvent.desa}</span>{" "}
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-[9px] sm:text-[11px] leading-tight truncate">
+                <span className="text-[#FDB913] font-bold">Seseorang dari {currentEvent.desa}</span>{" "}
                 {currentEvent.type === "daftar" && (
-                  <>
-                    baru saja mendaftar <span className="text-[#F47920] font-black">{currentEvent.paket}</span>
-                  </>
+                  <>daftar <span className="text-[#F47920] font-bold">{currentEvent.paket}</span></>
                 )}
                 {currentEvent.type === "konsultasi" && (
-                  <>
-                    sedang berkonsultasi via <span className="text-emerald-400 font-black">WhatsApp CS</span>
-                  </>
+                  <>tanya via <span className="text-emerald-400 font-bold">WA</span></>
                 )}
                 {currentEvent.type === "lihat" && (
-                  <>
-                    sedang melihat paket <span className="text-[#F47920] font-black">{currentEvent.paket}</span>
-                  </>
+                  <>lihat <span className="text-[#F47920] font-bold">{currentEvent.paket}</span></>
                 )}
+                <span className="text-white/40 ml-1.5 whitespace-nowrap">• {currentEvent.time}</span>
               </p>
             </div>
           </motion.div>
@@ -213,11 +211,16 @@ export const FloatingWhatsAppButton: React.FC = () => {
             initial={{ opacity: 0, y: 10, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.9 }}
-            className="bg-white text-slate-800 text-[11px] font-black uppercase tracking-wider px-4 py-2.5 rounded-2xl shadow-xl border border-slate-100 relative pointer-events-auto select-none"
+            className="bg-white text-slate-800 px-4 py-3 rounded-2xl shadow-xl border border-slate-100 relative pointer-events-auto select-none max-w-[220px]"
           >
             {/* Small triangle arrow at bottom-right */}
             <div className="absolute bottom-[-5px] right-6 w-3.5 h-3.5 bg-white border-r border-b border-slate-100 rotate-45"></div>
-            💬 Tanya CS / Konsultasi WA
+            <p className="text-[11px] font-black leading-tight mb-1">
+              💬 Kesulitan mendaftar via web?
+            </p>
+            <p className="text-[10px] font-semibold text-slate-500 leading-tight">
+              Anda bisa mendaftar atau konsultasi langsung via WhatsApp.
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
