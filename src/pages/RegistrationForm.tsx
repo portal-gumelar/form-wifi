@@ -1,6 +1,6 @@
 // Last update: 2026-05-18 23:55 - Clean Split RegistrationForm Flow
 import React, { useState, useRef, useEffect } from "react";
-import { RefreshCw, AlertCircle, ChevronDown } from "lucide-react";
+import { RefreshCw, AlertCircle, ChevronDown, Camera, Image as ImageIcon } from "lucide-react";
 import { parseKTPText } from "../utils/ktpParser";
 import { supabase } from "../utils/supabaseClient";
 
@@ -123,7 +123,38 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
       }
     }, 300);
   };
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
+  const handleKtpFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxWidth = 600;
+        const scale = Math.min(1, maxWidth / img.width);
+        const width = img.width * scale;
+        const height = img.height * scale;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const compressed = canvas.toDataURL('image/jpeg', 0.6);
+        
+        setForm(prev => ({ ...prev, fotoKtp: compressed }));
+        setError("");
+        handleKtpOcr(compressed);
+      };
+      img.src = evt.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
   const handleKtpOcr = async (imageSrc: string) => {
     setIsScanningKtp(true);
     setOcrSuccessMessage("");
@@ -270,7 +301,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         const fileName = `KTP_${cleanName}_${timestamp}.jpg`;
         
         // Upload to bucket 'dokumen-ktp'
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from("dokumen-ktp")
           .upload(fileName, blob, {
             contentType: "image/jpeg",
@@ -690,60 +721,22 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                   </label>
                   
                   {!form.fotoKtp ? (
-                    <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-slate-200 hover:border-[#F47920] rounded-[2rem] bg-slate-50 hover:bg-orange-50/10 cursor-pointer transition-all duration-300">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-                        <div className="w-12 h-12 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center mb-3">
-                          <svg className="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                          </svg>
-                        </div>
-                        <p className="text-xs font-black text-[#1a2d8f] uppercase tracking-wide">Pilih atau Ambil Foto KTP</p>
-                        <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">Format JPG, PNG (Otomatis Diperkecil)</p>
-                      </div>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          
-                          // Kompresi ekstrim agar proses upload sangat cepat
-                          const reader = new FileReader();
-                          reader.onload = (evt) => {
-                            const img = new Image();
-                            img.onload = () => {
-                              // Resize ke max 600px width untuk efisiensi
-                              const maxWidth = 600;
-                              const scale = Math.min(1, maxWidth / img.width);
-                              const width = img.width * scale;
-                              const height = img.height * scale;
-                              
-                              const canvas = document.createElement('canvas');
-                              canvas.width = width;
-                              canvas.height = height;
-                              const ctx = canvas.getContext('2d')!;
-                              ctx.drawImage(img, 0, 0, width, height);
-                              
-                              // Compress to JPEG 60% quality untuk ukuran file sangat kecil (biasanya cuma puluhan KB)
-                              const compressed = canvas.toDataURL('image/jpeg', 0.6);
-                              
-                              const originalSize = (file.size / 1024).toFixed(0);
-                              const compressedSize = (compressed.length / 1024).toFixed(0);
-                              console.log(`📷 KTP: ${originalSize}KB → ${compressedSize}KB (${scale < 1 ? 'resized' : 'original'})`);
-                              
-                              setForm(prev => ({ ...prev, fotoKtp: compressed }));
-                              setError("");
-                              
-                              // Trigger OCR pemindaian KTP
-                              handleKtpOcr(compressed);
-                            };
-                            img.src = evt.target?.result as string;
-                          };
-                          reader.readAsDataURL(file);
-                        }}
-                        className="hidden" 
-                      />
-                    </label>
+                    <div className="grid grid-cols-2 gap-4 w-full h-44">
+                      <input type="file" accept="image/*" capture="environment" onChange={handleKtpFileChange} ref={cameraInputRef} className="hidden" />
+                      <input type="file" accept="image/*" onChange={handleKtpFileChange} ref={galleryInputRef} className="hidden" />
+                      
+                      <button type="button" onClick={() => cameraInputRef.current?.click()} className="flex flex-col items-center justify-center h-full border-2 border-dashed border-slate-200 rounded-[2rem] bg-slate-50 hover:bg-orange-50/10 hover:border-[#F47920] transition-all duration-300">
+                        <Camera className="w-8 h-8 text-slate-400 mb-2" />
+                        <span className="text-xs font-black uppercase text-[#1a2d8f]">Kamera</span>
+                        <span className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">Ambil Langsung</span>
+                      </button>
+                      
+                      <button type="button" onClick={() => galleryInputRef.current?.click()} className="flex flex-col items-center justify-center h-full border-2 border-dashed border-slate-200 rounded-[2rem] bg-slate-50 hover:bg-orange-50/10 hover:border-[#F47920] transition-all duration-300">
+                        <ImageIcon className="w-8 h-8 text-slate-400 mb-2" />
+                        <span className="text-xs font-black uppercase text-[#1a2d8f]">Galeri</span>
+                        <span className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">Pilih File</span>
+                      </button>
+                    </div>
                   ) : (
                     <div className="relative w-full h-44 rounded-[2rem] border-2 border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center group shadow-inner">
                       <img 
