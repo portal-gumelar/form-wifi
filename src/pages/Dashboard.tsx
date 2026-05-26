@@ -393,9 +393,9 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       try {
         const response = await fetch(finalKtpUrl);
         const blob = await response.blob();
-        const cleanName = (updatedItem["Nama Lengkap"] || "admin-upload").toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 30);
-        const randomString = Math.random().toString(36).substring(2, 8);
-        const fileName = `ktp-${Date.now()}-${cleanName}-${randomString}.jpg`;
+        const cleanName = (updatedItem["Nama Lengkap"] || "admin-upload").trim().toUpperCase().replace(/[^A-Z0-9]/g, "_");
+        const timestamp = Math.floor(Date.now() / 1000); // Shorter timestamp
+        const fileName = `KTP_${cleanName}_${timestamp}.jpg`;
         
         const { error: uploadError } = await supabase.storage
           .from("dokumen-ktp")
@@ -934,7 +934,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
                         <Lucide.FileSpreadsheet size={20} />
                         <span className="text-[9px] font-black uppercase tracking-wide">Excel</span>
                       </button>
-                      <button onClick={() => setPdfPreviewUrl(generatePDFBlobUrl(filteredData))} className="flex flex-col items-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-2xl border-2 border-red-100 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm">
+                      <button onClick={async () => setPdfPreviewUrl(await generatePDFBlobUrl(filteredData))} className="flex flex-col items-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-2xl border-2 border-red-100 font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm">
                         <Lucide.FileText size={20} />
                         <span className="text-[9px] font-black uppercase tracking-wide">PDF</span>
                       </button>
@@ -1024,7 +1024,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       </div>
 
       {/* Modals */}
-      <PDFPreviewModal url={pdfPreviewUrl} onClose={() => setPdfPreviewUrl(null)} onDownload={() => downloadPDF(filteredData)} />
+      <PDFPreviewModal url={pdfPreviewUrl} onClose={() => setPdfPreviewUrl(null)} onDownload={async () => await downloadPDF(filteredData)} />
       <DetailsModal item={selectedReg} isDarkMode={isDarkMode} onClose={() => setSelectedReg(null)} />
       <ConfirmDeleteModal timestamp={confirmDelete} isDarkMode={isDarkMode} onClose={() => setConfirmDelete(null)} onConfirm={handleDelete} />
       <EditRegistrationModal item={editingReg} isDarkMode={isDarkMode} onClose={() => setEditingReg(null)} onSave={handleSaveEdit} />

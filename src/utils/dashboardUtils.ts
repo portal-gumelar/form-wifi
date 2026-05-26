@@ -110,11 +110,11 @@ export const exportToExcel = (data: RegistrationData[]) => {
     "Nama Lengkap": item["Nama Lengkap"],
     "No HP / WA": item["No HP / WA"],
     "Alamat Pemasangan": item["Alamat Pemasangan"],
-    "RW / RT": item["RW / RT"] || "-",
+    "RW / RT": (item as any)["RW / RT"] || "-",
     "Desa": item.Desa,
     "Kecamatan": item.Kecamatan,
     "Paket Layanan": item.Paket,
-    "Titik Koordinat (Maps)": item["Titik Koordinat"],
+    "Titik Koordinat (Maps)": (item as any)["Titik Koordinat"],
     "Catatan Khusus": item.Catatan || "-",
     "Tanggal Mendaftar": item.Timestamp.split(",")[0],
     "Foto KTP (Sistem)": item["Foto KTP"] ? "Ada Lampiran" : "Tidak Ada"
@@ -135,15 +135,33 @@ export const exportToExcel = (data: RegistrationData[]) => {
 };
 
 const LOGO_URL = "https://ik.imagekit.io/Gumelar/LogO/logo%20pt.png?updatedAt=1778213993513";
-const BRAND_COLOR = [13, 22, 85]; // Navy corporate brand color for header
+const BRAND_COLOR: [number, number, number] = [13, 22, 85]; // Navy corporate brand color for header
 
-const appendKtpAttachments = (doc: any, data: RegistrationData[]) => {
-  data.forEach((item) => {
-    const ktpData = item["Foto KTP"];
-    if (ktpData && String(ktpData).startsWith("data:image/")) {
+const appendKtpAttachments = async (doc: any, data: RegistrationData[]) => {
+  const itemsWithKtp = data.filter(item => item["Foto KTP"] && (String(item["Foto KTP"]).startsWith("data:image/") || String(item["Foto KTP"]).startsWith("http")));
+  
+  if (itemsWithKtp.length === 0) return;
+
+  const ITEMS_PER_PAGE = 12; // Maximized to 12 photos per page
+  const COLS = 4;
+  
+  const colWidth = 60; // 60mm width
+  const rowHeight = 38; // 38mm height (maintains ~1.57 KTP aspect ratio)
+  
+  const startX = 18;
+  const startY = 40;
+  const gapX = 8;
+  const gapY = 20; // 20mm gap for the text below the image
+  
+  for (let i = 0; i < itemsWithKtp.length; i++) {
+    const item = itemsWithKtp[i];
+    const ktpData = item["Foto KTP"] as string;
+    
+    // If it's the first item on a new page
+    if (i % ITEMS_PER_PAGE === 0) {
       doc.addPage();
       
-      // Frame
+      // Outer Frame
       doc.setDrawColor(244, 121, 32); // Brand Orange
       doc.setLineWidth(1);
       doc.rect(14, 14, 269, 182);
@@ -152,91 +170,83 @@ const appendKtpAttachments = (doc: any, data: RegistrationData[]) => {
       doc.setFontSize(16);
       doc.setTextColor(13, 22, 85); // Navy
       doc.setFont("helvetica", "bold");
-      doc.text(`LAMPIRAN FOTO KTP - ${String(item["Nama Lengkap"] || "").toUpperCase()}`, 20, 26);
+      const pageNum = Math.floor(i / ITEMS_PER_PAGE) + 1;
+      const totalPages = Math.ceil(itemsWithKtp.length / ITEMS_PER_PAGE);
+      doc.text(`LAMPIRAN FOTO KTP (Halaman ${pageNum} dari ${totalPages})`, 20, 26);
       
       doc.setFontSize(9);
       doc.setTextColor(100, 116, 139);
       doc.setFont("helvetica", "normal");
-      doc.text(`ID Pelanggan: ${getCustomerNo(item.Timestamp)} | No. WA: ${item["No HP / WA"] || "-"}`, 20, 32);
-      doc.text(`Alamat: ${item["Alamat Pemasangan"] || "-"} (${item.Desa || "-"}, ${item.Kecamatan || "-"}) | Paket: ${item.Paket || "-"}`, 20, 37);
+      doc.text(`Memuat total ${itemsWithKtp.length} dokumen terlampir`, 20, 32);
       
       // Thin line divider
       doc.setDrawColor(226, 232, 240);
-      doc.line(20, 41, 277, 41);
-      
-      // Render KTP image centered & framed
-      try {
-        let format = "JPEG";
-        if (ktpData.includes("image/png")) format = "PNG";
-        else if (ktpData.includes("image/webp")) format = "WEBP";
-        
-        const imgWidth = 142;
-        const imgHeight = 90;
-        const imgX = (297 - imgWidth) / 2;
-        const imgY = 50;
-        
-        // Premium gray/orange framing card border for the KTP photo
-        doc.setFillColor(248, 250, 252);
-        doc.rect(imgX - 4, imgY - 4, imgWidth + 8, imgHeight + 8, "F");
-        doc.setDrawColor(203, 213, 225);
-        doc.rect(imgX - 4, imgY - 4, imgWidth + 8, imgHeight + 8, "S");
-        
-        doc.addImage(ktpData, format, imgX, imgY, imgWidth, imgHeight);
-        
-        // Footer signature watermark
-        doc.setFontSize(8);
-        doc.setTextColor(148, 163, 184);
-        doc.text("Arsip pendaftaran digital resmi PT. AKSES ARTHA MEDIA (ARMEDIA.ID).", 20, 188);
-      } catch (err) {
-        console.error("Gagal merawat gambar KTP ke PDF:", err);
-        doc.setFontSize(10);
-        doc.setTextColor(239, 68, 68);
-        doc.setFont("helvetica", "bold");
-        doc.text("[Foto KTP tidak dapat ditampilkan secara visual - Format file korup atau tidak didukung]", 20, 60);
-      }
-    } else if (ktpData && String(ktpData).startsWith("http")) {
-      doc.addPage();
-      
-      // Frame
-      doc.setDrawColor(244, 121, 32); // Brand Orange
-      doc.setLineWidth(1);
-      doc.rect(14, 14, 269, 182);
-      
-      // Header Info
-      doc.setFontSize(16);
-      doc.setTextColor(13, 22, 85); // Navy
-      doc.setFont("helvetica", "bold");
-      doc.text(`LAMPIRAN FOTO KTP - ${String(item["Nama Lengkap"] || "").toUpperCase()}`, 20, 26);
-      
-      doc.setFontSize(9);
-      doc.setTextColor(100, 116, 139);
-      doc.setFont("helvetica", "normal");
-      doc.text(`ID Pelanggan: ${getCustomerNo(item.Timestamp)} | No. WA: ${item["No HP / WA"] || "-"}`, 20, 32);
-      doc.text(`Alamat: ${item["Alamat Pemasangan"] || "-"} (${item.Desa || "-"}, ${item.Kecamatan || "-"}) | Paket: ${item.Paket || "-"}`, 20, 37);
-      
-      // Thin line divider
-      doc.setDrawColor(226, 232, 240);
-      doc.line(20, 41, 277, 41);
-      
-      // Text indicating file location
-      doc.setFontSize(11);
-      doc.setTextColor(13, 22, 85);
-      doc.setFont("helvetica", "bold");
-      doc.text("Foto KTP diunggah ke Cloud Storage (Supabase):", 20, 60);
-      
-      doc.setFontSize(10);
-      doc.setTextColor(244, 121, 32);
-      doc.setFont("helvetica", "normal");
-      
-      const splitUrl = doc.splitTextToSize(ktpData, 240);
-      doc.text(splitUrl, 20, 70);
+      doc.line(20, 36, 277, 36);
       
       // Footer signature watermark
       doc.setFontSize(8);
       doc.setTextColor(148, 163, 184);
       doc.text("Arsip pendaftaran digital resmi PT. AKSES ARTHA MEDIA (ARMEDIA.ID).", 20, 188);
     }
-  });
+    
+    const indexOnPage = i % ITEMS_PER_PAGE;
+    const col = indexOnPage % COLS;
+    const row = Math.floor(indexOnPage / COLS);
+    
+    const x = startX + col * (colWidth + gapX);
+    const y = startY + row * (rowHeight + gapY);
+    
+    try {
+      let base64Data = ktpData;
+      
+      // Fetch if URL
+      if (ktpData.startsWith("http")) {
+         const response = await fetch(ktpData);
+         const blob = await response.blob();
+         const reader = new FileReader();
+         base64Data = await new Promise<string>((resolve, reject) => {
+           reader.onloadend = () => resolve(reader.result as string);
+           reader.onerror = reject;
+           reader.readAsDataURL(blob);
+         });
+      }
+      
+      let format = "JPEG";
+      if (base64Data.includes("image/png")) format = "PNG";
+      else if (base64Data.includes("image/webp")) format = "WEBP";
+      
+      // Draw image
+      doc.addImage(base64Data, format, x, y, colWidth, rowHeight);
+      
+      // Draw border
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.5);
+      doc.rect(x, y, colWidth, rowHeight, "S");
+      
+    } catch (err) {
+      console.error("Gagal memuat KTP:", err);
+      doc.setFillColor(241, 245, 249);
+      doc.rect(x, y, colWidth, rowHeight, "F");
+      doc.setFontSize(8);
+      doc.setTextColor(239, 68, 68);
+      doc.text("Gagal memuat gambar", x + 5, y + 25);
+    }
+    
+    // Label under image
+    doc.setFontSize(7);
+    doc.setTextColor(13, 22, 85);
+    doc.setFont("helvetica", "bold");
+    const labelName = doc.splitTextToSize((item["Nama Lengkap"] || "-").toUpperCase(), colWidth);
+    doc.text(labelName, x, y + rowHeight + 4);
+    
+    doc.setFontSize(6);
+    doc.setTextColor(100, 116, 139);
+    doc.setFont("helvetica", "normal");
+    // Calculate vertical offset in case labelName wrapped to multiple lines
+    const nextLineY = y + rowHeight + 7 + (labelName.length - 1) * 3;
+    doc.text(`ID: ${getCustomerNo(item.Timestamp)} | WA: ${item["No HP / WA"] || "-"}`, x, nextLineY);
+    doc.text(`Paket: ${item.Paket || "-"}`, x, nextLineY + 3);
+  }
 };
 
 const appendNotes = (doc: any) => {
@@ -264,7 +274,7 @@ const appendNotes = (doc: any) => {
   });
 };
 
-export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
+export const generatePDFBlobUrl = async (data: RegistrationData[]): Promise<string> => {
   const doc = new jsPDF("l", "mm", "a4");
   
   // Header with Logo
@@ -305,12 +315,12 @@ export const generatePDFBlobUrl = (data: RegistrationData[]): string => {
   });
 
   appendNotes(doc);
-  appendKtpAttachments(doc, data);
+  await appendKtpAttachments(doc, data);
 
   return URL.createObjectURL(doc.output("blob"));
 };
 
-export const downloadPDF = (data: RegistrationData[]) => {
+export const downloadPDF = async (data: RegistrationData[]) => {
   const doc = new jsPDF("l", "mm", "a4");
   
   // Header with Logo
@@ -351,7 +361,7 @@ export const downloadPDF = (data: RegistrationData[]) => {
   });
 
   appendNotes(doc);
-  appendKtpAttachments(doc, data);
+  await appendKtpAttachments(doc, data);
 
   doc.save(`Armedia_Report_${new Date().toLocaleDateString()}.pdf`);
 };

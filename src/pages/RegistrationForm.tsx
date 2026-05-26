@@ -265,9 +265,9 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         const blob = await response.blob();
         
         // Generate a unique filename using timestamp and name (sluggified)
-        const cleanName = form.namaLengkap.toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 30);
-        const randomString = Math.random().toString(36).substring(2, 8);
-        const fileName = `ktp-${Date.now()}-${cleanName}-${randomString}.jpg`;
+        const cleanName = form.namaLengkap.trim().toUpperCase().replace(/[^A-Z0-9]/g, "_");
+        const timestamp = Math.floor(Date.now() / 1000); // Shorter timestamp
+        const fileName = `KTP_${cleanName}_${timestamp}.jpg`;
         
         // Upload to bucket 'dokumen-ktp'
         const { data: uploadData, error: uploadError } = await supabase.storage
