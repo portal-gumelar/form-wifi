@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import * as Lucide from "lucide-react";
 import { RegistrationData } from "../../types";
 import { getCustomerNo, calculateProRata } from "../../utils/dashboardUtils";
+import { api } from "../../utils/apiClient";
 
 interface PDFPreviewModalProps {
   url: string | null;
@@ -463,12 +464,29 @@ const StatusPillButtons = ({ value, onChange }: { value: string; onChange: (val:
 
 export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMode, onClose, onSave }) => {
   const [formData, setFormData] = useState<RegistrationData | null>(null);
+  const [isUploadingKtp, setIsUploadingKtp] = useState(false);
 
   useEffect(() => {
     if (item) setFormData({ ...item });
   }, [item]);
 
   if (!item || !formData) return null;
+
+  const handleKtpUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingKtp(true);
+    try {
+      const publicUrl = await api.uploadKtp(file, file.name);
+      setFormData(prev => prev ? ({ ...prev, "Foto KTP": publicUrl }) : null);
+    } catch (err) {
+      console.error(err);
+      alert("Gagal mengunggah foto KTP.");
+    } finally {
+      setIsUploadingKtp(false);
+    }
+  };
 
   const handleChange = (field: keyof RegistrationData, value: string) => {
     setFormData(prev => prev ? ({ ...prev, [field]: value }) : null);
@@ -543,25 +561,24 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
                       </div>
                     </div>
                   ) : (
-                    <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-200 hover:border-[#F47920] rounded-xl bg-slate-50/50 cursor-pointer transition-all">
-                      <div className="text-center px-4">
-                        <p className="text-[10px] font-bold text-[#1a2d8f]">Unggah Foto KTP Baru</p>
-                        <p className="text-[9px] text-slate-400 font-medium mt-0.5">Pilih Gambar dari Perangkat</p>
-                      </div>
+                    <label className={`flex items-center justify-center w-full h-24 border-2 border-dashed rounded-xl transition-all relative overflow-hidden ${isUploadingKtp ? 'border-[#F47920] bg-orange-50' : 'border-slate-200 hover:border-[#F47920] bg-slate-50/50 cursor-pointer'}`}>
+                      {isUploadingKtp ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <Lucide.Loader2 size={20} className="animate-spin text-[#F47920]" />
+                          <span className="text-[10px] font-bold text-[#F47920]">Mengunggah...</span>
+                        </div>
+                      ) : (
+                        <div className="text-center px-4">
+                          <p className="text-[10px] font-bold text-[#1a2d8f]">Unggah Foto KTP Baru</p>
+                          <p className="text-[9px] text-slate-400 font-medium mt-0.5">Pilih Gambar dari Perangkat</p>
+                        </div>
+                      )}
                       <input 
                         type="file" 
                         accept="image/*" 
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              handleChange("Foto KTP", reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        className="hidden" 
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full disabled:cursor-not-allowed"
+                        disabled={isUploadingKtp}
+                        onChange={handleKtpUpload}
                       />
                     </label>
                   )}
