@@ -17,8 +17,12 @@ CREATE TABLE IF NOT EXISTS registrations (
     "Foto KTP" TEXT,
     "Persetujuan S&K" TEXT,
     "Catatan" TEXT,
-    "Tanggal Aktif" VARCHAR(100),
-    "Tanggal Rencana Pasang" VARCHAR(100),
+    "Tanggal Aktif" DATE,
+    "Tanggal Rencana Pasang" DATE,
     "Waktu Survei" VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_registrations_status ON registrations (status);
+CREATE INDEX IF NOT EXISTS idx_registrations_desa ON registrations ("Desa");
+CREATE INDEX IF NOT EXISTS idx_registrations_paket ON registrations ("Paket");

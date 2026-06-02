@@ -37,7 +37,26 @@ pool.connect().then(async (client) => {
   console.log('Connected to pure PostgreSQL database.');
   try {
     await client.query('ALTER TABLE registrations ADD COLUMN IF NOT EXISTS "NIK" VARCHAR(100)');
-    console.log('Database schema verified (NIK column checked).');
+    
+    // Safely cast dates
+    await client.query(`
+      ALTER TABLE registrations 
+      ALTER COLUMN "Tanggal Aktif" TYPE DATE 
+      USING NULLIF(TRIM("Tanggal Aktif"), '')::DATE
+    `).catch(e => console.warn("Cast Tanggal Aktif failed:", e.message));
+
+    await client.query(`
+      ALTER TABLE registrations 
+      ALTER COLUMN "Tanggal Rencana Pasang" TYPE DATE 
+      USING NULLIF(TRIM("Tanggal Rencana Pasang"), '')::DATE
+    `).catch(e => console.warn("Cast Tanggal Rencana Pasang failed:", e.message));
+
+    // Create Indexes
+    await client.query('CREATE INDEX IF NOT EXISTS idx_registrations_status ON registrations (status)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_registrations_desa ON registrations ("Desa")');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_registrations_paket ON registrations ("Paket")');
+
+    console.log('Database schema verified and optimized.');
   } catch (e) {
     console.error('Migration error:', e.message);
   } finally {
@@ -83,53 +102,49 @@ app.post('/api/registrations', async (req, res) => {
   try {
     const data = req.body;
     
-    // Check if exists
-    const checkResult = await pool.query('SELECT "Timestamp" FROM registrations WHERE "Timestamp" = $1', [data.Timestamp]);
+    const query = `
+      INSERT INTO registrations (
+        "Timestamp", "NIK", "Nama Lengkap", "No HP / WA", "Alamat Pemasangan",
+        "Kecamatan", "Desa", "RW", "RT", "Paket", "status", "Provider Saat Ini",
+        "Sumber Info", "Link Google Maps", "Foto KTP", "Persetujuan S&K",
+        "Catatan", "Tanggal Aktif", "Tanggal Rencana Pasang", "Waktu Survei"
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+      )
+      ON CONFLICT ("Timestamp") DO UPDATE SET
+        "NIK" = EXCLUDED."NIK",
+        "Nama Lengkap" = EXCLUDED."Nama Lengkap",
+        "No HP / WA" = EXCLUDED."No HP / WA",
+        "Alamat Pemasangan" = EXCLUDED."Alamat Pemasangan",
+        "Kecamatan" = EXCLUDED."Kecamatan",
+        "Desa" = EXCLUDED."Desa",
+        "RW" = EXCLUDED."RW",
+        "RT" = EXCLUDED."RT",
+        "Paket" = EXCLUDED."Paket",
+        "status" = EXCLUDED."status",
+        "Provider Saat Ini" = EXCLUDED."Provider Saat Ini",
+        "Sumber Info" = EXCLUDED."Sumber Info",
+        "Link Google Maps" = EXCLUDED."Link Google Maps",
+        "Foto KTP" = EXCLUDED."Foto KTP",
+        "Persetujuan S&K" = EXCLUDED."Persetujuan S&K",
+        "Catatan" = EXCLUDED."Catatan",
+        "Tanggal Aktif" = EXCLUDED."Tanggal Aktif",
+        "Tanggal Rencana Pasang" = EXCLUDED."Tanggal Rencana Pasang",
+        "Waktu Survei" = EXCLUDED."Waktu Survei"
+    `;
+
+    const values = [
+      data.Timestamp, data.NIK || "", data["Nama Lengkap"], data["No HP / WA"], data["Alamat Pemasangan"],
+      data["Kecamatan"], data["Desa"], data["RW"], data["RT"], data["Paket"],
+      data["status"], data["Provider Saat Ini"], data["Sumber Info"],
+      data["Link Google Maps"], data["Foto KTP"], data["Persetujuan S&K"],
+      data["Catatan"], 
+      data["Tanggal Aktif"] || null, 
+      data["Tanggal Rencana Pasang"] || null, 
+      data["Waktu Survei"]
+    ];
     
-    if (checkResult.rows.length > 0) {
-      // Update
-      const query = `
-        UPDATE registrations SET
-          "NIK" = $1, "Nama Lengkap" = $2, "No HP / WA" = $3, "Alamat Pemasangan" = $4,
-          "Kecamatan" = $5, "Desa" = $6, "RW" = $7, "RT" = $8, "Paket" = $9,
-          "status" = $10, "Provider Saat Ini" = $11, "Sumber Info" = $12,
-          "Link Google Maps" = $13, "Foto KTP" = $14, "Persetujuan S&K" = $15,
-          "Catatan" = $16, "Tanggal Aktif" = $17, "Tanggal Rencana Pasang" = $18,
-          "Waktu Survei" = $19
-        WHERE "Timestamp" = $20
-      `;
-      const values = [
-        data.NIK || "", data["Nama Lengkap"], data["No HP / WA"], data["Alamat Pemasangan"],
-        data["Kecamatan"], data["Desa"], data["RW"], data["RT"], data["Paket"],
-        data["status"], data["Provider Saat Ini"], data["Sumber Info"],
-        data["Link Google Maps"], data["Foto KTP"], data["Persetujuan S&K"],
-        data["Catatan"], data["Tanggal Aktif"], data["Tanggal Rencana Pasang"],
-        data["Waktu Survei"], data.Timestamp
-      ];
-      await pool.query(query, values);
-    } else {
-      // Insert
-      const query = `
-        INSERT INTO registrations (
-          "Timestamp", "NIK", "Nama Lengkap", "No HP / WA", "Alamat Pemasangan",
-          "Kecamatan", "Desa", "RW", "RT", "Paket", "status", "Provider Saat Ini",
-          "Sumber Info", "Link Google Maps", "Foto KTP", "Persetujuan S&K",
-          "Catatan", "Tanggal Aktif", "Tanggal Rencana Pasang", "Waktu Survei"
-        ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
-        )
-      `;
-      const values = [
-        data.Timestamp, data.NIK || "", data["Nama Lengkap"], data["No HP / WA"], data["Alamat Pemasangan"],
-        data["Kecamatan"], data["Desa"], data["RW"], data["RT"], data["Paket"],
-        data["status"], data["Provider Saat Ini"], data["Sumber Info"],
-        data["Link Google Maps"], data["Foto KTP"], data["Persetujuan S&K"],
-        data["Catatan"], data["Tanggal Aktif"], data["Tanggal Rencana Pasang"],
-        data["Waktu Survei"]
-      ];
-      await pool.query(query, values);
-    }
-    
+    await pool.query(query, values);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
