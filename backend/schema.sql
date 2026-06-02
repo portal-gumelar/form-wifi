@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS registrations (
     id SERIAL PRIMARY KEY,
     "Timestamp" VARCHAR(255) UNIQUE NOT NULL,
+    "NIK" VARCHAR(100),
     "Nama Lengkap" VARCHAR(255),
     "No HP / WA" VARCHAR(100),
     "Alamat Pemasangan" TEXT,

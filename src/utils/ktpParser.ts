@@ -1,4 +1,5 @@
 export interface ParsedKTP {
+  nik?: string;
   nama?: string;
   alamat?: string;
   rt?: string;
@@ -55,6 +56,15 @@ export const parseKTPText = (text: string): ParsedKTP => {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     const upperLine = line.toUpperCase();
+
+    // 0. Extract NIK
+    if ((upperLine.includes("NIK") || upperLine.includes("N1K") || upperLine.includes("M|K")) && !result.nik) {
+      const cleanLine = upperLine.replace(/\s+/g, '');
+      const nikMatch = cleanLine.match(/(\d{16})/);
+      if (nikMatch) {
+        result.nik = nikMatch[1];
+      }
+    }
 
     // 1. Extract Nama
     if ((upperLine.includes("NAMA") || upperLine.includes("NEMA") || upperLine.includes("NANA")) && !result.nama) {
@@ -137,6 +147,15 @@ export const parseKTPText = (text: string): ParsedKTP => {
     if (rwMatch && !result.rw) {
       const rwNum = formatToTwoDigits(rwMatch[1]);
       if (rwNum) result.rw = `RW ${rwNum}`;
+    }
+  }
+
+  // Fallback for NIK
+  if (!result.nik) {
+    const cleanText = text.replace(/\s+/g, '');
+    const nikMatch = cleanText.match(/(\d{16})/);
+    if (nikMatch) {
+      result.nik = nikMatch[1];
     }
   }
 

@@ -27,6 +27,7 @@ export interface VillageFundSummary {
 
 export interface RegistrationData {
   Timestamp: string;
+  NIK?: string;
   "Nama Lengkap": string;
   "No HP / WA": string;
   Paket: string;

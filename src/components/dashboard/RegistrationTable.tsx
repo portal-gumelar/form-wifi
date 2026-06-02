@@ -170,15 +170,16 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
   };
 
   const exportToCSV = () => {
-    const headers = ["Nama Lengkap", "Alamat", "Desa", "No HP", "Paket", "Status", "Timestamp"];
+    const headers = ["NIK", "Nama Lengkap", "Alamat", "Desa", "No HP", "Paket", "Status", "Timestamp"];
     const rows = sortedData.map(item => [
-      item["Nama Lengkap"],
-      item["Alamat Pemasangan"],
-      item.Desa,
-      item["No HP / WA"],
-      item.Paket,
-      item.status,
-      item.Timestamp
+      item.NIK || "",
+      item["Nama Lengkap"] || "",
+      item["Alamat Pemasangan"] || "",
+      item.Desa || "",
+      item["No HP / WA"] || "",
+      item.Paket || "",
+      item.status || "",
+      item.Timestamp || ""
     ]);
     const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });

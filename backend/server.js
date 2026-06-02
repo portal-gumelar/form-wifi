@@ -33,12 +33,18 @@ const pool = new Pool({
   port: process.env.DB_PORT || 5432,
 });
 
-pool.connect((err) => {
-  if (err) {
-    console.error('Failed to connect to pure PostgreSQL:', err.message);
-  } else {
-    console.log('Connected to pure PostgreSQL database.');
+pool.connect().then(async (client) => {
+  console.log('Connected to pure PostgreSQL database.');
+  try {
+    await client.query('ALTER TABLE registrations ADD COLUMN IF NOT EXISTS "NIK" VARCHAR(100)');
+    console.log('Database schema verified (NIK column checked).');
+  } catch (e) {
+    console.error('Migration error:', e.message);
+  } finally {
+    client.release();
   }
+}).catch(err => {
+  console.error('Failed to connect to pure PostgreSQL:', err.message);
 });
 
 // Configure Multer for KTP Uploads
@@ -84,16 +90,16 @@ app.post('/api/registrations', async (req, res) => {
       // Update
       const query = `
         UPDATE registrations SET
-          "Nama Lengkap" = $1, "No HP / WA" = $2, "Alamat Pemasangan" = $3,
-          "Kecamatan" = $4, "Desa" = $5, "RW" = $6, "RT" = $7, "Paket" = $8,
-          "status" = $9, "Provider Saat Ini" = $10, "Sumber Info" = $11,
-          "Link Google Maps" = $12, "Foto KTP" = $13, "Persetujuan S&K" = $14,
-          "Catatan" = $15, "Tanggal Aktif" = $16, "Tanggal Rencana Pasang" = $17,
-          "Waktu Survei" = $18
-        WHERE "Timestamp" = $19
+          "NIK" = $1, "Nama Lengkap" = $2, "No HP / WA" = $3, "Alamat Pemasangan" = $4,
+          "Kecamatan" = $5, "Desa" = $6, "RW" = $7, "RT" = $8, "Paket" = $9,
+          "status" = $10, "Provider Saat Ini" = $11, "Sumber Info" = $12,
+          "Link Google Maps" = $13, "Foto KTP" = $14, "Persetujuan S&K" = $15,
+          "Catatan" = $16, "Tanggal Aktif" = $17, "Tanggal Rencana Pasang" = $18,
+          "Waktu Survei" = $19
+        WHERE "Timestamp" = $20
       `;
       const values = [
-        data["Nama Lengkap"], data["No HP / WA"], data["Alamat Pemasangan"],
+        data.NIK || "", data["Nama Lengkap"], data["No HP / WA"], data["Alamat Pemasangan"],
         data["Kecamatan"], data["Desa"], data["RW"], data["RT"], data["Paket"],
         data["status"], data["Provider Saat Ini"], data["Sumber Info"],
         data["Link Google Maps"], data["Foto KTP"], data["Persetujuan S&K"],
@@ -105,16 +111,16 @@ app.post('/api/registrations', async (req, res) => {
       // Insert
       const query = `
         INSERT INTO registrations (
-          "Timestamp", "Nama Lengkap", "No HP / WA", "Alamat Pemasangan",
+          "Timestamp", "NIK", "Nama Lengkap", "No HP / WA", "Alamat Pemasangan",
           "Kecamatan", "Desa", "RW", "RT", "Paket", "status", "Provider Saat Ini",
           "Sumber Info", "Link Google Maps", "Foto KTP", "Persetujuan S&K",
           "Catatan", "Tanggal Aktif", "Tanggal Rencana Pasang", "Waktu Survei"
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
         )
       `;
       const values = [
-        data.Timestamp, data["Nama Lengkap"], data["No HP / WA"], data["Alamat Pemasangan"],
+        data.Timestamp, data.NIK || "", data["Nama Lengkap"], data["No HP / WA"], data["Alamat Pemasangan"],
         data["Kecamatan"], data["Desa"], data["RW"], data["RT"], data["Paket"],
         data["status"], data["Provider Saat Ini"], data["Sumber Info"],
         data["Link Google Maps"], data["Foto KTP"], data["Persetujuan S&K"],

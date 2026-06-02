@@ -99,6 +99,7 @@ const CustomPaketDropdown = ({ value, onChange, options }: { value: string, onCh
 // --- Normalisasi Field dari Google Sheets (di luar komponen agar selalu tersedia) ---
 const normalizeRow = (row: any): RegistrationData => ({
   Timestamp: String(row.Timestamp || ""),
+  NIK: String(row.NIK || ""),
   "Nama Lengkap": String(row["Nama Lengkap"] || ""),
   "No HP / WA": String(row["No HP / WA"] || ""),
   Paket: String(row.Paket || ""),
@@ -110,7 +111,6 @@ const normalizeRow = (row: any): RegistrationData => ({
   RW: String(row.RW || row.rw || ""),
   RT: String(row.RT || row.rt || ""),
   "Tanggal Rencana Pasang": String(row["Tanggal Rencana Pasang"] || ""),
-  "Waktu Survei": String(row["Waktu Survei"] || ""),
   "Link Google Maps": String(row["Link Google Maps"] || ""),
   status: String(row.status || row.Status || "PENGAJUAN"),
   "Foto KTP": String(row["Foto KTP"] || row.fotoKtp || ""),
@@ -401,6 +401,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       // 2. Simpan atau Update ke Database PostgreSQL
       const dbRecord = {
         "Timestamp": finalTimestamp,
+        "NIK": updatedItem.NIK || "",
         "Nama Lengkap": updatedItem["Nama Lengkap"] || "",
         "No HP / WA": updatedItem["No HP / WA"] || "",
         "Alamat Pemasangan": updatedItem["Alamat Pemasangan"] || "",
@@ -417,8 +418,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
         "Persetujuan S&K": updatedItem["Persetujuan S&K"] || "SETUJU (Manual Admin)",
         "Catatan": updatedItem.Catatan || "",
         "Tanggal Aktif": updatedItem["Tanggal Aktif"] || "",
-        "Tanggal Rencana Pasang": updatedItem["Tanggal Rencana Pasang"] || "",
-        "Waktu Survei": updatedItem["Waktu Survei"] || ""
+        "Tanggal Rencana Pasang": updatedItem["Tanggal Rencana Pasang"] || ""
       };
 
       await api.insertRegistration(dbRecord);

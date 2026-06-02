@@ -17,6 +17,7 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztG8z0ob1ULp
 
 const initialForm = {
   currentProvider: "",
+  nik: "",
   namaLengkap: "",
   kecamatan: "GUMELAR",
   desa: "",
@@ -28,7 +29,6 @@ const initialForm = {
   tanggalPasang: "",
   bisaGoogleMaps: "",
   linkGoogleMaps: "",
-  waktuSurvei: "",
   prioritas: "",
   prioritasLain: "",
   sumberInfo: "",
@@ -195,6 +195,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
       setForm(prev => {
         const updated = { ...prev };
+        if (parsedData.nik) updated.nik = parsedData.nik;
         if (parsedData.nama) updated.namaLengkap = parsedData.nama;
         if (parsedData.alamat) updated.alamat = parsedData.alamat;
         if (parsedData.desa) {
@@ -207,7 +208,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         return updated;
       });
 
-      if (parsedData.nama || parsedData.alamat || parsedData.desa || parsedData.rt || parsedData.rw) {
+      if (parsedData.nik || parsedData.nama || parsedData.alamat || parsedData.desa || parsedData.rt || parsedData.rw) {
         setOcrSuccessMessage("✓ KTP berhasil dipindai! Beberapa kolom formulir telah diisi otomatis. Mohon periksa kembali data Anda.");
       } else {
         setOcrSuccessMessage("⚠️ KTP terunggah, namun sistem kesulitan membaca tulisan secara otomatis. Silakan isi data secara manual.");
@@ -263,8 +264,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         mapsInput?.focus();
       }, 500);
     }
-    else if (name === "waktuSurvei" && value) {
-      // After survei time, auto-advance to sumber info
+    else if (name === "linkGoogleMaps") {
       setTimeout(() => {
         document.getElementById("sec-sumber")?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 300);
@@ -284,7 +284,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.currentProvider || !form.namaLengkap || !form.kecamatan || !form.desa || !form.alamat || !form.noHp || !form.paket || !form.sumberInfo || !form.fotoKtp) {
+    if (!form.currentProvider || !form.nik || !form.namaLengkap || !form.kecamatan || !form.desa || !form.alamat || !form.noHp || !form.paket || !form.fotoKtp) {
       setError("Mohon lengkapi semua field yang wajib diisi (*), termasuk mengunggah foto KTP.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -332,6 +332,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     
     const newRecord = {
       "Timestamp": timestampStr,
+      "NIK": form.nik,
       "Nama Lengkap": form.namaLengkap,
       "No HP / WA": form.noHp,
       "Alamat Pemasangan": form.alamat,
@@ -348,7 +349,6 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
       "Persetujuan S&K": "SETUJU (Sudah Dibaca & Disetujui)",
       "Catatan": form.catatan || "",
       "Tanggal Rencana Pasang": form.tanggalPasang || "",
-      "Waktu Survei": form.waktuSurvei || "",
       "Tanggal Aktif": ""
     };
 
@@ -371,7 +371,6 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         tanggal: form.tanggalPasang,
         maps: form.bisaGoogleMaps || "Tidak",
         link: form.linkGoogleMaps,
-        survei: form.waktuSurvei,
         prioritas: form.prioritas === "lain" ? form.prioritasLain : form.prioritas,
         sumber: form.sumberInfo,
         fotoKtp: finalKtpUrl,
@@ -539,6 +538,8 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
             <Section id="sec-datadiri" title="Informasi Pemasangan" icon="👤">
               <div className="grid grid-cols-1 gap-6 md:gap-8">
+                <InputField label="Nomor Induk Kependudukan (NIK)" name="nik" value={form.nik} onChange={handleChange} placeholder="16 Digit NIK" required />
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                   <InputField label="Nama Lengkap Sesuai KTP" name="namaLengkap" value={form.namaLengkap} onChange={handleChange} placeholder="Contoh: Budi Santoso" required />
                   <InputField label="Nomor WhatsApp Aktif" name="noHp" value={form.noHp} onChange={handleChange} placeholder="08123456789" required type="tel" />
@@ -821,36 +822,10 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
             <Section id="sec-lokasi" title="Detail Tambahan" icon="📍">
               <div className="grid grid-cols-1 gap-8 md:gap-10">
                 <InputField label="Link Google Maps (Opsional)" name="linkGoogleMaps" value={form.linkGoogleMaps} onChange={handleChange} placeholder="https://maps.app.goo.gl/..." type="url" />
-
-                <div className="w-full">
-                  <label className="block text-[11px] sm:text-xs font-black text-black uppercase tracking-widest mb-4 ml-1">Waktu Survei Yang Pas <span className="text-red-500">*</span></label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {[
-                      { label: "Pagi", time: "08:00 - 11:00" },
-                      { label: "Siang", time: "11:00 - 14:00" },
-                      { label: "Sore", time: "14:00 - 17:00" },
-                      { label: "Malam", time: "18:00 - 20:00" }
-                    ].map(opt => (
-                      <RadioCard
-                        key={opt.label}
-                        name="waktuSurvei"
-                        value={`${opt.label} (${opt.time})`}
-                        checked={form.waktuSurvei.startsWith(opt.label)}
-                        onChange={handleChange}
-                        label={
-                          <div className="text-center w-full">
-                            <div className="font-black text-slate-800 text-sm md:text-base leading-none">{opt.label}</div>
-                            <div className="text-[10px] md:text-xs font-bold text-slate-400 mt-1.5 uppercase tracking-tighter">{opt.time}</div>
-                          </div>
-                        }
-                      />
-                    ))}
-                  </div>
-                </div>
               </div>
             </Section>
 
-            <Section id="sec-sumber" title="Tahu Kami Dari Mana?" icon="🔍" required>
+            <Section id="sec-sumber" title="Tahu Kami Dari Mana? (Opsional)" icon="🔍">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {["Media Sosial", "Teman/Tetangga", "Spanduk/Banner", "Sales/Petugas"].map(opt => (
                   <RadioCard key={opt} name="sumberInfo" value={opt} checked={form.sumberInfo === opt} onChange={handleChange} label={<span className="text-[11px] md:text-xs font-black text-slate-700 tracking-tight">{opt}</span>} />

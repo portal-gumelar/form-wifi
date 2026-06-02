@@ -221,13 +221,13 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
                 <p className="font-bold text-slate-700 text-sm">{item["Tanggal Rencana Pasang"] || "Belum Dijadwalkan"}</p>
               </div>
 
-              {/* Waktu Survei */}
+              {/* NIK */}
               <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <Lucide.Clock size={14} className="text-cyan-500" />
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Waktu Survei</p>
+                  <Lucide.Fingerprint size={14} className="text-cyan-500" />
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">NIK</p>
                 </div>
-                <p className="font-bold text-slate-700 text-sm">{item["Waktu Survei"] || "-"}</p>
+                <p className="font-bold text-slate-700 text-sm">{item.NIK || "-"}</p>
               </div>
             </div>
 
@@ -520,6 +520,10 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
                   <input type="text" value={formData["No HP / WA"] || ""} onChange={e => handleChange("No HP / WA", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: 0812..." />
                 </div>
                 <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800">NIK KTP</label>
+                  <input type="text" value={formData.NIK || ""} onChange={e => handleChange("NIK", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="16 Digit NIK" />
+                </div>
+                <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Provider Saat Ini</label>
                   <input type="text" value={formData["Provider Saat Ini"] || ""} onChange={e => handleChange("Provider Saat Ini", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: Indihome / Belum" />
                 </div>
@@ -648,10 +652,6 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Rencana Tanggal Pasang</label>
                   <input type="text" value={formData["Tanggal Rencana Pasang"] || ""} onChange={e => handleChange("Tanggal Rencana Pasang", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: 25 Mei 2026" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-800">Alokasi Waktu Survei</label>
-                  <input type="text" value={formData["Waktu Survei"] || ""} onChange={e => handleChange("Waktu Survei", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: Jam 10:00 Pagi" />
                 </div>
                 <div className="sm:col-span-2 space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Catatan Evaluasi / Pesan</label>
