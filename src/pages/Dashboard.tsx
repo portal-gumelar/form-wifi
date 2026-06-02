@@ -18,7 +18,7 @@ import { VillageFundChart } from "../components/dashboard/VillageFundChart";
 // Utils & Types
 import { RegistrationData, DashboardStats } from "../types";
 import { calculateStats, exportToExcel, generatePDFBlobUrl, downloadPDF } from "../utils/dashboardUtils";
-import { supabase } from "../utils/supabaseClient";
+import { api } from "../utils/apiClient";
 
 // --- Komponen Custom Dropdown ---
 const CustomPaketDropdown = ({ value, onChange, options }: { value: string, onChange: (v: string) => void, options: { name: string }[] }) => {
@@ -177,15 +177,12 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       let sheetsData: RegistrationData[] = [];
       
       try {
-        const { data: rows, error } = await supabase
-          .from("registrations")
-          .select("*")
-          .order("id", { ascending: false });
-        if (!error && rows && rows.length > 0) {
-          supabaseData = rows;
+        const res = await api.getRegistrations();
+        if (res.data && res.data.length > 0) {
+          supabaseData = res.data;
         }
       } catch (err) {
-        console.warn("Supabase refresh failed", err);
+        console.warn("Backend refresh failed", err);
       }
 
       if (googleScriptUrl) {
@@ -247,18 +244,14 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       let supabaseData: RegistrationData[] = [];
       let sheetsData: RegistrationData[] = [];
       
-      // 1. Fetch live data dari Supabase
+      // 1. Fetch live data dari Backend
       try {
-        const { data: rows, error } = await supabase
-          .from("registrations")
-          .select("*")
-          .order("id", { ascending: false });
-
-        if (!error && rows && rows.length > 0) {
-          supabaseData = rows;
+        const res = await api.getRegistrations();
+        if (res.data && res.data.length > 0) {
+          supabaseData = res.data;
         }
       } catch (err) {
-        console.warn("Supabase fetch failed", err);
+        console.warn("Backend fetch failed", err);
       }
       
       // 2. Fetch dari Google Apps Script
@@ -324,16 +317,11 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
     // 1. Update UI Lokal secara Instan
     setData(prev => prev.map(item => item.Timestamp === timestamp ? { ...item, status: newStatus } : item));
 
-    // 2. Simpan di database Supabase
+    // 2. Simpan di database Backend
     try {
-      const { error } = await supabase
-        .from("registrations")
-        .update({ status: newStatus })
-        .eq("Timestamp", timestamp);
-
-      if (error) throw error;
+      await api.updateStatus(timestamp, newStatus);
     } catch (err) {
-      console.error("Gagal memperbarui status ke Supabase:", err);
+      console.error("Gagal memperbarui status ke Backend:", err);
     }
 
     // 3. Backup asinkron ke Google Sheets
@@ -355,16 +343,11 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
     // 1. Update UI Lokal
     setData(prev => prev.filter(item => item.Timestamp !== timestamp));
 
-    // 2. Hapus di database Supabase
+    // 2. Hapus di database Backend
     try {
-      const { error } = await supabase
-        .from("registrations")
-        .delete()
-        .eq("Timestamp", timestamp);
-
-      if (error) throw error;
+      await api.deleteRegistration(timestamp);
     } catch (err) {
-      console.error("Gagal menghapus dari Supabase:", err);
+      console.error("Gagal menghapus dari Backend:", err);
     }
 
     // 3. Backup asinkron ke Google Sheets
@@ -397,24 +380,8 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
         const timestamp = Math.floor(Date.now() / 1000); // Shorter timestamp
         const fileName = `KTP_${cleanName}_${timestamp}.jpg`;
         
-        const { error: uploadError } = await supabase.storage
-          .from("dokumen-ktp")
-          .upload(fileName, blob, {
-            contentType: "image/jpeg",
-            cacheControl: "3600",
-            upsert: false
-          });
-          
-        if (uploadError) throw uploadError;
-        
-        const { data: urlData } = supabase.storage
-          .from("dokumen-ktp")
-          .getPublicUrl(fileName);
-          
-        if (urlData && urlData.publicUrl) {
-          finalKtpUrl = urlData.publicUrl;
-          console.log("📸 KTP successfully uploaded from admin panel:", finalKtpUrl);
-        }
+        finalKtpUrl = await api.uploadKtp(blob, fileName);
+        console.log("📸 KTP successfully uploaded from admin panel:", finalKtpUrl);
       } catch (uploadErr) {
         console.error("Gagal mengunggah KTP baru ke storage:", uploadErr);
       }
@@ -454,37 +421,10 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
         "Waktu Survei": updatedItem["Waktu Survei"] || ""
       };
 
-      if (isNewRecord) {
-        const { error } = await supabase
-          .from("registrations")
-          .insert([supabaseRecord]);
-        if (error) throw error;
-      } else {
-        // Karena mungkin data baru di-fetch dari Google Sheets dan belum ada di Supabase,
-        // kita cek dulu apakah sudah ada di Supabase berdasarkan Timestamp
-        const { data: existingData } = await supabase
-          .from("registrations")
-          .select("Timestamp")
-          .eq("Timestamp", finalTimestamp);
-
-        if (existingData && existingData.length > 0) {
-          // Data ada di Supabase, lakukan Update
-          const { error } = await supabase
-            .from("registrations")
-            .update(supabaseRecord)
-            .eq("Timestamp", finalTimestamp);
-          if (error) throw error;
-        } else {
-          // Data belum ada di Supabase (hanya di Sheets/Local), lakukan Insert
-          const { error } = await supabase
-            .from("registrations")
-            .insert([supabaseRecord]);
-          if (error) throw error;
-        }
-      }
+      await api.insertRegistration(supabaseRecord);
     } catch (err: any) {
-      console.error("Gagal menyimpan ke Supabase:", err);
-      alert(`Gagal menyimpan ke database: ${err.message || "Unknown error"}\nSilakan cek RLS Policy tabel registrations!`);
+      console.error("Gagal menyimpan ke Backend:", err);
+      alert(`Gagal menyimpan ke database: ${err.message || "Unknown error"}`);
     }
 
     try {

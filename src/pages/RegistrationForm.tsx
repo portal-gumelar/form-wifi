@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { RefreshCw, AlertCircle, ChevronDown, Camera, Image as ImageIcon } from "lucide-react";
 import { parseKTPText } from "../utils/ktpParser";
-import { supabase } from "../utils/supabaseClient";
+import { api } from "../utils/apiClient";
 
 // UI Components
 import { Section, RadioCard, InputField } from "../components/ui/FormElements";
@@ -322,29 +322,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         const timestamp = Math.floor(Date.now() / 1000); // Shorter timestamp
         const fileName = `KTP_${cleanName}_${timestamp}.jpg`;
         
-        // Upload to bucket 'dokumen-ktp'
-        const { error: uploadError } = await supabase.storage
-          .from("dokumen-ktp")
-          .upload(fileName, blob, {
-            contentType: "image/jpeg",
-            cacheControl: "3600",
-            upsert: false
-          });
-          
-        if (uploadError) {
-          throw uploadError;
-        }
-        
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from("dokumen-ktp")
-          .getPublicUrl(fileName);
-          
-        if (!urlData || !urlData.publicUrl) {
-          throw new Error("Gagal mendapatkan public URL untuk foto KTP");
-        }
-        
-        finalKtpUrl = urlData.publicUrl;
+        finalKtpUrl = await api.uploadKtp(blob, fileName);
         console.log("📸 KTP successfully uploaded to Storage:", finalKtpUrl);
       } catch (uploadErr: any) {
         console.warn("⚠️ Gagal mengunggah foto KTP ke Storage, beralih ke mode Base64 fallback:", uploadErr);
@@ -375,12 +353,8 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     };
 
     try {
-      // 1. Simpan ke database Supabase
-      const { error: supabaseError } = await supabase
-        .from("registrations")
-        .insert([newRecord]);
-
-      if (supabaseError) throw supabaseError;
+      // 1. Simpan ke database Backend
+      await api.insertRegistration(newRecord);
 
       // 2. Backup ke localData untuk indikator lokal
       const localData = JSON.parse(localStorage.getItem('adminData') || '[]');

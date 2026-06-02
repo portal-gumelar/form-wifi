@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS registrations (
+    id SERIAL PRIMARY KEY,
+    "Timestamp" VARCHAR(255) UNIQUE NOT NULL,
+    "Nama Lengkap" VARCHAR(255),
+    "No HP / WA" VARCHAR(100),
+    "Alamat Pemasangan" TEXT,
+    "Kecamatan" VARCHAR(100),
+    "Desa" VARCHAR(100),
+    "RW" VARCHAR(50),
+    "RT" VARCHAR(50),
+    "Paket" VARCHAR(255),
+    "status" VARCHAR(50),
+    "Provider Saat Ini" VARCHAR(255),
+    "Sumber Info" VARCHAR(255),
+    "Link Google Maps" TEXT,
+    "Foto KTP" TEXT,
+    "Persetujuan S&K" TEXT,
+    "Catatan" TEXT,
+    "Tanggal Aktif" VARCHAR(100),
+    "Tanggal Rencana Pasang" VARCHAR(100),
+    "Waktu Survei" VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
