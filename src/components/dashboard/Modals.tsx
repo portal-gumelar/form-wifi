@@ -382,7 +382,7 @@ interface EditModalProps {
 // Paket options - Simple Mbps only matching PACKAGES constants
 const PAKET_OPTIONS = [
   { key: "20", guyub: "GUYUB_1", label: "20 Mbps", price: "Rp 115.000", color: "from-orange-400 to-orange-500", icon: Lucide.Zap },
-  { key: "30", guyub: "GUYUB_2", label: "30 Mbps", price: "Rp 142.000", color: "from-blue-400 to-blue-500", icon: Lucide.Zap },
+  { key: "30", guyub: "GUYUB_2", label: "30 Mbps", price: "Rp 148.000", color: "from-blue-400 to-blue-500", icon: Lucide.Zap },
   { key: "50", guyub: "GUYUB_3", label: "50 Mbps", price: "Rp 182.000", color: "from-indigo-400 to-indigo-500", icon: Lucide.Zap },
   { key: "75", guyub: "GUYUB_4", label: "75 Mbps", price: "Rp 260.000", color: "from-purple-400 to-purple-500", icon: Lucide.Zap },
   { key: "100", guyub: "GUYUB_5", label: "100 Mbps", price: "Rp 330.000", color: "from-amber-400 to-amber-500", icon: Lucide.Crown },

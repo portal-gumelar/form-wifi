@@ -11,7 +11,7 @@ export const PACKAGES = [
   { 
     label: "GUYUB_2", 
     speed: "30 Mbps", 
-    price: "142.000", 
+    price: "148.000", 
     badge: "bg-blue-600", 
     popular: true, 
     features: ["Upto 30 MBPS", "Download/Upload", "Unlimited", "DUAL BAND 2,4G & 5G"] 
