@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Lucide from "lucide-react";
-import { supabase } from "../../utils/supabaseClient";
+import { api } from "../../utils/apiClient";
 
 interface FomoEvent {
   id: string;
@@ -36,17 +36,12 @@ export const FomoNotifications: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Fetch real registration data from Supabase and blend it
+  // Fetch real registration data from Backend and blend it
   useEffect(() => {
     const fetchLatestRegistrations = async () => {
       try {
-        const { data, error } = await supabase
-          .from("registrations")
-          .select("Nama Lengkap, Desa, Paket, Timestamp")
-          .order("Timestamp", { ascending: false })
-          .limit(5);
-
-        if (error) throw error;
+        const res = await api.getRegistrations();
+        const data = res.data ? res.data.slice(0, 5) : [];
 
         if (data && data.length > 0) {
           const realEvents: FomoEvent[] = data.map((reg: any, idx: number) => {

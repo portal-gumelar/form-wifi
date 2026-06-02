@@ -173,13 +173,13 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
   const silentRefresh = async () => {
     setIsRefreshing(true);
     try {
-      let supabaseData: RegistrationData[] = [];
+      let dbData: RegistrationData[] = [];
       let sheetsData: RegistrationData[] = [];
       
       try {
         const res = await api.getRegistrations();
         if (res.data && res.data.length > 0) {
-          supabaseData = res.data;
+          dbData = res.data;
         }
       } catch (err) {
         console.warn("Backend refresh failed", err);
@@ -205,7 +205,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       sheetsData.forEach(item => {
         if (item.Timestamp) mergedDataMap.set(item.Timestamp, item);
       });
-      supabaseData.forEach(item => {
+      dbData.forEach(item => {
         if (item.Timestamp) mergedDataMap.set(item.Timestamp, item);
       });
 
@@ -241,14 +241,14 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
     try {
       setLoading(true);
       
-      let supabaseData: RegistrationData[] = [];
+      let dbData: RegistrationData[] = [];
       let sheetsData: RegistrationData[] = [];
       
       // 1. Fetch live data dari Backend
       try {
         const res = await api.getRegistrations();
         if (res.data && res.data.length > 0) {
-          supabaseData = res.data;
+          dbData = res.data;
         }
       } catch (err) {
         console.warn("Backend fetch failed", err);
@@ -271,13 +271,13 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
         }
       }
 
-      // Gabungkan (Merge) data dari Google Sheets dan Supabase
+      // Gabungkan (Merge) data dari Google Sheets dan PostgreSQL Database
       const mergedDataMap = new Map();
       sheetsData.forEach(item => {
         if (item.Timestamp) mergedDataMap.set(item.Timestamp, item);
       });
-      // Supabase menimpa Google Sheets (lebih prioritas)
-      supabaseData.forEach(item => {
+      // Data Database menimpa Google Sheets (lebih prioritas)
+      dbData.forEach(item => {
         if (item.Timestamp) mergedDataMap.set(item.Timestamp, item);
       });
 
@@ -356,7 +356,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
     } catch (err) {}
   };
 
-  // --- REVISI TOTAL: IMPLEMENTASI SEKUENSAL INPUT FULL CRUD KE SUPABASE ---
+  // --- IMPLEMENTASI SEKUENSAL INPUT FULL CRUD KE POSTGRESQL ---
   const handleSaveEdit = async (updatedItem: RegistrationData) => {
     if (userRole !== "superadmin") {
       alert("Akses ditolak: Hanya Superadmin yang bisa menyimpan perubahan.");
@@ -371,7 +371,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
 
     let finalKtpUrl = updatedItem["Foto KTP"] || "";
 
-    // Upload to Supabase Storage if the image is a base64 string
+    // Upload to Storage if the image is a base64 string
     if (finalKtpUrl && finalKtpUrl.startsWith("data:image/")) {
       try {
         const response = await fetch(finalKtpUrl);
@@ -398,8 +398,8 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
     setData(prev => isNewRecord ? [finalItem, ...prev] : prev.map(item => item.Timestamp === updatedItem.Timestamp ? finalItem : item));
 
     try {
-      // 2. Simpan atau Update ke Supabase
-      const supabaseRecord = {
+      // 2. Simpan atau Update ke Database PostgreSQL
+      const dbRecord = {
         "Timestamp": finalTimestamp,
         "Nama Lengkap": updatedItem["Nama Lengkap"] || "",
         "No HP / WA": updatedItem["No HP / WA"] || "",
@@ -421,7 +421,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
         "Waktu Survei": updatedItem["Waktu Survei"] || ""
       };
 
-      await api.insertRegistration(supabaseRecord);
+      await api.insertRegistration(dbRecord);
     } catch (err: any) {
       console.error("Gagal menyimpan ke Backend:", err);
       alert(`Gagal menyimpan ke database: ${err.message || "Unknown error"}`);
@@ -446,7 +446,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       params.append("status", updatedItem.status || "PENGAJUAN");
       if (updatedItem["Link Google Maps"]) params.append("Link Google Maps", updatedItem["Link Google Maps"]);
       
-      // PERBAIKAN PENTING: Gunakan finalKtpUrl (URL publik dari Supabase), bukan base64!
+      // PERBAIKAN PENTING: Gunakan finalKtpUrl (URL publik dari Backend), bukan base64!
       if (finalKtpUrl) params.append("Foto KTP", finalKtpUrl);
 
       fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: params }).catch(() => {});

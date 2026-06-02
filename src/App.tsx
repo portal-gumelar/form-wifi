@@ -1,11 +1,9 @@
-// Last update: 2026-05-18 22:40 - Restored Original Production Database URL
+// Last update: 2026-06-03 - Replaced Supabase with localStorage auth
 import React, { useState, useEffect } from "react";
 import { RegistrationForm } from "./pages/RegistrationForm";
 import { SuccessPage } from "./components/ui/SuccessPage";
 import { LoginPage } from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
-
-import { supabase } from "./utils/supabaseClient";
 
 // REVISI SOP: Mengembalikan ke URL Database Produksi Asli Anda yang Valid
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztG8z0ob1ULpzkYXIIbaV1PokdR_dO4qj7TSD0rnwz8qb77QlJNrUQM0DHwNwXFC_reQ/exec";
@@ -13,67 +11,26 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztG8z0ob1ULp
 export default function App() {
   const isDashboardPath = window.location.pathname.includes("/dashboard");
 
-  const [view, setView] = useState<"form" | "login" | "admin">(
-    isDashboardPath ? "login" : "form"
-  );
+  const [view, setView] = useState<"form" | "login" | "admin">("form");
   const [submitted, setSubmitted] = useState(false);
   const [lastReg, setLastReg] = useState({ name: "", desa: "" });
-  const [session, setSession] = useState<any>(null);
   const [userRole, setUserRole] = useState<string>("admin"); // default to read-only admin
 
-  // Monitor auth state changes in Supabase
+  // Initial Auth Check using localStorage
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        determineUserRole(session.user);
-        setView("admin");
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        determineUserRole(session.user);
-        setView("admin");
+    const savedRole = localStorage.getItem("armedia_admin_role");
+    
+    if (savedRole) {
+      setUserRole(savedRole);
+      setView("admin");
+    } else {
+      if (isDashboardPath) {
+        setView("login");
       } else {
-        setUserRole("admin");
-        if (window.location.pathname.includes("/dashboard")) {
-          setView("login");
-        } else {
-          setView("form");
-        }
+        setView("form");
       }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const determineUserRole = async (user: any) => {
-    if (!user) return;
-    
-    // Default fallback based on email pattern
-    let role = "admin";
-    if (user.email && (user.email === "superadmin@armedia.id" || user.email.startsWith("superadmin"))) {
-      role = "superadmin";
     }
-
-    try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single();
-        
-      if (data && data.role) {
-        role = data.role;
-      }
-    } catch (err) {
-      console.log("Gagal menanyakan user_roles, menggunakan email fallback:", err);
-    }
-    
-    setUserRole(role);
-  };
+  }, [isDashboardPath]);
 
   // Sinkronisasi URL Browser secara dinamis berdasarkan state aktif aplikasi
   useEffect(() => {
@@ -92,8 +49,9 @@ export default function App() {
     }
   }, [view]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    localStorage.removeItem("armedia_admin_role");
+    setUserRole("admin");
     setView("form");
     window.scrollTo(0, 0);
   };
@@ -118,7 +76,8 @@ export default function App() {
       <LoginPage
         onBack={() => setView("form")}
         onFallbackLogin={(email: string, role: string) => {
-          console.log("[App] Fallback login berhasil:", email, role);
+          console.log("[App] Login berhasil:", email, role);
+          localStorage.setItem("armedia_admin_role", role);
           setUserRole(role);
           setView("admin");
         }}

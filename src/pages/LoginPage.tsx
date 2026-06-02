@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import * as Lucide from "lucide-react";
 import { motion } from "framer-motion";
-import { supabase } from "../utils/supabaseClient";
 
 interface LoginPageProps {
   onBack: () => void;
   onFallbackLogin?: (email: string, role: string) => void;
 }
 
-// Fallback credentials saat Supabase Auth provider belum dikonfigurasi
+// Hardcoded credentials sementara
 const FALLBACK_CREDENTIALS = [
   { email: "admin@armedia.id",      password: "admin123",   role: "admin" },
   { email: "superadmin@armedia.id", password: "superadmin", role: "superadmin" },
@@ -28,33 +27,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBack, onFallbackLogin })
     setLoading(true);
 
     try {
-      // Coba Supabase Auth terlebih dahulu
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password,
-      });
-
-      if (!error) {
-        // Supabase Auth berhasil — App.tsx akan handle via onAuthStateChange
-        return;
-      }
-
-      // Fallback: cek credentials manual jika Supabase Auth gagal
-      // (misalnya Email provider belum dikonfigurasi di self-hosted)
       const trimmedEmail = email.trim().toLowerCase();
       const match = FALLBACK_CREDENTIALS.find(
         (c) => c.email === trimmedEmail && c.password === password
       );
 
       if (match) {
-        console.log("[Fallback Auth] Login berhasil untuk:", match.email, "role:", match.role);
+        console.log("[Auth] Login berhasil untuk:", match.email, "role:", match.role);
         if (onFallbackLogin) {
           onFallbackLogin(match.email, match.role);
         }
         return;
       }
 
-      // Keduanya gagal
       throw new Error("Email atau password tidak valid.");
     } catch (err: any) {
       console.error("Login failed:", err);
