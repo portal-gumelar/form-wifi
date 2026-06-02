@@ -457,37 +457,26 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
         <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
           <Lucide.Zap size={14} className="text-[#F47920] shrink-0" />
           <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Mbps:</span>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {["", "20", "30", "50", "75", "100"].map((mbps) => {
-              const pkgName = mbps === "" ? "" : `${mbps} Mbps`;
-              const isActive = mbps === "" ? filterPackage === null : filterPackage === pkgName;
-              
-              // find count from packageStats
-              let count = 0;
-              if (mbps !== "") {
+          <div className="relative">
+            <select
+              value={filterPackage ? filterPackage.split(' ')[0] : ""}
+              onChange={(e) => setFilterPackage(e.target.value === "" ? null : `${e.target.value} Mbps`)}
+              className="appearance-none bg-slate-50 border border-slate-200 text-slate-600 text-[10px] font-black rounded-xl px-3 py-1.5 pr-8 focus:outline-none focus:border-[#F47920] hover:border-[#F47920] transition-all cursor-pointer"
+            >
+              <option value="">Semua Mbps</option>
+              {["20", "30", "50", "75", "100"].map((mbps) => {
+                const pkgName = `${mbps} Mbps`;
+                let count = 0;
                 const found = packageStats.find(([name]) => name === pkgName);
                 if (found) count = found[1];
-              }
-
-              return (
-                <button
-                  key={mbps}
-                  onClick={() => setFilterPackage(mbps === "" ? null : pkgName)}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black transition-all border ${
-                    isActive
-                      ? "bg-[#F47920] text-white border-[#F47920]"
-                      : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#F47920]"
-                  }`}
-                >
-                  <span>{mbps === "" ? "Semua" : `${mbps} Mbps`}</span>
-                  {mbps !== "" && (
-                    <span className={`px-1 rounded text-[8px] font-black ${isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+                return (
+                  <option key={mbps} value={mbps}>
+                    {mbps} Mbps {count > 0 ? `(${count})` : ''}
+                  </option>
+                );
+              })}
+            </select>
+            <Lucide.ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
         </div>
 
@@ -495,30 +484,23 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
         <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
           <Lucide.MapPin size={14} className="text-[#0d1655] shrink-0" />
           <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Desa:</span>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {["", "GUMELAR", "CIHONJE", "TLAGA", "SAMUDRA", "SAMUDRA KULON", "CILANGKAP", "PANINGKABAN", "KARANG KEMOJING", "GANCANG", "KEDUNG URANG"].map((desa) => {
-              const isActive = desa === "" ? filterDesa === null : filterDesa === desa;
-              const count = desa === "" ? 0 : (villageStats[desa] || 0);
-
-              return (
-                <button
-                  key={desa}
-                  onClick={() => setFilterDesa(desa === "" ? null : desa)}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black transition-all border ${
-                    isActive
-                      ? "bg-[#0d1655] text-white border-[#0d1655]"
-                      : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#0d1655]"
-                  }`}
-                >
-                  <span>{desa === "" ? "Semua Desa" : desa}</span>
-                  {desa !== "" && count > 0 && (
-                    <span className={`px-1 rounded text-[8px] font-black ${isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+          <div className="relative">
+            <select
+              value={filterDesa || ""}
+              onChange={(e) => setFilterDesa(e.target.value === "" ? null : e.target.value)}
+              className="appearance-none bg-slate-50 border border-slate-200 text-slate-600 text-[10px] font-black rounded-xl px-3 py-1.5 pr-8 focus:outline-none focus:border-[#0d1655] hover:border-[#0d1655] transition-all cursor-pointer"
+            >
+              <option value="">Semua Desa</option>
+              {["GUMELAR", "CIHONJE", "TLAGA", "SAMUDRA", "SAMUDRA KULON", "CILANGKAP", "PANINGKABAN", "KARANG KEMOJING", "GANCANG", "KEDUNG URANG"].map((desa) => {
+                const count = villageStats[desa] || 0;
+                return (
+                  <option key={desa} value={desa}>
+                    {desa} {count > 0 ? `(${count})` : ''}
+                  </option>
+                );
+              })}
+            </select>
+            <Lucide.ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
         </div>
       </div>
