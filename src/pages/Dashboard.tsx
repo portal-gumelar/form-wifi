@@ -660,19 +660,20 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
               <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
                 <Lucide.Zap size={14} className="text-[#F47920] shrink-0" />
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Mbps:</span>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {["", "20", "30", "50", "75", "100"].map(mbps => (
-                    <button
-                      key={mbps}
-                      onClick={() => setFilterMbps(mbps)}
-                      className={`px-3 py-1 rounded-xl text-[10px] font-black transition-all border ${filterMbps === mbps
-                        ? "bg-[#F47920] text-white border-[#F47920]"
-                        : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#F47920]"
-                        }`}
-                    >
-                      {mbps === "" ? "Semua" : `${mbps} Mbps`}
-                    </button>
-                  ))}
+                <div className="relative">
+                  <select
+                    value={filterMbps}
+                    onChange={(e) => setFilterMbps(e.target.value)}
+                    className="appearance-none bg-slate-50 border border-slate-200 text-slate-600 text-[10px] font-black rounded-xl px-3 py-1.5 pr-8 focus:outline-none focus:border-[#F47920] hover:border-[#F47920] transition-all cursor-pointer"
+                  >
+                    <option value="">Semua Mbps</option>
+                    <option value="20">20 Mbps</option>
+                    <option value="30">30 Mbps</option>
+                    <option value="50">50 Mbps</option>
+                    <option value="75">75 Mbps</option>
+                    <option value="100">100 Mbps</option>
+                  </select>
+                  <Lucide.ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 </div>
               </div>
 
@@ -680,24 +681,25 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
               <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
                 <Lucide.MapPin size={14} className="text-[#0d1655] shrink-0" />
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Desa:</span>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {[
-                    "",
-                    "GUMELAR", "CIHONJE", "TLAGA", "SAMUDRA",
-                    "SAMUDRA KULON", "CILANGKAP", "PANINGKABAN",
-                    "KARANG KEMOJING", "GANCANG", "KEDUNG URANG"
-                  ].map(desa => (
-                    <button
-                      key={desa}
-                      onClick={() => setFilterDesa(desa)}
-                      className={`px-3 py-1 rounded-xl text-[10px] font-black transition-all border ${filterDesa === desa
-                        ? "bg-[#0d1655] text-white border-[#0d1655]"
-                        : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#0d1655]"
-                        }`}
-                    >
-                      {desa === "" ? "Semua Desa" : desa}
-                    </button>
-                  ))}
+                <div className="relative">
+                  <select
+                    value={filterDesa}
+                    onChange={(e) => setFilterDesa(e.target.value)}
+                    className="appearance-none bg-slate-50 border border-slate-200 text-slate-600 text-[10px] font-black rounded-xl px-3 py-1.5 pr-8 focus:outline-none focus:border-[#0d1655] hover:border-[#0d1655] transition-all cursor-pointer"
+                  >
+                    <option value="">Semua Desa</option>
+                    <option value="GUMELAR">GUMELAR</option>
+                    <option value="CIHONJE">CIHONJE</option>
+                    <option value="TLAGA">TLAGA</option>
+                    <option value="SAMUDRA">SAMUDRA</option>
+                    <option value="SAMUDRA KULON">SAMUDRA KULON</option>
+                    <option value="CILANGKAP">CILANGKAP</option>
+                    <option value="PANINGKABAN">PANINGKABAN</option>
+                    <option value="KARANG KEMOJING">KARANG KEMOJING</option>
+                    <option value="GANCANG">GANCANG</option>
+                    <option value="KEDUNG URANG">KEDUNG URANG</option>
+                  </select>
+                  <Lucide.ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 </div>
               </div>
             </div>
