@@ -477,15 +477,57 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
     if (!file) return;
 
     setIsUploadingKtp(true);
-    try {
-      const publicUrl = await api.uploadKtp(file, file.name);
-      setFormData(prev => prev ? ({ ...prev, "Foto KTP": publicUrl }) : null);
-    } catch (err) {
-      console.error(err);
-      alert("Gagal mengunggah foto KTP.");
-    } finally {
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const img = new globalThis.Image();
+      img.onload = async () => {
+        const TARGET_W = 600;
+        const TARGET_H = 380;
+        const TARGET_RATIO = TARGET_W / TARGET_H;
+
+        const srcRatio = img.width / img.height;
+        let srcX = 0, srcY = 0, srcW = img.width, srcH = img.height;
+        if (srcRatio > TARGET_RATIO) {
+          srcW = img.height * TARGET_RATIO;
+          srcX = (img.width - srcW) / 2;
+        } else {
+          srcH = img.width / TARGET_RATIO;
+          srcY = (img.height - srcH) / 2;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = TARGET_W;
+        canvas.height = TARGET_H;
+        const ctx = canvas.getContext('2d')!;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, TARGET_W, TARGET_H);
+        ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, TARGET_W, TARGET_H);
+
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+
+        try {
+          const response = await fetch(compressedBase64);
+          const blob = await response.blob();
+          const fileName = `KTP_Update_${Date.now()}.jpg`;
+          const publicUrl = await api.uploadKtp(blob, fileName);
+          
+          setFormData(prev => prev ? ({ ...prev, "Foto KTP": publicUrl }) : null);
+        } catch (err) {
+          console.error(err);
+          alert("Gagal mengunggah foto KTP. Coba gunakan foto yang lebih kecil atau pastikan koneksi stabil.");
+        } finally {
+          setIsUploadingKtp(false);
+        }
+      };
+      img.src = evt.target?.result as string;
+    };
+    reader.onerror = () => {
+      alert("Gagal membaca file foto.");
       setIsUploadingKtp(false);
-    }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleChange = (field: keyof RegistrationData, value: string) => {
