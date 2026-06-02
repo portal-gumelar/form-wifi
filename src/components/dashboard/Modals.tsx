@@ -465,6 +465,12 @@ const StatusPillButtons = ({ value, onChange }: { value: string; onChange: (val:
 export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMode, onClose, onSave }) => {
   const [formData, setFormData] = useState<RegistrationData | null>(null);
   const [isUploadingKtp, setIsUploadingKtp] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   useEffect(() => {
     if (item) setFormData({ ...item });
@@ -514,9 +520,10 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
           const publicUrl = await api.uploadKtp(blob, fileName);
           
           setFormData(prev => prev ? ({ ...prev, "Foto KTP": publicUrl }) : null);
+          showToast("success", "Foto KTP berhasil diunggah!");
         } catch (err) {
           console.error(err);
-          alert("Gagal mengunggah foto KTP. Coba gunakan foto yang lebih kecil atau pastikan koneksi stabil.");
+          showToast("error", "Gagal mengunggah foto KTP. Coba gunakan foto yang lebih kecil atau pastikan koneksi stabil.");
         } finally {
           setIsUploadingKtp(false);
         }
@@ -524,7 +531,7 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
       img.src = evt.target?.result as string;
     };
     reader.onerror = () => {
-      alert("Gagal membaca file foto.");
+      showToast("error", "Gagal membaca file foto.");
       setIsUploadingKtp(false);
     };
     reader.readAsDataURL(file);
@@ -537,10 +544,33 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-[#0d1655]/85 backdrop-blur-md">
+        {/* Toast Notification */}
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className={`absolute top-6 left-1/2 -translate-x-1/2 z-[510] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-xl border backdrop-blur-lg ${
+                toast.type === 'success' 
+                  ? 'bg-emerald-500/90 border-emerald-400 text-white' 
+                  : 'bg-red-500/90 border-red-400 text-white'
+              }`}
+            >
+              {toast.type === 'success' ? (
+                <Lucide.CheckCircle className="w-5 h-5 text-emerald-100" />
+              ) : (
+                <Lucide.AlertCircle className="w-5 h-5 text-red-100" />
+              )}
+              <span className="font-semibold text-sm tracking-wide">{toast.message}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <motion.div
-          initial={{ y: "100%" }}
-          animate={{ y: 0 }}
-          exit={{ y: "100%" }}
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
           className={`${isDarkMode ? 'bg-[#1e293b] border-slate-800 text-white' : 'bg-white border-slate-100 text-slate-800'} 
             w-full sm:max-w-3xl max-h-[95vh] sm:max-h-[90vh] rounded-t-3xl sm:rounded-[2rem] 

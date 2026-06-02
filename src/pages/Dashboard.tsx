@@ -139,6 +139,12 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedReg, setSelectedReg] = useState<RegistrationData | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 4000);
+  };
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [filterPaket, setFilterPaket] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -311,60 +317,58 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
 
   const handleUpdateStatus = async (timestamp: string, newStatus: string) => {
     if (userRole !== "superadmin") {
-      alert("Akses ditolak: Hanya Superadmin yang bisa mengubah status.");
+      showToast("error", "Akses ditolak: Hanya Superadmin yang bisa mengubah status.");
       return;
     }
     // 1. Update UI Lokal secara Instan
-    setData(prev => prev.map(item => item.Timestamp === timestamp ? { ...item, status: newStatus } : item));
-
-    // 2. Simpan di database Backend
+    // Find the item to check its "Tanggal Aktif"
+    const item = data.find(r => r.Timestamp === timestamp);
+    const finalTanggalAktif = newStatus === "AKTIF" ? new Date().toLocaleDateString("id-ID") : (item ? item["Tanggal Aktif"] : "");
+    
     try {
+      setData(prev => prev.map(r => r.Timestamp === timestamp ? { ...r, status: newStatus, "Tanggal Aktif": finalTanggalAktif } : r));
       await api.updateStatus(timestamp, newStatus);
-    } catch (err) {
-      console.error("Gagal memperbarui status ke Backend:", err);
-    }
-
-    // 3. Backup asinkron ke Google Sheets
-    try {
+      showToast("success", "Status berhasil diubah!");
+      
+      // Backup asinkron
       const params = new URLSearchParams();
       params.append("action", "update");
       params.append("Timestamp", timestamp);
       params.append("status", newStatus);
       fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: params }).catch(() => {});
-    } catch (err) {}
+    } catch (err) {
+      console.error(err);
+      showToast("error", "Gagal mengubah status di database.");
+    }
   };
 
   const handleDelete = async (timestamp: string) => {
     if (userRole !== "superadmin") {
-      alert("Akses ditolak: Hanya Superadmin yang bisa menghapus data.");
+      showToast("error", "Akses ditolak: Hanya Superadmin yang bisa menghapus data.");
+      setConfirmDelete(null);
       return;
     }
-    setConfirmDelete(null);
-    // 1. Update UI Lokal
-    setData(prev => prev.filter(item => item.Timestamp !== timestamp));
-
-    // 2. Hapus di database Backend
     try {
+      setData(prev => prev.filter(r => r.Timestamp !== timestamp));
       await api.deleteRegistration(timestamp);
-    } catch (err) {
-      console.error("Gagal menghapus dari Backend:", err);
-    }
-
-    // 3. Backup asinkron ke Google Sheets
-    try {
+      setConfirmDelete(null);
+      showToast("success", "Data berhasil dihapus!");
+      
+      // Backup asinkron
       fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: new URLSearchParams({ action: "delete", timestamp }) }).catch(() => {});
-    } catch (err) {}
+    } catch (err) {
+      console.error(err);
+      showToast("error", "Terjadi kesalahan saat menghapus data.");
+    }
   };
 
   // --- IMPLEMENTASI SEKUENSAL INPUT FULL CRUD KE POSTGRESQL ---
   const handleSaveEdit = async (updatedItem: RegistrationData) => {
     if (userRole !== "superadmin") {
-      alert("Akses ditolak: Hanya Superadmin yang bisa menyimpan perubahan.");
+      showToast("error", "Akses ditolak: Hanya Superadmin yang bisa menyimpan perubahan.");
       return;
     }
-    setEditingReg(null);
-    setIsAddingNew(false);
-
+    
     // Penanda unik (Primary Key) riil untuk record baru
     const isNewRecord = !updatedItem.Timestamp || updatedItem.Timestamp.includes("baru") || !data.some(d => d.Timestamp === updatedItem.Timestamp);
     const finalTimestamp = isNewRecord ? new Date().toLocaleString("id-ID") : updatedItem.Timestamp;
@@ -422,9 +426,13 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       };
 
       await api.insertRegistration(dbRecord);
-    } catch (err: any) {
-      console.error("Gagal menyimpan ke Backend:", err);
-      alert(`Gagal menyimpan ke database: ${err.message || "Unknown error"}`);
+      
+      setEditingReg(null);
+      setIsAddingNew(false);
+      showToast("success", "Data pendaftaran berhasil disimpan!");
+    } catch (err) {
+      console.error(err);
+      showToast("error", "Gagal menyimpan ke database.");
     }
 
     try {
@@ -517,10 +525,32 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
     </div>
   );
 
-  return (
-    <div className="min-h-screen bg-slate-50 flex overflow-hidden font-sans text-slate-800">
+  return <div className={`flex h-screen ${isDarkMode ? 'bg-[#0f172a] text-white' : 'bg-slate-50 text-slate-800'}`}>
+        
+        {/* Toast Notification */}
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className={`fixed top-6 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-xl border backdrop-blur-lg ${
+                toast.type === 'success' 
+                  ? 'bg-emerald-500/90 border-emerald-400 text-white' 
+                  : 'bg-red-500/90 border-red-400 text-white'
+              }`}
+            >
+              {toast.type === 'success' ? (
+                <Lucide.CheckCircle className="w-5 h-5 text-emerald-100" />
+              ) : (
+                <Lucide.AlertCircle className="w-5 h-5 text-red-100" />
+              )}
+              <span className="font-semibold text-sm tracking-wide">{toast.message}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Sidebar - Tersembunyi di HP, Aktif di Laptop */}
+        {/* --- Sidebar Desktop --- */}
       <div className="hidden md:block">
         <Sidebar
           activeTab={activeTab}
