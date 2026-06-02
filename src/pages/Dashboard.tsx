@@ -525,7 +525,8 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
     </div>
   );
 
-  return <div className={`flex h-screen ${isDarkMode ? 'bg-[#0f172a] text-white' : 'bg-slate-50 text-slate-800'}`}>
+  return (
+    <div className={`flex h-screen ${isDarkMode ? 'bg-[#0f172a] text-white' : 'bg-slate-50 text-slate-800'}`}>
         
         {/* Toast Notification */}
         <AnimatePresence>
