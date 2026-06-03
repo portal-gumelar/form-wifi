@@ -9,7 +9,7 @@ interface PackageSelectionProps {
 }
 
 export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPackage, onSelect }) => {
-  const [gadgetCount, setGadgetCount] = useState<number>(2);
+  const [gadgetCount, setGadgetCount] = useState<number>(0);
   const [hasTv, setHasTv] = useState<boolean>(false);
   const [tvSize, setTvSize] = useState<string>("32");
   const [hasLive, setHasLive] = useState<boolean>(false);
