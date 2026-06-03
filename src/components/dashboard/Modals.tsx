@@ -5,6 +5,7 @@ import * as Lucide from "lucide-react";
 import { RegistrationData } from "../../types";
 import { getCustomerNo, calculateProRata } from "../../utils/dashboardUtils";
 import { api } from "../../utils/apiClient";
+import { DESA_RW_RT, VILLAGES } from "../../constants/villages";
 
 interface PDFPreviewModalProps {
   url: string | null;
@@ -674,15 +675,66 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Desa</label>
-                  <input type="text" value={formData.desa || ""} onChange={e => handleChange("desa", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" />
+                  <select 
+                    value={formData.desa || ""} 
+                    onChange={e => {
+                      handleChange("desa", e.target.value);
+                      handleChange("rw", "");
+                      handleChange("rt", "");
+                    }} 
+                    className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] appearance-none"
+                  >
+                    <option value="" disabled>-- Pilih Desa --</option>
+                    {VILLAGES.map(v => (
+                      <option key={v} value={v}>{v}</option>
+                    ))}
+                    {!VILLAGES.includes(formData.desa || "") && formData.desa && (
+                      <option value={formData.desa}>{formData.desa}</option>
+                    )}
+                  </select>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">RW</label>
-                  <input type="text" value={formData.rw || ""} onChange={e => handleChange("rw", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0d1655] placeholder:text-slate-400" placeholder="Contoh: RW 01" />
+                  {formData.desa && DESA_RW_RT[formData.desa] ? (
+                    <select 
+                      value={formData.rw || ""} 
+                      onChange={e => {
+                        handleChange("rw", e.target.value);
+                        handleChange("rt", "");
+                      }} 
+                      className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0d1655] appearance-none"
+                    >
+                      <option value="" disabled>-- Pilih RW --</option>
+                      {Object.keys(DESA_RW_RT[formData.desa]).map(rw => (
+                        <option key={rw} value={rw}>{rw}</option>
+                      ))}
+                      {!Object.keys(DESA_RW_RT[formData.desa]).includes(formData.rw || "") && formData.rw && (
+                        <option value={formData.rw}>{formData.rw}</option>
+                      )}
+                    </select>
+                  ) : (
+                    <input type="text" value={formData.rw || ""} onChange={e => handleChange("rw", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0d1655] placeholder:text-slate-400" placeholder="Contoh: RW 01" />
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">RT</label>
-                  <input type="text" value={formData.rt || ""} onChange={e => handleChange("rt", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: RT 01" />
+                  {formData.desa && formData.rw && DESA_RW_RT[formData.desa] && DESA_RW_RT[formData.desa][formData.rw] ? (
+                    <select 
+                      value={formData.rt || ""} 
+                      onChange={e => handleChange("rt", e.target.value)} 
+                      className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] appearance-none"
+                    >
+                      <option value="" disabled>-- Pilih RT --</option>
+                      {DESA_RW_RT[formData.desa][formData.rw].map(rt => (
+                        <option key={rt} value={rt}>{rt}</option>
+                      ))}
+                      {!DESA_RW_RT[formData.desa][formData.rw].includes(formData.rt || "") && formData.rt && (
+                        <option value={formData.rt}>{formData.rt}</option>
+                      )}
+                    </select>
+                  ) : (
+                    <input type="text" value={formData.rt || ""} onChange={e => handleChange("rt", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: RT 01" />
+                  )}
                 </div>
                 <div className="sm:col-span-4 space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Link Koordinat GPS (Google Maps)</label>

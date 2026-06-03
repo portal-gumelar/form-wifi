@@ -8,18 +8,7 @@ export interface ParsedKTP {
   kecamatan?: string;
 }
 
-const VILLAGES = [
-  "GUMELAR",
-  "CIHONJE",
-  "TLAGA",
-  "SAMUDRA KULON",
-  "SAMUDRA",
-  "CILANGKAP",
-  "PANINGKABAN",
-  "KARANG KEMOJING",
-  "GANCANG",
-  "KEDUNG URANG"
-];
+import { VILLAGES } from "../constants/villages";
 
 const formatToTwoDigits = (numStr: string): string => {
   const clean = numStr.replace(/\D/g, "");
