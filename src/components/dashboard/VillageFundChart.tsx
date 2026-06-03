@@ -36,9 +36,9 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
       // Safeguard: pastikan item ada
       if (!item) return;
       
-      const desa = String(item.Desa || "GUMELAR").toUpperCase();
-      const rw = String(item.RW || "RW 00");
-      const rt = String(item.RT || "RT 00");
+      const desa = String(item.desa || "GUMELAR").toUpperCase();
+      const rw = String(item.rw || "RW 00");
+      const rt = String(item.rt || "RT 00");
       
       if (!fundMap.has(desa)) {
         fundMap.set(desa, { count: 0, rws: new Map() });
@@ -50,7 +50,7 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
         villageData.rws.set(rw, { rt: new Set(), customers: [] });
       }
       villageData.rws.get(rw)!.rt.add(rt);
-      villageData.rws.get(rw)!.customers.push(String(item["Nama Lengkap"] || ""));
+      villageData.rws.get(rw)!.customers.push(String(item.nama_lengkap || ""));
     });
     
     return fundMap;
@@ -84,9 +84,9 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
     
     activeData.forEach(item => {
       if (!item) return;
-      const desa = String(item.Desa || "GUMELAR").toUpperCase();
-      const rw = String(item.RW || "RW 00");
-      const rt = String(item.RT || "RT 00");
+      const desa = String(item.desa || "GUMELAR").toUpperCase();
+      const rw = String(item.rw || "RW 00");
+      const rt = String(item.rt || "RT 00");
       
       if (!rtMap.has(desa)) {
         rtMap.set(desa, new Map());
@@ -103,7 +103,7 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
       }
       const rtData = rwMap.get(rt)!;
       rtData.count++;
-      rtData.names.push(String(item["Nama Lengkap"] || ""));
+      rtData.names.push(String(item.nama_lengkap || ""));
     });
     
     return rtMap;
@@ -200,7 +200,7 @@ export const VillageFundChart: React.FC<VillageFundChartProps> = ({ data, isDark
     });
     
     // Create CSV content
-    const headers = ["Desa", "RW", "RT", "Nama Pelanggan", "Jumlah Pelanggan", "Dana (Rp)"];
+    const headers = ["desa", "rw", "rt", "Nama Pelanggan", "Jumlah Pelanggan", "Dana (Rp)"];
     
     // Download
     const csvContent = [

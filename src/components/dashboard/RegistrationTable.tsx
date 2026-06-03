@@ -118,11 +118,11 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(item => 
-        String(item["Nama Lengkap"] || "").toLowerCase().includes(query) ||
-        String(item["Alamat Pemasangan"] || "").toLowerCase().includes(query) ||
-        String(item["No HP / WA"] || "").toLowerCase().includes(query) ||
-        String(item.Desa || "").toLowerCase().includes(query) ||
-        String(item.Paket || "").toLowerCase().includes(query)
+        String(item.nama_lengkap || "").toLowerCase().includes(query) ||
+        String(item.alamat_pemasangan || "").toLowerCase().includes(query) ||
+        String(item.no_hp_wa || "").toLowerCase().includes(query) ||
+        String(item.desa || "").toLowerCase().includes(query) ||
+        String(item.paket || "").toLowerCase().includes(query)
       );
     }
     if (statusFilter !== "ALL") {
@@ -154,7 +154,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
     proses: data.filter(d => d.status === 'PROSES').length,
     survey: data.filter(d => d.status === 'SURVEY').length,
     belumAktif: data.filter(d => d.status === 'NON AKTIF' || d.status === 'BERHENTI BERLANGGANAN').length,
-    ktp: data.filter(d => d["Foto KTP"]).length
+    ktp: data.filter(d => d.foto_ktp).length
   }), [data]);
 
   const getDaysAgo = (timestamp: string) => {
@@ -170,16 +170,16 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
   };
 
   const exportToCSV = () => {
-    const headers = ["NIK", "Nama Lengkap", "Alamat", "Desa", "No HP", "Paket", "Status", "Timestamp"];
+    const headers = ["nik", "nama_lengkap", "Alamat", "desa", "No HP", "paket", "Status", "timestamp"];
     const rows = sortedData.map(item => [
-      item.NIK || "",
-      item["Nama Lengkap"] || "",
-      item["Alamat Pemasangan"] || "",
-      item.Desa || "",
-      item["No HP / WA"] || "",
-      item.Paket || "",
+      item.nik || "",
+      item.nama_lengkap || "",
+      item.alamat_pemasangan || "",
+      item.desa || "",
+      item.no_hp_wa || "",
+      item.paket || "",
       item.status || "",
-      item.Timestamp || ""
+      item.timestamp || ""
     ]);
     const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -201,7 +201,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
     if (selectedRows.size === paginatedData.length) {
       setSelectedRows(new Set());
     } else {
-      setSelectedRows(new Set(paginatedData.map(item => item.Timestamp)));
+      setSelectedRows(new Set(paginatedData.map(item => item.timestamp)));
     }
   };
 
@@ -254,13 +254,13 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                   <td className="px-4 sm:px-6 py-3.5">
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center font-black text-[#0d1655] text-xs shrink-0 border border-slate-200">
-                        {String(item["Nama Lengkap"] || "U").charAt(0).toUpperCase()}
+                        {String(item.nama_lengkap || "U").charAt(0).toUpperCase()}
                       </div>
-                      <p className="font-bold text-slate-800 text-xs truncate max-w-[120px]">{item["Nama Lengkap"]}</p>
+                      <p className="font-bold text-slate-800 text-xs truncate max-w-[120px]">{item.nama_lengkap}</p>
                     </div>
                   </td>
                   <td className="px-4 sm:px-6 py-3.5 text-center">
-                    <StatusDropdown currentStatus={item.status || "PENGAJUAN"} onSelect={(newStatus) => onUpdateStatus(item.Timestamp, newStatus)} disabled={userRole !== "superadmin"} />
+                    <StatusDropdown currentStatus={item.status || "PENGAJUAN"} onSelect={(newStatus) => onUpdateStatus(item.timestamp, newStatus)} disabled={userRole !== "superadmin"} />
                   </td>
                   <td className="px-4 sm:px-6 py-3.5 text-right">
                     <button onClick={() => onViewDetails(item)} className="p-2 rounded-xl text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all border border-blue-100">
@@ -391,37 +391,37 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                 };
                 
                 return (
-                <tr key={idx} className={`transition-colors ${selectedRows.has(item.Timestamp) ? 'bg-emerald-50/60' : getRowBg(item.status || '')}`}>
+                <tr key={idx} className={`transition-colors ${selectedRows.has(item.timestamp) ? 'bg-emerald-50/60' : getRowBg(item.status || '')}`}>
                   {userRole === "superadmin" && (
                     <td className="px-3 sm:px-4 py-3.5">
-                      <input type="checkbox" checked={selectedRows.has(item.Timestamp)} onChange={() => toggleSelectRow(item.Timestamp)} className="w-4 h-4 rounded border-slate-300 text-[#0d1655]" />
+                      <input type="checkbox" checked={selectedRows.has(item.timestamp)} onChange={() => toggleSelectRow(item.timestamp)} className="w-4 h-4 rounded border-slate-300 text-[#0d1655]" />
                     </td>
                   )}
                   <td className="px-4 sm:px-6 py-3.5">
                     <div className="flex items-center gap-2.5 sm:gap-3">
                       <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-100 flex items-center justify-center font-black text-[#0d1655] text-xs sm:text-sm shrink-0 border border-slate-200 shadow-sm">
-                        {String(item["Nama Lengkap"] || "U").charAt(0).toUpperCase()}
+                        {String(item.nama_lengkap || "U").charAt(0).toUpperCase()}
                       </div>
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2">
-                          <button onClick={() => onViewDetails(item)} className="font-black text-slate-800 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[160px] hover:text-[#F47920] transition-colors text-left">{item["Nama Lengkap"]}</button>
-                          {item["Foto KTP"] ? (
+                          <button onClick={() => onViewDetails(item)} className="font-black text-slate-800 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[160px] hover:text-[#F47920] transition-colors text-left">{item.nama_lengkap}</button>
+                          {item.foto_ktp ? (
                             <span className="bg-emerald-50 text-emerald-700 text-[8px] font-black border border-emerald-200/60 px-1.5 py-0.5 rounded-md uppercase tracking-widest shrink-0 scale-95 shadow-sm">KTP</span>
                           ) : (
                             <span className="bg-slate-50 text-slate-400 text-[8px] font-black border border-slate-200/60 px-1.5 py-0.5 rounded-md uppercase tracking-widest shrink-0 scale-95">No KTP</span>
                           )}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <p className="text-[10px] text-slate-400 font-bold">ID: #{getCustomerNo(item.Timestamp).split('-')[1] || "00"}</p>
+                          <p className="text-[10px] text-slate-400 font-bold">ID: #{getCustomerNo(item.timestamp).split('-')[1] || "00"}</p>
                           <span className="text-slate-300">•</span>
                           <p className="text-[10px] text-orange-500 font-black tracking-wide bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100 flex items-center gap-1">
-                            <Lucide.Clock size={10} /> {getDaysAgo(item.Timestamp)}
+                            <Lucide.Clock size={10} /> {getDaysAgo(item.timestamp)}
                           </p>
                         </div>
                         {/* Mobile Address - Hidden on Desktop */}
                         <div className="md:hidden mt-1">
                           <p className="text-[10px] text-slate-500 truncate max-w-[140px] leading-tight">
-                            {String(item["Alamat Pemasangan"] || "")}
+                            {String(item.alamat_pemasangan || "")}
                           </p>
                         </div>
                       </div>
@@ -429,7 +429,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                   </td>
                   <td className="px-4 sm:px-6 py-3.5 hidden md:table-cell">
                     {(() => {
-                      const address = String(item["Alamat Pemasangan"] || "");
+                      const address = String(item.alamat_pemasangan || "");
                       const lowerAddr = address.toLowerCase();
                       let colorConfig = { color: "text-blue-600", bg: "bg-blue-50 border-blue-100" };
                       const keywords: Record<string, { color: string; bg: string }> = {
@@ -446,10 +446,10 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                       return (
                         <div className={`inline-block px-2.5 py-1 rounded-lg border ${colorConfig.bg} max-w-[160px] sm:max-w-[240px]`}>
                           <p className={`text-[11px] font-black truncate ${colorConfig.color}`}>{address}</p>
-                          {(item.RW || item.RT) && (
+                          {(item.rw || item.rt) && (
                             <div className="flex gap-1 mt-0.5">
-                              {item.RW && <span className="text-[9px] font-black bg-[#0d1655] text-white px-1.5 py-0.5 rounded">{item.RW}</span>}
-                              {item.RT && <span className="text-[9px] font-black bg-[#F47920] text-white px-1.5 py-0.5 rounded">{item.RT}</span>}
+                              {item.rw && <span className="text-[9px] font-black bg-[#0d1655] text-white px-1.5 py-0.5 rounded">{item.rw}</span>}
+                              {item.rt && <span className="text-[9px] font-black bg-[#F47920] text-white px-1.5 py-0.5 rounded">{item.rt}</span>}
                             </div>
                           )}
                         </div>
@@ -459,17 +459,17 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                   <td className="px-4 sm:px-6 py-3.5 text-center">
                     <StatusDropdown 
                       currentStatus={item.status || "PENGAJUAN"} 
-                      onSelect={(newStatus) => onUpdateStatus(item.Timestamp, newStatus)} 
+                      onSelect={(newStatus) => onUpdateStatus(item.timestamp, newStatus)} 
                       allowedStatuses={allowedStatuses}
                       disabled={userRole !== "superadmin"}
                     />
-                    {item.status === "AKTIF" && item["Tanggal Aktif"] && !isNaN(new Date(item["Tanggal Aktif"]).getTime()) && (
+                    {item.status === "AKTIF" && item.tanggal_aktif && !isNaN(new Date(item.tanggal_aktif).getTime()) && (
                       <div className="mt-2 flex flex-col gap-1 items-start">
                         <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-emerald-100 bg-emerald-50 text-[9px] font-bold text-emerald-600">
-                          <Lucide.Power size={10} /> Aktif: {new Date(item["Tanggal Aktif"]).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          <Lucide.Power size={10} /> Aktif: {new Date(item.tanggal_aktif).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </div>
                         <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-rose-100 bg-rose-50 text-[9px] font-bold text-rose-600">
-                          <Lucide.CalendarDays size={10} /> Jatuh Tempo: Tgl {new Date(item["Tanggal Aktif"]).getDate()} tiap bln
+                          <Lucide.CalendarDays size={10} /> Jatuh Tempo: Tgl {new Date(item.tanggal_aktif).getDate()} tiap bln
                         </div>
                       </div>
                     )}
@@ -492,7 +492,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                       </button>
                       {/* Tombol Hapus */}
                       {userRole === "superadmin" && (
-                        <button onClick={() => onDelete(item.Timestamp)} className="p-2 rounded-xl text-rose-600 bg-rose-50 hover:bg-rose-100 transition-all border border-rose-100" title="Hapus">
+                        <button onClick={() => onDelete(item.timestamp)} className="p-2 rounded-xl text-rose-600 bg-rose-50 hover:bg-rose-100 transition-all border border-rose-100" title="Hapus">
                           <Lucide.Trash2 size={14} strokeWidth={2.5} />
                         </button>
                       )}
@@ -546,7 +546,7 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
                   <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400"><Lucide.MessageCircle size={20} strokeWidth={2.5} /></div>
                   <div>
                     <h3 className="font-black text-xs uppercase tracking-widest">WhatsApp Template</h3>
-                    <p className="text-[10px] text-slate-300 font-bold mt-0.5">Kirim ke {selectedWaCustomer["Nama Lengkap"]}</p>
+                    <p className="text-[10px] text-slate-300 font-bold mt-0.5">Kirim ke {selectedWaCustomer.nama_lengkap}</p>
                   </div>
                 </div>
                 <button onClick={() => setSelectedWaCustomer(null)} className="p-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all"><Lucide.X size={16} /></button>
@@ -554,16 +554,16 @@ export const RegistrationTable: React.FC<RegistrationTableProps> = ({
               <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
                 <div className="space-y-3">
                   {[
-                    { title: "1. Jadwal Survei", message: `*ARMEDIA.ID - SURVEI* 📍\n\nHalo Kak *${selectedWaCustomer["Nama Lengkap"]}*,\n\nTerima kasih telah mendaftar ARMEDIA.ID. Tim kami akan survei di *${selectedWaCustomer["Alamat Pemasangan"] || "-"}*.\n\nMohon informasi jadwal terbaik untuk survei.` },
-                    { title: "2. Jadwal Instalasi", message: `*ARMEDIA.ID - INSTALASI* 🔌\n\nHalo Kak *${selectedWaCustomer["Nama Lengkap"]}*,\n\nPendaftaran disetujui! Tim teknisi akan melakukan instalasi di alamat Anda. Mohon kesiapan saat jadwal yang ditentukan.` },
-                    { title: "3. Aktivasi & Billing", message: `*ARMEDIA.ID - AKTIF* 💳\n\nHalo Kak *${selectedWaCustomer["Nama Lengkap"]}*,\n\nInternet Anda sudah AKTIF di *${selectedWaCustomer["Alamat Pemasangan"] || "-"}*!\n📦 Paket: ${selectedWaCustomer.Paket || "-"}\n\nSelamat menikmati internet unlimited!` }
+                    { title: "1. Jadwal Survei", message: `*ARMEDIA.ID - SURVEI* 📍\n\nHalo Kak *${selectedWaCustomer.nama_lengkap}*,\n\nTerima kasih telah mendaftar ARMEDIA.ID. Tim kami akan survei di *${selectedWaCustomer.alamat_pemasangan || "-"}*.\n\nMohon informasi jadwal terbaik untuk survei.` },
+                    { title: "2. Jadwal Instalasi", message: `*ARMEDIA.ID - INSTALASI* 🔌\n\nHalo Kak *${selectedWaCustomer.nama_lengkap}*,\n\nPendaftaran disetujui! Tim teknisi akan melakukan instalasi di alamat Anda. Mohon kesiapan saat jadwal yang ditentukan.` },
+                    { title: "3. Aktivasi & Billing", message: `*ARMEDIA.ID - AKTIF* 💳\n\nHalo Kak *${selectedWaCustomer.nama_lengkap}*,\n\nInternet Anda sudah AKTIF di *${selectedWaCustomer.alamat_pemasangan || "-"}*!\n📦 paket: ${selectedWaCustomer.paket || "-"}\n\nSelamat menikmati internet unlimited!` }
                   ].map((tpl, i) => (
                     <div key={i} className="p-4 bg-white border border-slate-100 hover:border-emerald-500 rounded-2xl transition-all shadow-sm">
                       <h4 className="text-xs font-black text-[#0d1655] uppercase tracking-wider mb-2">{tpl.title}</h4>
                       <p className="text-[10px] text-slate-500 font-bold mb-3 line-clamp-2">{tpl.message}</p>
                       <button 
                         onClick={() => {
-                          const phone = String(selectedWaCustomer["No HP / WA"] || "");
+                          const phone = String(selectedWaCustomer.no_hp_wa || "");
                           const clean = String(phone).replace(/\D/g, "");
                           const waPhone = clean.startsWith("0") ? "62" + clean.slice(1) : clean;
                           window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(tpl.message)}`, "_blank");

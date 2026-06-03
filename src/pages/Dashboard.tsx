@@ -98,24 +98,24 @@ const CustomPaketDropdown = ({ value, onChange, options }: { value: string, onCh
 
 // --- Normalisasi Field dari Google Sheets (di luar komponen agar selalu tersedia) ---
 const normalizeRow = (row: any): RegistrationData => ({
-  Timestamp: String(row.Timestamp || ""),
-  NIK: String(row.NIK || ""),
-  "Nama Lengkap": String(row["Nama Lengkap"] || ""),
-  "No HP / WA": String(row["No HP / WA"] || ""),
-  Paket: String(row.Paket || ""),
-  "Alamat Pemasangan": String(row["Alamat Pemasangan"] || row["alamat pemasangan"] || ""),
-  "Provider Saat Ini": String(row["Provider Saat Ini"] || ""),
-  "Sumber Info": String(row["Sumber Info"] || ""),
-  Kecamatan: String(row.Kecamatan || row.kecamatan || "GUMELAR"),
-  Desa: String(row.Desa || row.desa || ""),
-  RW: String(row.RW || row.rw || ""),
-  RT: String(row.RT || row.rt || ""),
-  "Tanggal Rencana Pasang": String(row["Tanggal Rencana Pasang"] || ""),
-  "Link Google Maps": String(row["Link Google Maps"] || ""),
+  timestamp: String(row.timestamp || ""),
+  nik: String(row.nik || ""),
+  nama_lengkap: String(row.nama_lengkap || ""),
+  no_hp_wa: String(row.no_hp_wa || ""),
+  paket: String(row.paket || ""),
+  alamat_pemasangan: String(row.alamat_pemasangan || row["alamat pemasangan"] || ""),
+  provider_saat_ini: String(row.provider_saat_ini || ""),
+  sumber_info: String(row.sumber_info || ""),
+  kecamatan: String(row.kecamatan || row.kecamatan || "GUMELAR"),
+  desa: String(row.desa || row.desa || ""),
+  rw: String(row.rw || row.rw || ""),
+  rt: String(row.rt || row.rt || ""),
+  tanggal_rencana_pasang: String(row.tanggal_rencana_pasang || ""),
+  link_google_maps: String(row.link_google_maps || ""),
   status: String(row.status || row.Status || "PENGAJUAN"),
-  "Foto KTP": String(row["Foto KTP"] || row.fotoKtp || ""),
-  "Persetujuan S&K": String(row["Persetujuan S&K"] || row.persetujuanSnk || ""),
-  "Catatan": String(row.Catatan || row.catatan || ""),
+  foto_ktp: String(row.foto_ktp || row.fotoKtp || ""),
+  persetujuan_sk: String(row.persetujuan_sk || row.persetujuanSnk || ""),
+  catatan: String(row.catatan || row.catatan || ""),
 });
 
 // --- Helper: Extract price from Paket string ---
@@ -209,14 +209,14 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
 
       const mergedDataMap = new Map();
       sheetsData.forEach(item => {
-        if (item.Timestamp) mergedDataMap.set(item.Timestamp, item);
+        if (item.timestamp) mergedDataMap.set(item.timestamp, item);
       });
       dbData.forEach(item => {
-        if (item.Timestamp) mergedDataMap.set(item.Timestamp, item);
+        if (item.timestamp) mergedDataMap.set(item.timestamp, item);
       });
 
       let fetchedData = Array.from(mergedDataMap.values());
-      fetchedData.sort((a, b) => new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime());
+      fetchedData.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
 
       if (fetchedData.length > 0) {
@@ -225,8 +225,8 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
           if (fetchedData.length > prev.length) {
             const newEntries = fetchedData.slice(0, fetchedData.length - prev.length);
             const notifs = newEntries.map((e: RegistrationData) => ({
-              id: e.Timestamp,
-              name: e["Nama Lengkap"],
+              id: e.timestamp,
+              name: e.nama_lengkap,
               time: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
             }));
             setNotifications(prevNotif => [...notifs, ...prevNotif].slice(0, 10));
@@ -280,15 +280,15 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       // Gabungkan (Merge) data dari Google Sheets dan PostgreSQL Database
       const mergedDataMap = new Map();
       sheetsData.forEach(item => {
-        if (item.Timestamp) mergedDataMap.set(item.Timestamp, item);
+        if (item.timestamp) mergedDataMap.set(item.timestamp, item);
       });
       // Data Database menimpa Google Sheets (lebih prioritas)
       dbData.forEach(item => {
-        if (item.Timestamp) mergedDataMap.set(item.Timestamp, item);
+        if (item.timestamp) mergedDataMap.set(item.timestamp, item);
       });
 
       let fetchedData = Array.from(mergedDataMap.values());
-      fetchedData.sort((a, b) => new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime());
+      fetchedData.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
 
       if (fetchedData.length > 0) {
@@ -321,19 +321,19 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       return;
     }
     // 1. Update UI Lokal secara Instan
-    // Find the item to check its "Tanggal Aktif"
-    const item = data.find(r => r.Timestamp === timestamp);
-    const finalTanggalAktif = newStatus === "AKTIF" ? new Date().toLocaleDateString("id-ID") : (item ? item["Tanggal Aktif"] : "");
+    // Find the item to check its "tanggal_aktif"
+    const item = data.find(r => r.timestamp === timestamp);
+    const finalTanggalAktif = newStatus === "AKTIF" ? new Date().toLocaleDateString("id-ID") : (item ? item.tanggal_aktif : "");
     
     try {
-      setData(prev => prev.map(r => r.Timestamp === timestamp ? { ...r, status: newStatus, "Tanggal Aktif": finalTanggalAktif } : r));
+      setData(prev => prev.map(r => r.timestamp === timestamp ? { ...r, status: newStatus, tanggal_aktif: finalTanggalAktif } : r));
       await api.updateStatus(timestamp, newStatus);
       showToast("success", "Status berhasil diubah!");
       
       // Backup asinkron
       const params = new URLSearchParams();
       params.append("action", "update");
-      params.append("Timestamp", timestamp);
+      params.append("timestamp", timestamp);
       params.append("status", newStatus);
       fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: params }).catch(() => {});
     } catch (err) {
@@ -349,7 +349,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       return;
     }
     try {
-      setData(prev => prev.filter(r => r.Timestamp !== timestamp));
+      setData(prev => prev.filter(r => r.timestamp !== timestamp));
       await api.deleteRegistration(timestamp);
       setConfirmDelete(null);
       showToast("success", "Data berhasil dihapus!");
@@ -370,17 +370,17 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
     }
     
     // Penanda unik (Primary Key) riil untuk record baru
-    const isNewRecord = !updatedItem.Timestamp || updatedItem.Timestamp.includes("baru") || !data.some(d => d.Timestamp === updatedItem.Timestamp);
-    const finalTimestamp = isNewRecord ? new Date().toLocaleString("id-ID") : updatedItem.Timestamp;
+    const isNewRecord = !updatedItem.timestamp || updatedItem.timestamp.includes("baru") || !data.some(d => d.timestamp === updatedItem.timestamp);
+    const finalTimestamp = isNewRecord ? new Date().toLocaleString("id-ID") : updatedItem.timestamp;
 
-    let finalKtpUrl = updatedItem["Foto KTP"] || "";
+    let finalKtpUrl = updatedItem.foto_ktp || "";
 
     // Upload to Storage if the image is a base64 string
     if (finalKtpUrl && finalKtpUrl.startsWith("data:image/")) {
       try {
         const response = await fetch(finalKtpUrl);
         const blob = await response.blob();
-        const cleanName = (updatedItem["Nama Lengkap"] || "admin-upload").trim().toUpperCase().replace(/[^A-Z0-9]/g, "_");
+        const cleanName = (updatedItem.nama_lengkap || "admin-upload").trim().toUpperCase().replace(/[^A-Z0-9]/g, "_");
         const timestamp = Math.floor(Date.now() / 1000); // Shorter timestamp
         const fileName = `KTP_${cleanName}_${timestamp}.jpg`;
         
@@ -393,36 +393,36 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
 
     const finalItem: RegistrationData = {
       ...updatedItem,
-      Timestamp: finalTimestamp,
+      timestamp: finalTimestamp,
       status: updatedItem.status || "PENGAJUAN",
-      "Foto KTP": finalKtpUrl
+      foto_ktp: finalKtpUrl
     };
 
     // 1. Optimistic Update (Manipulasi State lokal agar UI langsung sinkron)
-    setData(prev => isNewRecord ? [finalItem, ...prev] : prev.map(item => item.Timestamp === updatedItem.Timestamp ? finalItem : item));
+    setData(prev => isNewRecord ? [finalItem, ...prev] : prev.map(item => item.timestamp === updatedItem.timestamp ? finalItem : item));
 
     try {
       // 2. Simpan atau Update ke Database PostgreSQL
       const dbRecord = {
-        "Timestamp": finalTimestamp,
-        "NIK": updatedItem.NIK || "",
-        "Nama Lengkap": updatedItem["Nama Lengkap"] || "",
-        "No HP / WA": updatedItem["No HP / WA"] || "",
-        "Alamat Pemasangan": updatedItem["Alamat Pemasangan"] || "",
-        "Kecamatan": updatedItem.Kecamatan || "GUMELAR",
-        "Desa": updatedItem.Desa || "GUMELAR",
-        "RW": updatedItem.RW || "",
-        "RT": updatedItem.RT || "",
-        "Paket": updatedItem.Paket || "",
+        timestamp: finalTimestamp,
+        nik: updatedItem.nik || "",
+        nama_lengkap: updatedItem.nama_lengkap || "",
+        no_hp_wa: updatedItem.no_hp_wa || "",
+        alamat_pemasangan: updatedItem.alamat_pemasangan || "",
+        kecamatan: updatedItem.kecamatan || "GUMELAR",
+        desa: updatedItem.desa || "GUMELAR",
+        rw: updatedItem.rw || "",
+        rt: updatedItem.rt || "",
+        paket: updatedItem.paket || "",
         "status": updatedItem.status || "PENGAJUAN",
-        "Provider Saat Ini": updatedItem["Provider Saat Ini"] || "Belum Pernah Pasang",
-        "Sumber Info": updatedItem["Sumber Info"] || "",
-        "Link Google Maps": updatedItem["Link Google Maps"] || "",
-        "Foto KTP": finalKtpUrl,
-        "Persetujuan S&K": updatedItem["Persetujuan S&K"] || "SETUJU (Manual Admin)",
-        "Catatan": updatedItem.Catatan || "",
-        "Tanggal Aktif": updatedItem["Tanggal Aktif"] || "",
-        "Tanggal Rencana Pasang": updatedItem["Tanggal Rencana Pasang"] || ""
+        provider_saat_ini: updatedItem.provider_saat_ini || "Belum Pernah Pasang",
+        sumber_info: updatedItem.sumber_info || "",
+        link_google_maps: updatedItem.link_google_maps || "",
+        foto_ktp: finalKtpUrl,
+        persetujuan_sk: updatedItem.persetujuan_sk || "SETUJU (Manual Admin)",
+        catatan: updatedItem.catatan || "",
+        tanggal_aktif: updatedItem.tanggal_aktif || "",
+        tanggal_rencana_pasang: updatedItem.tanggal_rencana_pasang || ""
       };
 
       await api.insertRegistration(dbRecord);
@@ -439,23 +439,23 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       // 3. Backup asinkron ke Google Sheets
       const params = new URLSearchParams();
       params.append("action", isNewRecord ? "add" : "update");
-      params.append("Timestamp", finalTimestamp);
-      params.append("Provider Saat Ini", updatedItem["Provider Saat Ini"] || "Belum Pernah Pasang");
-      params.append("Nama Lengkap", updatedItem["Nama Lengkap"] || "");
-      params.append("Kecamatan", updatedItem.Kecamatan || "GUMELAR");
-      params.append("Desa", updatedItem.Desa || "GUMELAR");
-      if (updatedItem.RW) params.append("RW", updatedItem.RW);
-      if (updatedItem.RT) params.append("RT", updatedItem.RT);
-      params.append("Alamat Pemasangan", updatedItem["Alamat Pemasangan"] || "");
-      params.append("No HP / WA", updatedItem["No HP / WA"] || "");
-      params.append("Paket", updatedItem.Paket || "");
-      params.append("Tanggal Rencana Pasang", updatedItem["Tanggal Rencana Pasang"] || "");
-      params.append("Waktu Survei", updatedItem["Waktu Survei"] || "");
+      params.append("timestamp", finalTimestamp);
+      params.append("provider_saat_ini", updatedItem.provider_saat_ini || "Belum Pernah Pasang");
+      params.append("nama_lengkap", updatedItem.nama_lengkap || "");
+      params.append("kecamatan", updatedItem.kecamatan || "GUMELAR");
+      params.append("desa", updatedItem.desa || "GUMELAR");
+      if (updatedItem.rw) params.append("rw", updatedItem.rw);
+      if (updatedItem.rt) params.append("rt", updatedItem.rt);
+      params.append("alamat_pemasangan", updatedItem.alamat_pemasangan || "");
+      params.append("no_hp_wa", updatedItem.no_hp_wa || "");
+      params.append("paket", updatedItem.paket || "");
+      params.append("tanggal_rencana_pasang", updatedItem.tanggal_rencana_pasang || "");
+      params.append("waktu_survei", updatedItem.waktu_survei || "");
       params.append("status", updatedItem.status || "PENGAJUAN");
-      if (updatedItem["Link Google Maps"]) params.append("Link Google Maps", updatedItem["Link Google Maps"]);
+      if (updatedItem.link_google_maps) params.append("link_google_maps", updatedItem.link_google_maps);
       
       // PERBAIKAN PENTING: Gunakan finalKtpUrl (URL publik dari Backend), bukan base64!
-      if (finalKtpUrl) params.append("Foto KTP", finalKtpUrl);
+      if (finalKtpUrl) params.append("foto_ktp", finalKtpUrl);
 
       fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: params }).catch(() => {});
     } catch (err) {}
@@ -466,12 +466,12 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
 
   const handleAddNew = () => {
     const newEntry: RegistrationData = {
-      Timestamp: "baru-" + Date.now(),
-      "Nama Lengkap": "", "No HP / WA": "", "Alamat Pemasangan": "",
-      "Provider Saat Ini": "Belum Pernah Pasang", "Sumber Info": "Rekomendasi Teman",
-      Paket: "GUYUB_1 (20 Mbps) - Rp 115.000/Bln", status: "PENGAJUAN", "Kecamatan": "GUMELAR", "Desa": "GUMELAR",
-      "Persetujuan S&K": "SETUJU (Manual Admin)",
-      "Catatan": ""
+      timestamp: "baru-" + Date.now(),
+      nama_lengkap: "", no_hp_wa: "", alamat_pemasangan: "",
+      provider_saat_ini: "Belum Pernah Pasang", sumber_info: "Rekomendasi Teman",
+      paket: "GUYUB_1 (20 Mbps) - Rp 115.000/Bln", status: "PENGAJUAN", kecamatan: "GUMELAR", desa: "GUMELAR",
+      persetujuan_sk: "SETUJU (Manual Admin)",
+      catatan: ""
     };
     setEditingReg(newEntry);
     setIsAddingNew(true);
@@ -484,19 +484,19 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
   const filteredData = useMemo(() => {
     return (data || []).filter(item => {
       const s = searchTerm.toLowerCase();
-      const matchesSearch = String(item["Nama Lengkap"] || "").toLowerCase().includes(s)
-        || String(item["No HP / WA"] || "").includes(s)
-        || String(item["Alamat Pemasangan"] || "").toLowerCase().includes(s);
-      const matchesPaket = filterPaket === "" || String(item.Paket || "").includes(filterPaket);
+      const matchesSearch = String(item.nama_lengkap || "").toLowerCase().includes(s)
+        || String(item.no_hp_wa || "").includes(s)
+        || String(item.alamat_pemasangan || "").toLowerCase().includes(s);
+      const matchesPaket = filterPaket === "" || String(item.paket || "").includes(filterPaket);
       const matchesStatus = filterStatus === "" || (item.status || "").toUpperCase() === filterStatus;
       // Filter Mbps: cocokkan angka Mbps dalam nama paket
-      const matchesMbps = filterMbps === "" || String(item.Paket || "").toLowerCase().includes(filterMbps.toLowerCase());
+      const matchesMbps = filterMbps === "" || String(item.paket || "").toLowerCase().includes(filterMbps.toLowerCase());
       // Filter Desa
-      const matchesDesa = filterDesa === "" || (item.Desa || "").toUpperCase() === filterDesa.toUpperCase();
+      const matchesDesa = filterDesa === "" || (item.desa || "").toUpperCase() === filterDesa.toUpperCase();
       // B: Filter tanggal
       let matchesDate = true;
       if (filterDateFrom || filterDateTo) {
-        const tsDate = item.Timestamp ? item.Timestamp.split(",")[0] : "";
+        const tsDate = item.timestamp ? item.timestamp.split(",")[0] : "";
         const parts = tsDate.split("/");
         if (parts.length === 3) {
           const itemDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
@@ -711,7 +711,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
               {/* Filter Desa */}
               <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
                 <Lucide.MapPin size={14} className="text-[#0d1655] shrink-0" />
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Desa:</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">desa:</span>
                 <div className="relative">
                   <select
                     value={filterDesa}
@@ -783,7 +783,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
                     <p className="text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Pendapatan/Bulan</p>
                     <p className="text-xl md:text-2xl font-black">Rp {(() => {
                       const activeData = data.filter(d => (d.status || "").toUpperCase() === "AKTIF");
-                      const totalRevenue = activeData.reduce((sum, item) => sum + extractPrice(item.Paket, PACKAGES), 0);
+                      const totalRevenue = activeData.reduce((sum, item) => sum + extractPrice(item.paket, PACKAGES), 0);
                       return totalRevenue.toLocaleString("id-ID");
                     })()}</p>
                     <p className="text-[10px] text-blue-300 mt-1">{data.filter(d => (d.status || "").toUpperCase() === "AKTIF").length} Pelanggan Aktif</p>

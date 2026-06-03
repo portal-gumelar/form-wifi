@@ -99,16 +99,16 @@ const generateCustomersPDFDoc = async (data: RegistrationData[], filterLabel: st
   doc.rect(0, 36, 297, 2, "F");
 
   // ── Table ─────────────────────────────────────────────────
-  const headers = [["No.", "Customer ID", "Nama Lengkap", "No. WhatsApp", "Paket", "Desa", "Status", "Tanggal Daftar"]];
+  const headers = [["No.", "Customer ID", "nama_lengkap", "No. WhatsApp", "paket", "desa", "Status", "Tanggal Daftar"]];
   const rows = data.map((item, idx) => [
     idx + 1,
-    getCustomerNo(item.Timestamp),
-    item["Nama Lengkap"] || "-",
-    item["No HP / WA"] || "-",
-    String(item.Paket || "").split("(")[0].trim(),
-    item.Desa || "-",
+    getCustomerNo(item.timestamp),
+    item.nama_lengkap || "-",
+    item.no_hp_wa || "-",
+    String(item.paket || "").split("(")[0].trim(),
+    item.desa || "-",
     String(item.status || "").toUpperCase(),
-    item.Timestamp ? String(item.Timestamp).split(",")[0] : "-",
+    item.timestamp ? String(item.timestamp).split(",")[0] : "-",
   ]);
 
   autoTable(doc, {
@@ -158,14 +158,14 @@ const generateCustomersPDFDoc = async (data: RegistrationData[], filterLabel: st
 const exportCustomersExcel = (data: RegistrationData[], filterLabel: string) => {
   const rows = data.map((item, idx) => ({
     "No.": idx + 1,
-    "Customer ID": getCustomerNo(item.Timestamp),
-    "Nama Lengkap": item["Nama Lengkap"] || "",
-    "No. WhatsApp": item["No HP / WA"] || "",
-    "Paket": String(item.Paket || "").split("(")[0].trim(),
-    "Desa": item.Desa || "",
+    "Customer ID": getCustomerNo(item.timestamp),
+    nama_lengkap: item.nama_lengkap || "",
+    "No. WhatsApp": item.no_hp_wa || "",
+    paket: String(item.paket || "").split("(")[0].trim(),
+    desa: item.desa || "",
     "Status": String(item.status || "").toUpperCase(),
-    "Tanggal Daftar": item.Timestamp ? String(item.Timestamp).split(",")[0] : "",
-    "Alamat Pemasangan": item["Alamat Pemasangan"] || "",
+    "Tanggal Daftar": item.timestamp ? String(item.timestamp).split(",")[0] : "",
+    alamat_pemasangan: item.alamat_pemasangan || "",
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
@@ -210,10 +210,10 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
       const q = searchQuery.toLowerCase();
       result = result.filter(item => {
         return (
-          (item["Nama Lengkap"] && String(item["Nama Lengkap"]).toLowerCase().includes(q)) ||
-          (item["No HP / WA"] && String(item["No HP / WA"]).toLowerCase().includes(q)) ||
-          (item["Alamat Pemasangan"] && String(item["Alamat Pemasangan"]).toLowerCase().includes(q)) ||
-          (item.Timestamp && getCustomerNo(item.Timestamp).toLowerCase().includes(q))
+          (item.nama_lengkap && String(item.nama_lengkap).toLowerCase().includes(q)) ||
+          (item.no_hp_wa && String(item.no_hp_wa).toLowerCase().includes(q)) ||
+          (item.alamat_pemasangan && String(item.alamat_pemasangan).toLowerCase().includes(q)) ||
+          (item.timestamp && getCustomerNo(item.timestamp).toLowerCase().includes(q))
         );
       });
     }
@@ -221,14 +221,14 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
     // Package Filter
     if (filterPackage) {
       result = result.filter(item => {
-        return standardizePackageName(item.Paket || "") === filterPackage;
+        return standardizePackageName(item.paket || "") === filterPackage;
       });
     }
 
     // Desa Filter
     if (filterDesa) {
       result = result.filter(item => {
-        const d = String(item.Desa || "").toUpperCase().trim();
+        const d = String(item.desa || "").toUpperCase().trim();
         return d === filterDesa;
       });
     }
@@ -256,8 +256,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
       "KEDUNG URANG"
     ]);
     activeAndInactiveData.forEach(item => {
-      if (item.Desa) {
-        vSet.add(item.Desa.toUpperCase().trim());
+      if (item.desa) {
+        vSet.add(item.desa.toUpperCase().trim());
       }
     });
     return Array.from(vSet).sort();
@@ -283,7 +283,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
       "100 Mbps": 0
     };
     activeData.forEach(item => {
-      const pkg = standardizePackageName(item.Paket || "");
+      const pkg = standardizePackageName(item.paket || "");
       counts[pkg] = (counts[pkg] || 0) + 1;
     });
     
@@ -297,8 +297,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
     const activeData = activeAndInactiveData.filter(d => String(d.status || "").toUpperCase() === "AKTIF");
     const counts: Record<string, number> = {};
     activeData.forEach(item => {
-      if (item.Desa) {
-        const d = item.Desa.toUpperCase().trim();
+      if (item.desa) {
+        const d = item.desa.toUpperCase().trim();
         counts[d] = (counts[d] || 0) + 1;
       }
     });
@@ -483,7 +483,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
         {/* Filter Desa */}
         <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
           <Lucide.MapPin size={14} className="text-[#0d1655] shrink-0" />
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Desa:</span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">desa:</span>
           <div className="relative">
             <select
               value={filterDesa || ""}

@@ -65,7 +65,7 @@ export const calculateStats = (data: RegistrationData[]): DashboardStats => {
 
   data.forEach(item => {
     // Package & Revenue
-    const pkgRaw = String(item.Paket || "Unknown");
+    const pkgRaw = String(item.paket || "Unknown");
     const pkg = pkgRaw.split("(")[0].trim();
     packages[pkg] = (packages[pkg] || 0) + 1;
     
@@ -77,16 +77,16 @@ export const calculateStats = (data: RegistrationData[]): DashboardStats => {
       }
     }
 
-    const dateStr = item.Timestamp ? item.Timestamp.split(",")[0] : "N/A";
+    const dateStr = item.timestamp ? item.timestamp.split(",")[0] : "N/A";
     trends[dateStr] = (trends[dateStr] || 0) + 1;
 
-    const prov = item["Provider Saat Ini"] || "None";
+    const prov = item.provider_saat_ini || "None";
     providers[prov] = (providers[prov] || 0) + 1;
 
-    const src = item["Sumber Info"] || "Direct";
+    const src = item.sumber_info || "Direct";
     sources[src] = (sources[src] || 0) + 1;
     
-    const region = item.Desa || "Lainnya";
+    const region = item.desa || "Lainnya";
     regions[region] = (regions[region] || 0) + 1;
 
     const status = (item.status || "BARU").toUpperCase();
@@ -105,19 +105,19 @@ export const calculateStats = (data: RegistrationData[]): DashboardStats => {
 export const exportToExcel = (data: RegistrationData[]) => {
   const formattedData = data.map((item, idx) => ({
     "No.": idx + 1,
-    "ID Pelanggan": getCustomerNo(item.Timestamp),
+    "ID Pelanggan": getCustomerNo(item.timestamp),
     "Status": (item.status || "PENGAJUAN").toUpperCase(),
-    "Nama Lengkap": item["Nama Lengkap"],
-    "No HP / WA": item["No HP / WA"],
-    "Alamat Pemasangan": item["Alamat Pemasangan"],
+    nama_lengkap: item.nama_lengkap,
+    no_hp_wa: item.no_hp_wa,
+    alamat_pemasangan: item.alamat_pemasangan,
     "RW / RT": (item as any)["RW / RT"] || "-",
-    "Desa": item.Desa,
-    "Kecamatan": item.Kecamatan,
-    "Paket Layanan": item.Paket,
+    desa: item.desa,
+    kecamatan: item.kecamatan,
+    "Paket Layanan": item.paket,
     "Titik Koordinat (Maps)": (item as any)["Titik Koordinat"],
-    "Catatan Khusus": item.Catatan || "-",
-    "Tanggal Mendaftar": item.Timestamp.split(",")[0],
-    "Foto KTP (Sistem)": item["Foto KTP"] ? "Ada Lampiran" : "Tidak Ada"
+    "Catatan Khusus": item.catatan || "-",
+    "Tanggal Mendaftar": item.timestamp.split(",")[0],
+    "Foto KTP (Sistem)": item.foto_ktp ? "Ada Lampiran" : "Tidak Ada"
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(formattedData);
@@ -138,7 +138,7 @@ const LOGO_URL = "https://ik.imagekit.io/Gumelar/LogO/logo%20pt.png?updatedAt=17
 const BRAND_COLOR: [number, number, number] = [13, 22, 85]; // Navy corporate brand color for header
 
 const appendKtpAttachments = async (doc: any, data: RegistrationData[]) => {
-  const itemsWithKtp = data.filter(item => item["Foto KTP"] && (String(item["Foto KTP"]).startsWith("data:image/") || String(item["Foto KTP"]).startsWith("http")));
+  const itemsWithKtp = data.filter(item => item.foto_ktp && (String(item.foto_ktp).startsWith("data:image/") || String(item.foto_ktp).startsWith("http")));
   
   if (itemsWithKtp.length === 0) return;
 
@@ -155,7 +155,7 @@ const appendKtpAttachments = async (doc: any, data: RegistrationData[]) => {
   
   for (let i = 0; i < itemsWithKtp.length; i++) {
     const item = itemsWithKtp[i];
-    const ktpData = item["Foto KTP"] as string;
+    const ktpData = item.foto_ktp as string;
     
     // If it's the first item on a new page
     if (i % ITEMS_PER_PAGE === 0) {
@@ -236,7 +236,7 @@ const appendKtpAttachments = async (doc: any, data: RegistrationData[]) => {
     doc.setFontSize(7);
     doc.setTextColor(13, 22, 85);
     doc.setFont("helvetica", "bold");
-    const labelName = doc.splitTextToSize((item["Nama Lengkap"] || "-").toUpperCase(), colWidth);
+    const labelName = doc.splitTextToSize((item.nama_lengkap || "-").toUpperCase(), colWidth);
     doc.text(labelName, x, y + rowHeight + 4);
     
     doc.setFontSize(6);
@@ -244,8 +244,8 @@ const appendKtpAttachments = async (doc: any, data: RegistrationData[]) => {
     doc.setFont("helvetica", "normal");
     // Calculate vertical offset in case labelName wrapped to multiple lines
     const nextLineY = y + rowHeight + 7 + (labelName.length - 1) * 3;
-    doc.text(`ID: ${getCustomerNo(item.Timestamp)} | WA: ${item["No HP / WA"] || "-"}`, x, nextLineY);
-    doc.text(`Paket: ${item.Paket || "-"}`, x, nextLineY + 3);
+    doc.text(`ID: ${getCustomerNo(item.timestamp)} | WA: ${item.no_hp_wa || "-"}`, x, nextLineY);
+    doc.text(`paket: ${item.paket || "-"}`, x, nextLineY + 3);
   }
 };
 
@@ -291,16 +291,16 @@ export const generatePDFBlobUrl = async (data: RegistrationData[]): Promise<stri
   
   doc.text(`Dicetak pada: ${new Date().toLocaleString("id-ID")}`, 280, 20, { align: "right" });
 
-  const headers = [["No.", "Customer ID", "Nama Lengkap", "Status", "WhatsApp", "Paket Layanan", "Kec/Desa/Alamat", "Tanggal Daftar"]];
+  const headers = [["No.", "Customer ID", "nama_lengkap", "Status", "WhatsApp", "Paket Layanan", "Kec/Desa/Alamat", "Tanggal Daftar"]];
   const rows = data.map((item, idx) => [
     idx + 1,
-    getCustomerNo(item.Timestamp),
-    item["Nama Lengkap"],
+    getCustomerNo(item.timestamp),
+    item.nama_lengkap,
     (item.status || "PENGAJUAN").toUpperCase(),
-    item["No HP / WA"],
-    String(item.Paket || "").split("(")[0].trim(),
-    `${item.Kecamatan || "-"} / ${item.Desa || "-"}\n${item["Alamat Pemasangan"] || "-"}`,
-    item.Timestamp.split(",")[0]
+    item.no_hp_wa,
+    String(item.paket || "").split("(")[0].trim(),
+    `${item.kecamatan || "-"} / ${item.desa || "-"}\n${item.alamat_pemasangan || "-"}`,
+    item.timestamp.split(",")[0]
   ]);
 
   autoTable(doc, {
@@ -337,16 +337,16 @@ export const downloadPDF = async (data: RegistrationData[]) => {
   
   doc.text(`Dicetak pada: ${new Date().toLocaleString("id-ID")}`, 280, 20, { align: "right" });
 
-  const headers = [["No.", "Customer ID", "Nama Lengkap", "Status", "WhatsApp", "Paket Layanan", "Kec/Desa/Alamat", "Tanggal Daftar"]];
+  const headers = [["No.", "Customer ID", "nama_lengkap", "Status", "WhatsApp", "Paket Layanan", "Kec/Desa/Alamat", "Tanggal Daftar"]];
   const rows = data.map((item, idx) => [
     idx + 1,
-    getCustomerNo(item.Timestamp),
-    item["Nama Lengkap"],
+    getCustomerNo(item.timestamp),
+    item.nama_lengkap,
     (item.status || "PENGAJUAN").toUpperCase(),
-    item["No HP / WA"],
-    String(item.Paket || "").split("(")[0].trim(),
-    `${item.Kecamatan || "-"} / ${item.Desa || "-"}\n${item["Alamat Pemasangan"] || "-"}`,
-    item.Timestamp.split(",")[0]
+    item.no_hp_wa,
+    String(item.paket || "").split("(")[0].trim(),
+    `${item.kecamatan || "-"} / ${item.desa || "-"}\n${item.alamat_pemasangan || "-"}`,
+    item.timestamp.split(",")[0]
   ]);
 
   autoTable(doc, {

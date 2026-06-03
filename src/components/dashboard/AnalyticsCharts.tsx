@@ -41,8 +41,8 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ stats, totalCo
   const getThisMonthData = () => {
     const now = new Date();
     return data.filter(item => {
-      if (!item.Timestamp) return false;
-      const itemDate = new Date(item.Timestamp.split(',')[0]);
+      if (!item.timestamp) return false;
+      const itemDate = new Date(item.timestamp.split(',')[0]);
       return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
     }).length;
   };
@@ -51,8 +51,8 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ stats, totalCo
     const now = new Date();
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1);
     return data.filter(item => {
-      if (!item.Timestamp) return false;
-      const itemDate = new Date(item.Timestamp.split(',')[0]);
+      if (!item.timestamp) return false;
+      const itemDate = new Date(item.timestamp.split(',')[0]);
       return itemDate.getMonth() === lastMonth.getMonth() && itemDate.getFullYear() === lastMonth.getFullYear();
     }).length;
   };
@@ -62,9 +62,9 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ stats, totalCo
   const momChange = lastMonthCount > 0 ? Math.round(((thisMonthCount - lastMonthCount) / lastMonthCount) * 100) : 0;
 
   // KTP per village data
-  const ktpByVillage = [...new Set(data.map(item => item.Desa || "Lainnya"))].map(desa => {
-    const villageData = data.filter(item => item.Desa === desa);
-    const withKTP = villageData.filter(item => item["Foto KTP"] && (String(item["Foto KTP"]).startsWith("data:image/") || String(item["Foto KTP"]).startsWith("http"))).length;
+  const ktpByVillage = [...new Set(data.map(item => item.desa || "Lainnya"))].map(desa => {
+    const villageData = data.filter(item => item.desa === desa);
+    const withKTP = villageData.filter(item => item.foto_ktp && (String(item.foto_ktp).startsWith("data:image/") || String(item.foto_ktp).startsWith("http"))).length;
     return { name: desa, total: villageData.length, withKTP, percentage: Math.round((withKTP / (villageData.length || 1)) * 100) };
   }).sort((a, b) => b.total - a.total).slice(0, 5);
 
@@ -222,8 +222,8 @@ export const FullAnalytics: React.FC<AnalyticsChartsProps> = ({ stats, totalCoun
   const getThisMonthData = () => {
     const now = new Date();
     return data.filter(item => {
-      if (!item.Timestamp) return false;
-      const itemDate = new Date(item.Timestamp.split(',')[0]);
+      if (!item.timestamp) return false;
+      const itemDate = new Date(item.timestamp.split(',')[0]);
       return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
     }).length;
   };
@@ -232,8 +232,8 @@ export const FullAnalytics: React.FC<AnalyticsChartsProps> = ({ stats, totalCoun
     const now = new Date();
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1);
     return data.filter(item => {
-      if (!item.Timestamp) return false;
-      const itemDate = new Date(item.Timestamp.split(',')[0]);
+      if (!item.timestamp) return false;
+      const itemDate = new Date(item.timestamp.split(',')[0]);
       return itemDate.getMonth() === lastMonth.getMonth() && itemDate.getFullYear() === lastMonth.getFullYear();
     }).length;
   };
@@ -243,9 +243,9 @@ export const FullAnalytics: React.FC<AnalyticsChartsProps> = ({ stats, totalCoun
   const momChange = lastMonthCount > 0 ? Math.round(((thisMonthCount - lastMonthCount) / lastMonthCount) * 100) : 0;
 
   // KTP per village data
-  const ktpByVillage = [...new Set(data.map(item => item.Desa || "Lainnya"))].map(desa => {
-    const villageData = data.filter(item => item.Desa === desa);
-    const withKTP = villageData.filter(item => item["Foto KTP"] && (String(item["Foto KTP"]).startsWith("data:image/") || String(item["Foto KTP"]).startsWith("http"))).length;
+  const ktpByVillage = [...new Set(data.map(item => item.desa || "Lainnya"))].map(desa => {
+    const villageData = data.filter(item => item.desa === desa);
+    const withKTP = villageData.filter(item => item.foto_ktp && (String(item.foto_ktp).startsWith("data:image/") || String(item.foto_ktp).startsWith("http"))).length;
     return { name: desa, total: villageData.length, withKTP, percentage: Math.round((withKTP / (villageData.length || 1)) * 100) };
   }).sort((a, b) => b.total - a.total).slice(0, 5);
 

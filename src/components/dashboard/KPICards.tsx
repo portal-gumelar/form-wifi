@@ -50,7 +50,7 @@ export const KPICards: React.FC<KPICardsProps> = ({ totalRegistrants, statusCoun
     const activeData = data.filter(item => (item.status || "").toUpperCase() === "AKTIF");
     
     activeData.forEach(item => {
-      const mbps = extractMbps(item.Paket);
+      const mbps = extractMbps(item.paket);
       if (mbps !== "Unknown") {
         packageMap.set(mbps, (packageMap.get(mbps) || 0) + 1);
       }

@@ -1,8 +1,18 @@
 const API_BASE_URL = (import.meta as any).env.VITE_API_URL || "http://localhost:5000";
 
 export const api = {
-  getRegistrations: async () => {
-    const res = await fetch(`${API_BASE_URL}/api/registrations`);
+  getRegistrations: async (page?: number, limit?: number, search?: string) => {
+    let url = `${API_BASE_URL}/api/registrations`;
+    const params = new URLSearchParams();
+    if (page) params.append('page', page.toString());
+    if (limit) params.append('limit', limit.toString());
+    if (search) params.append('search', search);
+    
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+    
+    const res = await fetch(url);
     if (!res.ok) throw new Error("Gagal mengambil data");
     return res.json();
   },

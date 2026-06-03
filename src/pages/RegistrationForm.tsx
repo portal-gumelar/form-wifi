@@ -331,25 +331,25 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     }
     
     const newRecord = {
-      "Timestamp": timestampStr,
-      "NIK": form.nik,
-      "Nama Lengkap": form.namaLengkap,
-      "No HP / WA": form.noHp,
-      "Alamat Pemasangan": form.alamat,
-      "Kecamatan": form.kecamatan,
-      "Desa": form.desa,
-      "RW": form.rw,
-      "RT": form.rt,
-      "Paket": form.paket,
+      timestamp: timestampStr,
+      nik: form.nik,
+      nama_lengkap: form.namaLengkap,
+      no_hp_wa: form.noHp,
+      alamat_pemasangan: form.alamat,
+      kecamatan: form.kecamatan,
+      desa: form.desa,
+      rw: form.rw,
+      rt: form.rt,
+      paket: form.paket,
       "status": "PENGAJUAN",
-      "Provider Saat Ini": form.currentProvider || "Belum Pernah Pasang",
-      "Sumber Info": form.sumberInfo || "Rekomendasi Teman",
-      "Link Google Maps": form.linkGoogleMaps || "",
-      "Foto KTP": finalKtpUrl || "",
-      "Persetujuan S&K": "SETUJU (Sudah Dibaca & Disetujui)",
-      "Catatan": form.catatan || "",
-      "Tanggal Rencana Pasang": form.tanggalPasang || "",
-      "Tanggal Aktif": ""
+      provider_saat_ini: form.currentProvider || "Belum Pernah Pasang",
+      sumber_info: form.sumberInfo || "Rekomendasi Teman",
+      link_google_maps: form.linkGoogleMaps || "",
+      foto_ktp: finalKtpUrl || "",
+      persetujuan_sk: "SETUJU (Sudah Dibaca & Disetujui)",
+      catatan: form.catatan || "",
+      tanggal_rencana_pasang: form.tanggalPasang || "",
+      tanggal_aktif: ""
     };
 
     try {

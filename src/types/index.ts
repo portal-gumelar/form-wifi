@@ -26,31 +26,31 @@ export interface VillageFundSummary {
 }
 
 export interface RegistrationData {
-  Timestamp: string;
-  NIK?: string;
-  "Nama Lengkap": string;
-  "No HP / WA": string;
-  Paket: string;
-  "Alamat Pemasangan": string;
-  "Provider Saat Ini": string;
-  "Sumber Info": string;
+  timestamp: string;
+  nik?: string;
+  nama_lengkap: string;
+  no_hp_wa: string;
+  paket: string;
+  alamat_pemasangan: string;
+  provider_saat_ini: string;
+  sumber_info: string;
 
   // REVISI SOP: Menyinkronkan properti wilayah untuk eliminasi error dasbor
-  Kecamatan: string;
-  Desa: string;
+  kecamatan: string;
+  desa: string;
   // Dana Desa fields
-  RW?: string;
-  RT?: string;
+  rw?: string;
+  rt?: string;
 
   // REVISI SOP: Properti opsional untuk manajemen penjadwalan instalasi tim teknis
-  "Tanggal Rencana Pasang"?: string;
-  "Waktu Survei"?: string;
-  "Link Google Maps"?: string;
+  tanggal_rencana_pasang?: string;
+  waktu_survei?: string;
+  link_google_maps?: string;
   status?: string;
-  "Foto KTP"?: string;
-  "Persetujuan S&K"?: string;
-  "Catatan"?: string;
-  "Tanggal Aktif"?: string;
+  foto_ktp?: string;
+  persetujuan_sk?: string;
+  catatan?: string;
+  tanggal_aktif?: string;
 }
 
 export interface DashboardStats {

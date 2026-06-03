@@ -20,7 +20,7 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
   const filteredData = data;
 
   // Stats
-  const withKTP = filteredData.filter(item => item["Foto KTP"] && (String(item["Foto KTP"]).startsWith("data:image/") || String(item["Foto KTP"]).startsWith("http"))).length;
+  const withKTP = filteredData.filter(item => item.foto_ktp && (String(item.foto_ktp).startsWith("data:image/") || String(item.foto_ktp).startsWith("http"))).length;
   const withoutKTP = filteredData.length - withKTP;
 
   const extractCoords = (url: string) => {
@@ -37,7 +37,7 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
 
   const geoData = data.map(item => ({
     ...item,
-    coords: extractCoords(item["Link Google Maps"] || "")
+    coords: extractCoords(item.link_google_maps || "")
   })).filter(item => item.coords);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
     const bounds = L.latLngBounds([]);
     geoData.forEach(point => {
       if (point.coords) {
-        const hasKTP = point["Foto KTP"] && (String(point["Foto KTP"]).startsWith("data:image/") || String(point["Foto KTP"]).startsWith("http"));
+        const hasKTP = point.foto_ktp && (String(point.foto_ktp).startsWith("data:image/") || String(point.foto_ktp).startsWith("http"));
         
         // Enhance marker based on status
         const status = (point.status || "").toUpperCase();
@@ -84,14 +84,14 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
         const marker = L.marker(point.coords, { icon }).addTo(leafletMap.current);
         marker.bindPopup(`
           <div style="font-family: 'Inter', sans-serif; padding: 4px; min-width: 180px;">
-            <p style="font-weight: 950; color: #0d1655; margin: 0 0 2px 0; font-size: 13px; text-transform: uppercase; letter-spacing: -0.5px;">${point["Nama Lengkap"]}</p>
-            <p style="font-size: 9px; color: #94a3b8; font-weight: 700; margin: 0 0 6px 0;">ID: AMN-${point.Timestamp.replace(/\D/g, "").slice(-5)}</p>
+            <p style="font-weight: 950; color: #0d1655; margin: 0 0 2px 0; font-size: 13px; text-transform: uppercase; letter-spacing: -0.5px;">${point.nama_lengkap}</p>
+            <p style="font-size: 9px; color: #94a3b8; font-weight: 700; margin: 0 0 6px 0;">ID: AMN-${point.timestamp.replace(/\D/g, "").slice(-5)}</p>
             <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 8px;">
               <span style="background-color: ${hasKTP ? '#f0fdf4' : '#fef2f2'}; color: ${hasKTP ? '#16a34a' : '#ef4444'}; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
                 ${hasKTP ? '📷 KTP Ada' : '❌ KTP Kosong'}
               </span>
             </div>
-            <a href="${point["Link Google Maps"]}" target="_blank" style="display: block; text-align: center; background-color: #F47920; color: white; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 10px rgba(244, 121, 32, 0.15);">
+            <a href="${point.link_google_maps}" target="_blank" style="display: block; text-align: center; background-color: #F47920; color: white; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 10px rgba(244, 121, 32, 0.15);">
               📍 Buka Rute GPS
             </a>
           </div>
@@ -196,10 +196,10 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
               </div>
             ) : (
               filteredData.map((item) => {
-                const hasKTP = item["Foto KTP"] && (String(item["Foto KTP"]).startsWith("data:image/") || String(item["Foto KTP"]).startsWith("http"));
+                const hasKTP = item.foto_ktp && (String(item.foto_ktp).startsWith("data:image/") || String(item.foto_ktp).startsWith("http"));
                 return (
                   <div 
-                    key={item.Timestamp}
+                    key={item.timestamp}
                     onClick={() => hasKTP && setSelectedKTP(item)}
                     className={`p-3 rounded-xl border transition-all cursor-pointer ${
                       hasKTP 
@@ -216,8 +216,8 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black text-slate-800 truncate">{item["Nama Lengkap"] || "Tanpa Nama"}</p>
-                        <p className="text-[10px] text-slate-400 font-bold">{item.Desa || "-"} • {item["No HP / WA"] || "-"}</p>
+                        <p className="text-xs font-black text-slate-800 truncate">{item.nama_lengkap || "Tanpa Nama"}</p>
+                        <p className="text-[10px] text-slate-400 font-bold">{item.desa || "-"} • {item.no_hp_wa || "-"}</p>
                         <div className="flex items-center gap-2 mt-1.5">
                           <span className={`text-[9px] font-black px-2 py-0.5 rounded-md ${
                             hasKTP ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
@@ -262,8 +262,8 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
                 <div className="flex items-center gap-3">
                   <Lucide.IdCard size={20} className="text-[#F47920]" />
                   <div>
-                    <h4 className="text-sm font-black text-white">{selectedKTP["Nama Lengkap"]}</h4>
-                    <p className="text-[10px] text-blue-200 font-bold">ID: AMN-{selectedKTP.Timestamp?.replace(/\D/g, "").slice(-5)}</p>
+                    <h4 className="text-sm font-black text-white">{selectedKTP.nama_lengkap}</h4>
+                    <p className="text-[10px] text-blue-200 font-bold">ID: AMN-{selectedKTP.timestamp?.replace(/\D/g, "").slice(-5)}</p>
                   </div>
                 </div>
                 <button 
@@ -277,23 +277,23 @@ export const GeographicalView: React.FC<GeographicalViewProps> = ({ data, isDark
                 <div className="space-y-3 mb-4">
                   <div className="flex items-center gap-2 text-xs">
                     <Lucide.MapPin size={14} className="text-slate-400" />
-                    <span className="font-bold text-slate-600">{selectedKTP["Alamat Pemasangan"]}</span>
+                    <span className="font-bold text-slate-600">{selectedKTP.alamat_pemasangan}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     <Lucide.Phone size={14} className="text-slate-400" />
-                    <span className="font-bold text-slate-600">{selectedKTP["No HP / WA"]}</span>
+                    <span className="font-bold text-slate-600">{selectedKTP.no_hp_wa}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     <Lucide.Package size={14} className="text-slate-400" />
-                    <span className="font-bold text-[#F47920]">{selectedKTP.Paket}</span>
+                    <span className="font-bold text-[#F47920]">{selectedKTP.paket}</span>
                   </div>
                 </div>
                 <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
                   <img 
-                    src={selectedKTP["Foto KTP"]} 
+                    src={selectedKTP.foto_ktp} 
                     alt="KTP Pelanggan" 
                     className="w-full h-auto max-h-[400px] object-contain cursor-zoom-in"
-                    onClick={() => window.open(selectedKTP["Foto KTP"], '_blank')}
+                    onClick={() => window.open(selectedKTP.foto_ktp, '_blank')}
                   />
                 </div>
                 <p className="text-[10px] text-center text-slate-400 mt-3 font-bold">

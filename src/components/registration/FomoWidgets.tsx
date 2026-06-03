@@ -46,16 +46,16 @@ export const FomoNotifications: React.FC = () => {
         if (data && data.length > 0) {
           const realEvents: FomoEvent[] = data.map((reg: any, idx: number) => {
             // Mask name for privacy (e.g. Budi Santoso -> Budi S.)
-            const nameParts = reg["Nama Lengkap"]?.trim().split(" ") || ["Pelanggan"];
+            const nameParts = reg.nama_lengkap?.trim().split(" ") || ["Pelanggan"];
             const maskedName = nameParts[0] + (nameParts.length > 1 ? ` ${nameParts[1][0]}.` : "");
             
             // Clean package name
-            const paketClean = reg.Paket ? reg.Paket.split("-")[0].trim() : "Paket Internet";
+            const paketClean = reg.paket ? reg.paket.split("-")[0].trim() : "Paket Internet";
 
             return {
               id: `real-${idx}-${Date.now()}`,
               name: maskedName,
-              desa: reg.Desa || "GUMELAR",
+              desa: reg.desa || "GUMELAR",
               type: "daftar" as const,
               paket: paketClean,
               time: "Baru-baru ini"

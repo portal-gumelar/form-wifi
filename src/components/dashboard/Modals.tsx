@@ -106,23 +106,23 @@ interface DetailsModalProps {
 
 export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, onClose }) => {
   const [copySuccess, setCopySuccess] = useState(false);
-  const proRata = item ? calculateProRata(item["Tanggal Aktif"] || "", item.Paket || "") : null;
+  const proRata = item ? calculateProRata(item.tanggal_aktif || "", item.paket || "") : null;
 
   const handleCopyWa = () => {
     if (!item || !proRata) return;
     
     const rp = (num: number) => `Rp ${num.toLocaleString('id-ID')}`;
     const text = `*INFORMASI TAGIHAN BULAN PERTAMA (PRO-RATA)*\n\n` +
-      `Halo Bapak/Ibu *${item["Nama Lengkap"]}*,\n` +
+      `Halo Bapak/Ibu *${item.nama_lengkap}*,\n` +
       `Layanan internet ARMEDIA.ID Anda telah aktif.\n\n` +
       `*Rincian Aktivasi:*\n` +
-      `- ID Pelanggan: ${getCustomerNo(item.Timestamp)}\n` +
-      `- Tanggal Aktif: ${new Date(item["Tanggal Aktif"]!).toLocaleDateString('id-ID')}\n` +
-      `- Paket Internet: ${item.Paket?.replace(/\.(\d+\s*Mbps)/i, ' $1')}\n\n` +
+      `- ID Pelanggan: ${getCustomerNo(item.timestamp)}\n` +
+      `- Tanggal Aktif: ${new Date(item.tanggal_aktif!).toLocaleDateString('id-ID')}\n` +
+      `- Paket Internet: ${item.paket?.replace(/\.(\d+\s*Mbps)/i, ' $1')}\n\n` +
       `*Tagihan Bulan Pertama (Pro-Rata):*\n` +
       `Karena internet Anda aktif pada tanggal ${proRata.day} ${proRata.monthName}, maka tagihan bulan pertama disesuaikan (Pro-Rata) untuk ${proRata.remainingDays} hari.\n` +
       `Total Tagihan: *${rp(proRata.proRataPrice)}*\n\n` +
-      `*Catatan:*\n` +
+      `*catatan:*\n` +
       `Untuk bulan berikutnya, tagihan akan kembali normal yaitu sebesar *${rp(proRata.normalPrice)}*/bulan.\n\n` +
       `Terima kasih telah mempercayakan layanan internet Anda kepada ARMEDIA.ID.`;
       
@@ -143,7 +143,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center border border-white/20"><Lucide.User size={24} className="text-[#FDB913]" /></div>
               <div>
-                <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{getCustomerNo(item.Timestamp)}</p>
+                <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{getCustomerNo(item.timestamp)}</p>
                 <h2 className="text-xl font-black italic">Detail Lengkap Pelanggan</h2>
               </div>
             </div>
@@ -156,11 +156,11 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
             <div className="bg-gradient-to-br from-[#0d1655] to-[#1a2a7a] rounded-2xl p-5 text-white shadow-lg">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center font-black text-2xl text-white">
-                  {item["Nama Lengkap"]?.charAt(0) || "U"}
+                  {item.nama_lengkap?.charAt(0) || "U"}
                 </div>
                 <div>
-                  <h3 className="text-lg font-extrabold text-white">{item["Nama Lengkap"]}</h3>
-                  <p className="text-slate-300 text-sm font-medium">{item["No HP / WA"]}</p>
+                  <h3 className="text-lg font-extrabold text-white">{item.nama_lengkap}</h3>
+                  <p className="text-slate-300 text-sm font-medium">{item.no_hp_wa}</p>
                 </div>
               </div>
               {/* Status Badge */}
@@ -183,7 +183,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
                   <Lucide.Zap size={14} className="text-[#F47920]" />
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paket Internet</p>
                 </div>
-                <p className="font-black text-[#F47920] text-sm">{item.Paket?.replace(/\.(\d+\s*Mbps)/i, ' $1') || "-"}</p>
+                <p className="font-black text-[#F47920] text-sm">{item.paket?.replace(/\.(\d+\s*Mbps)/i, ' $1') || "-"}</p>
               </div>
 
               {/* Provider Saat Ini */}
@@ -192,7 +192,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
                   <Lucide.Wifi size={14} className="text-blue-500" />
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Provider Saat Ini</p>
                 </div>
-                <p className="font-bold text-slate-700 text-sm">{item["Provider Saat Ini"] || "Belum Pernah Pasang"}</p>
+                <p className="font-bold text-slate-700 text-sm">{item.provider_saat_ini || "Belum Pernah Pasang"}</p>
               </div>
 
               {/* Kecamatan & Desa */}
@@ -201,7 +201,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
                   <Lucide.MapPin size={14} className="text-emerald-500" />
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kecamatan & Desa</p>
                 </div>
-                <p className="font-bold text-slate-700 text-sm">{item.Kecamatan || "GUMELAR"} / {item.Desa || "-"}</p>
+                <p className="font-bold text-slate-700 text-sm">{item.kecamatan || "GUMELAR"} / {item.desa || "-"}</p>
               </div>
 
               {/* Sumber Info */}
@@ -210,7 +210,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
                   <Lucide.Info size={14} className="text-purple-500" />
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sumber Info</p>
                 </div>
-                <p className="font-bold text-slate-700 text-sm">{item["Sumber Info"] || "-"}</p>
+                <p className="font-bold text-slate-700 text-sm">{item.sumber_info || "-"}</p>
               </div>
 
               {/* Tanggal Rencana Pasang */}
@@ -219,7 +219,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
                   <Lucide.Calendar size={14} className="text-amber-500" />
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rencana Pasang</p>
                 </div>
-                <p className="font-bold text-slate-700 text-sm">{item["Tanggal Rencana Pasang"] || "Belum Dijadwalkan"}</p>
+                <p className="font-bold text-slate-700 text-sm">{item.tanggal_rencana_pasang || "Belum Dijadwalkan"}</p>
               </div>
 
               {/* NIK */}
@@ -228,7 +228,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
                   <Lucide.Fingerprint size={14} className="text-cyan-500" />
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">NIK</p>
                 </div>
-                <p className="font-bold text-slate-700 text-sm">{item.NIK || "-"}</p>
+                <p className="font-bold text-slate-700 text-sm">{item.nik || "-"}</p>
               </div>
             </div>
 
@@ -238,7 +238,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
                 <Lucide.Home size={14} className="text-[#0d1655]" />
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Alamat Pemasangan</p>
               </div>
-              <p className="font-bold text-slate-700 text-sm leading-relaxed">{item["Alamat Pemasangan"]}</p>
+              <p className="font-bold text-slate-700 text-sm leading-relaxed">{item.alamat_pemasangan}</p>
             </div>
 
             {/* Timestamp */}
@@ -247,7 +247,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
                 <Lucide.History size={14} className="text-slate-400" />
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Waktu Pendaftaran</p>
               </div>
-              <p className="font-bold text-slate-500 text-sm">{item.Timestamp}</p>
+              <p className="font-bold text-slate-500 text-sm">{item.timestamp}</p>
             </div>
 
             {/* Persetujuan */}
@@ -256,11 +256,11 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
                 <Lucide.CheckCircle size={14} className="text-emerald-500" />
                 <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Persetujuan S&K</p>
               </div>
-              <p className="font-bold text-emerald-800 text-sm">{item["Persetujuan S&K"] || "SETUJU"}</p>
+              <p className="font-bold text-emerald-800 text-sm">{item.persetujuan_sk || "SETUJU"}</p>
             </div>
 
             {/* Pro-Rata Table (Bulan Pertama) */}
-            {item.status === "AKTIF" && item["Tanggal Aktif"] && proRata && (
+            {item.status === "AKTIF" && item.tanggal_aktif && proRata && (
               <div className="p-5 rounded-3xl bg-blue-50/50 border border-blue-100 overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -286,7 +286,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
                 <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden text-xs">
                   <div className="grid grid-cols-2 p-3 border-b border-slate-100 items-center">
                     <span className="font-bold text-slate-500">Tanggal Aktif</span>
-                    <span className="font-black text-slate-800 text-right">{new Date(item["Tanggal Aktif"]).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                    <span className="font-black text-slate-800 text-right">{new Date(item.tanggal_aktif).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                   </div>
                   <div className="grid grid-cols-2 p-3 border-b border-slate-100 items-center">
                     <span className="font-bold text-slate-500">Harga Normal / Bulan</span>
@@ -305,32 +305,32 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
             )}
 
             {/* Catatan */}
-            {item.Catatan && (
+            {item.catatan && (
               <div className="p-4 rounded-2xl border border-amber-100 bg-amber-50/30">
                 <div className="flex items-center gap-2 mb-1.5">
                   <Lucide.MessageSquare size={14} className="text-amber-500" />
                   <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Catatan</p>
                 </div>
-                <p className="font-bold text-slate-700 text-sm whitespace-pre-wrap">{item.Catatan}</p>
+                <p className="font-bold text-slate-700 text-sm whitespace-pre-wrap">{item.catatan}</p>
               </div>
             )}
 
             {/* Foto KTP */}
-            {item["Foto KTP"] && (
+            {item.foto_ktp && (
               <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/30">
                 <div className="flex items-center gap-2 mb-2">
                   <Lucide.CreditCard size={14} className="text-slate-500" />
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Foto KTP / ID Card</p>
                 </div>
                 <div className="w-full h-48 bg-slate-100 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200">
-                  <img src={item["Foto KTP"]} alt="KTP Pelanggan" className="w-full h-full object-contain cursor-zoom-in hover:scale-105 transition-transform duration-300" onClick={() => window.open(item["Foto KTP"], '_blank')} />
+                  <img src={item.foto_ktp} alt="KTP Pelanggan" className="w-full h-full object-contain cursor-zoom-in hover:scale-105 transition-transform duration-300" onClick={() => window.open(item.foto_ktp, '_blank')} />
                 </div>
               </div>
             )}
 
             {/* Link Google Maps */}
-            {item["Link Google Maps"] && (
-              <a href={item["Link Google Maps"]} target="_blank" rel="noreferrer"
+            {item.link_google_maps && (
+              <a href={item.link_google_maps} target="_blank" rel="noreferrer"
                 className="flex items-center justify-center gap-3 py-4 bg-[#0d1655] text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-blue-500/20 hover:bg-[#1a2a7a] transition-all"
               >
                 <Lucide.MapPin size={18} className="text-[#FDB913]" /> Lihat Lokasi di Google Maps
@@ -519,7 +519,7 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
           const fileName = `KTP_Update_${Date.now()}.jpg`;
           const publicUrl = await api.uploadKtp(blob, fileName);
           
-          setFormData(prev => prev ? ({ ...prev, "Foto KTP": publicUrl }) : null);
+          setFormData(prev => prev ? ({ ...prev, foto_ktp: publicUrl }) : null);
           showToast("success", "Foto KTP berhasil diunggah!");
         } catch (err) {
           console.error(err);
@@ -603,29 +603,29 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Nama Lengkap</label>
-                  <input type="text" value={formData["Nama Lengkap"] || ""} onChange={e => handleChange("Nama Lengkap", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Nama Lengkap" />
+                  <input type="text" value={formData.nama_lengkap || ""} onChange={e => handleChange("nama_lengkap", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="nama_lengkap" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">No. HP / WhatsApp</label>
-                  <input type="text" value={formData["No HP / WA"] || ""} onChange={e => handleChange("No HP / WA", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: 0812..." />
+                  <input type="text" value={formData.no_hp_wa || ""} onChange={e => handleChange("no_hp_wa", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: 0812..." />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">NIK KTP</label>
-                  <input type="text" value={formData.NIK || ""} onChange={e => handleChange("NIK", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="16 Digit NIK" />
+                  <input type="text" value={formData.nik || ""} onChange={e => handleChange("nik", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="16 Digit NIK" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Provider Saat Ini</label>
-                  <input type="text" value={formData["Provider Saat Ini"] || ""} onChange={e => handleChange("Provider Saat Ini", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: Indihome / Belum" />
+                  <input type="text" value={formData.provider_saat_ini || ""} onChange={e => handleChange("provider_saat_ini", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: Indihome / Belum" />
                 </div>
                 <div className="sm:col-span-3 space-y-1.5">
                   <label className="text-xs font-bold text-slate-800 block">Foto KTP / ID Card Pelanggan</label>
-                  {formData["Foto KTP"] ? (
+                  {formData.foto_ktp ? (
                     <div className="relative w-full h-36 border border-slate-200 bg-white rounded-xl overflow-hidden flex items-center justify-center group shadow-sm">
-                      <img src={formData["Foto KTP"]} alt="KTP" className="w-full h-full object-contain" />
+                      <img src={formData.foto_ktp} alt="KTP" className="w-full h-full object-contain" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                         <button
                           type="button"
-                          onClick={() => handleChange("Foto KTP", "")}
+                          onClick={() => handleChange("foto_ktp", "")}
                           className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-black text-[10px] uppercase tracking-widest rounded-lg transition-all active:scale-95"
                         >
                           Hapus Foto
@@ -666,27 +666,27 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div className="sm:col-span-2 space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Alamat Lengkap Rumah</label>
-                  <input type="text" value={formData["Alamat Pemasangan"] || ""} onChange={e => handleChange("Alamat Pemasangan", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Nama jalan, nomor rumah, gang..." />
+                  <input type="text" value={formData.alamat_pemasangan || ""} onChange={e => handleChange("alamat_pemasangan", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Nama jalan, nomor rumah, gang..." />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Kecamatan</label>
-                  <input type="text" value={formData.Kecamatan || ""} onChange={e => handleChange("Kecamatan", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" />
+                  <input type="text" value={formData.kecamatan || ""} onChange={e => handleChange("kecamatan", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Desa</label>
-                  <input type="text" value={formData.Desa || ""} onChange={e => handleChange("Desa", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" />
+                  <input type="text" value={formData.desa || ""} onChange={e => handleChange("desa", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">RW</label>
-                  <input type="text" value={formData.RW || ""} onChange={e => handleChange("RW", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0d1655] placeholder:text-slate-400" placeholder="Contoh: RW 01" />
+                  <input type="text" value={formData.rw || ""} onChange={e => handleChange("rw", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#0d1655] placeholder:text-slate-400" placeholder="Contoh: RW 01" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">RT</label>
-                  <input type="text" value={formData.RT || ""} onChange={e => handleChange("RT", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: RT 01" />
+                  <input type="text" value={formData.rt || ""} onChange={e => handleChange("rt", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: RT 01" />
                 </div>
                 <div className="sm:col-span-4 space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Link Koordinat GPS (Google Maps)</label>
-                  <input type="text" value={formData["Link Google Maps"] || ""} onChange={e => handleChange("Link Google Maps", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="https://maps.google.com/..." />
+                  <input type="text" value={formData.link_google_maps || ""} onChange={e => handleChange("link_google_maps", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="https://maps.google.com/..." />
                 </div>
               </div>
             </div>
@@ -700,7 +700,7 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
               {/* Paket Radio Cards - Mobile Friendly */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-800 block">Pilihan Paket Internet</label>
-                <PaketRadioCards value={formData.Paket} onChange={(val) => handleChange("Paket", val)} />
+                <PaketRadioCards value={formData.paket} onChange={(val) => handleChange("paket", val)} />
               </div>
               
               {/* Status Pill Buttons - Mobile Friendly */}
@@ -710,9 +710,9 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
                   value={formData.status || "PENGAJUAN"} 
                   onChange={(val) => {
                     handleChange("status", val);
-                    if (val === "AKTIF" && !formData["Tanggal Aktif"]) {
+                    if (val === "AKTIF" && !formData.tanggal_aktif) {
                       const today = new Date();
-                      handleChange("Tanggal Aktif", today.toISOString().split('T')[0]);
+                      handleChange("tanggal_aktif", today.toISOString().split('T')[0]);
                     }
                   }} 
                 />
@@ -727,8 +727,8 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
                   </label>
                   <input 
                     type="date" 
-                    value={formData["Tanggal Aktif"] || ""} 
-                    onChange={e => handleChange("Tanggal Aktif", e.target.value)} 
+                    value={formData.tanggal_aktif || ""} 
+                    onChange={e => handleChange("tanggal_aktif", e.target.value)} 
                     className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" 
                   />
                   <p className="text-[10px] text-slate-500 mt-2 leading-tight">
@@ -740,13 +740,13 @@ export const EditRegistrationModal: React.FC<EditModalProps> = ({ item, isDarkMo
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Rencana Tanggal Pasang</label>
-                  <input type="text" value={formData["Tanggal Rencana Pasang"] || ""} onChange={e => handleChange("Tanggal Rencana Pasang", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: 25 Mei 2026" />
+                  <input type="text" value={formData.tanggal_rencana_pasang || ""} onChange={e => handleChange("tanggal_rencana_pasang", e.target.value)} className="w-full px-3 py-3 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] placeholder:text-slate-400" placeholder="Contoh: 25 Mei 2026" />
                 </div>
                 <div className="sm:col-span-2 space-y-1.5">
                   <label className="text-xs font-bold text-slate-800">Catatan Evaluasi / Pesan</label>
                   <textarea
-                    value={formData.Catatan || ""}
-                    onChange={e => handleChange("Catatan", e.target.value)}
+                    value={formData.catatan || ""}
+                    onChange={e => handleChange("catatan", e.target.value)}
                     rows={3}
                     className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#F47920] resize-none placeholder:text-slate-400"
                     placeholder="Catatan dari pelanggan atau catatan internal survei..."

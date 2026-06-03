@@ -58,7 +58,7 @@ export const parseKTPText = (text: string): ParsedKTP => {
     const upperLine = line.toUpperCase();
 
     // 0. Extract NIK
-    if ((upperLine.includes("NIK") || upperLine.includes("N1K") || upperLine.includes("M|K")) && !result.nik) {
+    if ((upperLine.includes("nik") || upperLine.includes("N1K") || upperLine.includes("M|K")) && !result.nik) {
       const cleanLine = upperLine.replace(/\s+/g, '');
       const nikMatch = cleanLine.match(/(\d{16})/);
       if (nikMatch) {
@@ -110,7 +110,7 @@ export const parseKTPText = (text: string): ParsedKTP => {
 
     // 4. Extract Kel/Desa
     if ((upperLine.includes("KEL/DESA") || upperLine.includes("KEL") || upperLine.includes("DESA")) && !result.desa) {
-      let val = extractValue(line, ["Kel/Desa", "Kelur", "Desa", "Kel"]);
+      let val = extractValue(line, ["Kel/Desa", "Kelur", "desa", "Kel"]);
       if (val) {
         val = val.toUpperCase().trim();
         // Match against standard covered villages
@@ -128,14 +128,14 @@ export const parseKTPText = (text: string): ParsedKTP => {
 
     // 5. Extract Kecamatan
     if ((upperLine.includes("KECAMATAN") || upperLine.includes("KEC")) && !result.kecamatan) {
-      const val = extractValue(line, ["Kecamatan", "Kec"]);
+      const val = extractValue(line, ["kecamatan", "Kec"]);
       if (val && val.length > 2) {
         result.kecamatan = val.toUpperCase();
       }
     }
   }
 
-  // Fallback for RT/RW: if RT/RW line didn't match, search entire text for "RT 0X" or "RW 0X" style patterns
+  // Fallback for RT/rw: if RT/RW line didn't match, search entire text for "RT 0X" or "RW 0X" style patterns
   if (!result.rt || !result.rw) {
     const fullText = text.toUpperCase();
     const rtMatch = fullText.match(/RT[\s\.]*(\d{1,3})/);

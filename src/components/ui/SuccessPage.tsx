@@ -18,7 +18,7 @@ export const SuccessPage: React.FC<SuccessPageProps> = ({ userName, userDesa, on
 
   // Template Otomatisasi Pesan Konfirmasi CS Armedia
   const messageTemplate = encodeURIComponent(
-    `Halo CS ARMEDIA,\n\nSaya telah melakukan pengisian formulir pendaftaran pemasangan internet baru secara online.\n\n*Detail Registrasi:*\n• Nama: ${userName}\n• Domisili Desa: ${userDesa}\n\nMohon dibantu konfirmasi untuk jadwal survei lokasi dan instalasi perangkat teknisi lapangan. Terima kasih!`
+    `Halo CS ARMEDIA,\n\nSaya telah melakukan pengisian formulir pendaftaran pemasangan internet baru secara online.\n\n*Detail Registrasi:*\n• Nama: ${userName}\n• Domisili desa: ${userDesa}\n\nMohon dibantu konfirmasi untuk jadwal survei lokasi dan instalasi perangkat teknisi lapangan. Terima kasih!`
   );
 
   const handleWhatsAppRedirect = () => {
