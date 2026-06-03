@@ -5,7 +5,7 @@ import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 
 interface PackageSelectionProps {
   selectedPackage: string;
-  onSelect: (pkgLabel: string, pkgSpeed: string, pkgPrice: string) => void;
+  onSelect: (pkgLabel: string, pkgSpeed: string, pkgPrice: string, autoScroll?: boolean) => void;
 }
 
 export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPackage, onSelect }) => {
@@ -13,6 +13,7 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
   const [hasTv, setHasTv] = useState<boolean>(false);
   const [tvSize, setTvSize] = useState<string>("32");
   const [hasLive, setHasLive] = useState<boolean>(false);
+  const [hasInteracted, setHasInteracted] = useState<boolean>(false);
 
   const [totalMbps, setTotalMbps] = useState<number>(8);
   const [recommendedSpeed, setRecommendedSpeed] = useState<number>(20);
@@ -48,7 +49,15 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
 
     setRecommendedSpeed(rec);
 
-  }, [gadgetCount, hasTv, tvSize, hasLive]);
+    if (hasInteracted) {
+      const targetSpeed = rec === 10 ? 20 : rec;
+      const pkg = PACKAGES.find(p => p.speed.includes(`${targetSpeed} Mbps`));
+      if (pkg) {
+        onSelect(pkg.label, pkg.speed, pkg.price, false);
+      }
+    }
+
+  }, [gadgetCount, hasTv, tvSize, hasLive, hasInteracted]);
 
   // Handle Auto-Select saat rekomendasi berubah, HANYA JIKA user belum memilih manual?
   // Atau kita biarkan tombol pilih di paket sebagai manual override.
@@ -106,7 +115,7 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
               </div>
               <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
                 <button 
-                  onClick={() => setGadgetCount(Math.max(0, gadgetCount - 1))}
+                  onClick={() => { setGadgetCount(Math.max(0, gadgetCount - 1)); setHasInteracted(true); }}
                   className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-colors"
                 >
                   <Lucide.Minus size={14} strokeWidth={3} />
@@ -115,7 +124,7 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
                   {gadgetCount}
                 </div>
                 <button 
-                  onClick={() => setGadgetCount(gadgetCount + 1)}
+                  onClick={() => { setGadgetCount(gadgetCount + 1); setHasInteracted(true); }}
                   className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 flex items-center justify-center text-blue-600 transition-colors"
                 >
                   <Lucide.Plus size={14} strokeWidth={3} />
@@ -136,7 +145,7 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
                   </div>
                 </div>
                 <div className="relative">
-                  <input type="checkbox" className="sr-only" checked={hasTv} onChange={(e) => setHasTv(e.target.checked)} />
+                  <input type="checkbox" className="sr-only" checked={hasTv} onChange={(e) => { setHasTv(e.target.checked); setHasInteracted(true); }} />
                   <div className={`block w-10 h-6 rounded-full transition-colors ${hasTv ? 'bg-orange-500' : 'bg-slate-300'}`}></div>
                   <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${hasTv ? 'transform translate-x-4' : ''}`}></div>
                 </div>
@@ -148,7 +157,7 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
                   <div className="relative w-full">
                     <select 
                       value={tvSize} 
-                      onChange={(e) => setTvSize(e.target.value)}
+                      onChange={(e) => { setTvSize(e.target.value); setHasInteracted(true); }}
                       className="w-full p-2.5 text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded-xl outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 appearance-none shadow-sm transition-all pr-8"
                     >
                       <option value="32">Standar / Sekitar 32 Inch</option>
@@ -176,7 +185,7 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
                   </div>
                 </div>
                 <div className="relative">
-                  <input type="checkbox" className="sr-only" checked={hasLive} onChange={(e) => setHasLive(e.target.checked)} />
+                  <input type="checkbox" className="sr-only" checked={hasLive} onChange={(e) => { setHasLive(e.target.checked); setHasInteracted(true); }} />
                   <div className={`block w-10 h-6 rounded-full transition-colors ${hasLive ? 'bg-rose-500' : 'bg-slate-300'}`}></div>
                   <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${hasLive ? 'transform translate-x-4' : ''}`}></div>
                 </div>
@@ -232,7 +241,7 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
           return (
             <div
               key={pkg.label}
-              onClick={() => onSelect(pkg.label, pkg.speed, pkg.price)}
+              onClick={() => onSelect(pkg.label, pkg.speed, pkg.price, true)}
               className={`relative cursor-pointer rounded-[2rem] p-5 sm:p-6 transition-all duration-300 border-2 flex flex-col justify-between ${isSelected
                   ? "bg-white border-[#F47920] shadow-[0_20px_40px_rgba(244,121,32,0.25)] translate-y-[-4px] z-10"
                   : isRecommended 

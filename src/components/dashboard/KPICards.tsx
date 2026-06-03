@@ -20,11 +20,11 @@ const extractMbps = (paket: string): string => {
   if (match) return match[1];
   
   // Fallback: check package names
-  if (lower.includes("guyub_5") || lower.includes("100")) return "100";
-  if (lower.includes("guyub_4") || lower.includes("75")) return "75";
-  if (lower.includes("guyub_3") || lower.includes("50")) return "50";
-  if (lower.includes("guyub_2") || lower.includes("30")) return "30";
-  if (lower.includes("guyub_1") || lower.includes("20")) return "20";
+  if (lower.includes("paket_5") || lower.includes("100")) return "100";
+  if (lower.includes("paket_4") || lower.includes("75")) return "75";
+  if (lower.includes("paket_3") || lower.includes("50")) return "50";
+  if (lower.includes("paket_2") || lower.includes("30")) return "30";
+  if (lower.includes("paket_1") || lower.includes("20")) return "20";
   
   return "Unknown";
 };

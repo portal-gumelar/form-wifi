@@ -31,19 +31,19 @@ const standardizePackageName = (rawPaket: string): string => {
   if (!rawPaket) return "Tanpa Paket";
   const clean = rawPaket.toUpperCase().replace(/\s/g, "");
   
-  if (clean.includes("20MBPS") || clean.includes("20.MBPS") || clean.includes("GUYUB_1") || clean === "20") {
+  if (clean.includes("20MBPS") || clean.includes("20.MBPS") || clean.includes("PAKET_1") || clean === "20") {
     return "20 Mbps";
   }
-  if (clean.includes("30MBPS") || clean.includes("30.MBPS") || clean.includes("GUYUB_2") || clean === "30") {
+  if (clean.includes("30MBPS") || clean.includes("30.MBPS") || clean.includes("PAKET_2") || clean === "30") {
     return "30 Mbps";
   }
-  if (clean.includes("50MBPS") || clean.includes("50.MBPS") || clean.includes("GUYUB_3") || clean === "50") {
+  if (clean.includes("50MBPS") || clean.includes("50.MBPS") || clean.includes("PAKET_3") || clean === "50") {
     return "50 Mbps";
   }
-  if (clean.includes("75MBPS") || clean.includes("75.MBPS") || clean.includes("GUYUB_4") || clean === "75") {
+  if (clean.includes("75MBPS") || clean.includes("75.MBPS") || clean.includes("PAKET_4") || clean === "75") {
     return "75 Mbps";
   }
-  if (clean.includes("100MBPS") || clean.includes("100.MBPS") || clean.includes("GUYUB_5") || clean === "100") {
+  if (clean.includes("100MBPS") || clean.includes("100.MBPS") || clean.includes("PAKET_5") || clean === "100") {
     return "100 Mbps";
   }
   

@@ -383,11 +383,11 @@ interface EditModalProps {
 
 // Paket options - Simple Mbps only matching PACKAGES constants
 const PAKET_OPTIONS = [
-  { key: "20", guyub: "GUYUB_1", label: "20 Mbps", price: "Rp 115.000", color: "from-orange-400 to-orange-500", icon: Lucide.Zap },
-  { key: "30", guyub: "GUYUB_2", label: "30 Mbps", price: "Rp 148.000", color: "from-blue-400 to-blue-500", icon: Lucide.Zap },
-  { key: "50", guyub: "GUYUB_3", label: "50 Mbps", price: "Rp 182.000", color: "from-indigo-400 to-indigo-500", icon: Lucide.Zap },
-  { key: "75", guyub: "GUYUB_4", label: "75 Mbps", price: "Rp 260.000", color: "from-purple-400 to-purple-500", icon: Lucide.Zap },
-  { key: "100", guyub: "GUYUB_5", label: "100 Mbps", price: "Rp 330.000", color: "from-amber-400 to-amber-500", icon: Lucide.Crown },
+  { key: "20", paket: "PAKET_1", label: "20 Mbps", price: "Rp 115.000", color: "from-orange-400 to-orange-500", icon: Lucide.Zap },
+  { key: "30", paket: "PAKET_2", label: "30 Mbps", price: "Rp 148.000", color: "from-blue-400 to-blue-500", icon: Lucide.Zap },
+  { key: "50", paket: "PAKET_3", label: "50 Mbps", price: "Rp 182.000", color: "from-indigo-400 to-indigo-500", icon: Lucide.Zap },
+  { key: "75", paket: "PAKET_4", label: "75 Mbps", price: "Rp 260.000", color: "from-purple-400 to-purple-500", icon: Lucide.Zap },
+  { key: "100", paket: "PAKET_5", label: "100 Mbps", price: "Rp 330.000", color: "from-amber-400 to-amber-500", icon: Lucide.Crown },
 ];
 
 // Radio Card untuk Paket (Mobile Friendly)
@@ -402,7 +402,7 @@ const PaketRadioCards = ({ value, onChange }: { value: string; onChange: (val: s
     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
       {PAKET_OPTIONS.map((paket) => {
         const isSelected = selectedMbps === paket.key;
-        const fullValue = `${paket.guyub} (${paket.label}) - ${paket.price}/Bln`;
+        const fullValue = `${paket.paket} (${paket.label}) - ${paket.price}/Bln`;
         return (
           <button
             key={paket.key}

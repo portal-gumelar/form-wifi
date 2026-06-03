@@ -25,7 +25,7 @@ const initialForm = {
   rt: "",
   alamat: "",
   noHp: "",
-  paket: "GUYUB_1 (20 Mbps) - Rp 115.000/Bln",
+  paket: "",
   tanggalPasang: "",
   bisaGoogleMaps: "",
   linkGoogleMaps: "",
@@ -240,11 +240,13 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     }
   };
 
-  const handlePackageSelect = (pkgLabel: string, pkgSpeed: string, pkgPrice: string) => {
+const handlePackageSelect = (pkgLabel: string, pkgSpeed: string, pkgPrice: string, autoScroll = true) => {
     setForm(p => ({ ...p, paket: `${pkgLabel} (${pkgSpeed}) - Rp ${pkgPrice}/Bln` }));
-    setTimeout(() => {
-      document.getElementById('registration-form')?.scrollIntoView({ behavior: 'smooth' });
-    }, 150);
+    if (autoScroll) {
+      setTimeout(() => {
+        document.getElementById('registration-form')?.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {

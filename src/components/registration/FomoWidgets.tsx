@@ -13,22 +13,22 @@ interface FomoEvent {
 }
 
 const FALLBACK_EVENTS: FomoEvent[] = [
-  { id: "f1", name: "Andi S.", desa: "GUMELAR", type: "daftar", paket: "GUYUB_1 (20 Mbps)", time: "3 menit yang lalu" },
+  { id: "f1", name: "Andi S.", desa: "GUMELAR", type: "daftar", paket: "PAKET_1 (20 Mbps)", time: "3 menit yang lalu" },
   { id: "f2", name: "Siti R.", desa: "CIHONJE", type: "konsultasi", time: "Baru saja" },
-  { id: "f3", name: "Roni H.", desa: "CIHONJE", type: "lihat", paket: "GUYUB_2 (30 Mbps)", time: "1 menit yang lalu" },
+  { id: "f3", name: "Roni H.", desa: "CIHONJE", type: "lihat", paket: "PAKET_2 (30 Mbps)", time: "1 menit yang lalu" },
   { id: "f4", name: "Dewi A.", desa: "GUMELAR", type: "konsultasi", time: "10 menit yang lalu" },
-  { id: "f5", name: "Joko W.", desa: "GUMELAR", type: "daftar", paket: "GUYUB_3 (50 Mbps)", time: "2 jam yang lalu" },
-  { id: "f6", name: "Budi P.", desa: "CIHONJE", type: "daftar", paket: "GUYUB_1 (20 Mbps)", time: "5 menit yang lalu" },
-  { id: "f7", name: "Lina M.", desa: "GUMELAR", type: "lihat", paket: "GUYUB_5 (100 Mbps)", time: "Baru saja" },
+  { id: "f5", name: "Joko W.", desa: "GUMELAR", type: "daftar", paket: "PAKET_3 (50 Mbps)", time: "2 jam yang lalu" },
+  { id: "f6", name: "Budi P.", desa: "CIHONJE", type: "daftar", paket: "PAKET_1 (20 Mbps)", time: "5 menit yang lalu" },
+  { id: "f7", name: "Lina M.", desa: "GUMELAR", type: "lihat", paket: "PAKET_5 (100 Mbps)", time: "Baru saja" },
   { id: "f8", name: "Ahmad F.", desa: "CIHONJE", type: "konsultasi", time: "12 menit yang lalu" },
-  { id: "f9", name: "Rina K.", desa: "GUMELAR", type: "daftar", paket: "GUYUB_2 (30 Mbps)", time: "8 menit yang lalu" },
-  { id: "f10", name: "Dani T.", desa: "CIHONJE", type: "lihat", paket: "GUYUB_1 (20 Mbps)", time: "2 menit yang lalu" },
+  { id: "f9", name: "Rina K.", desa: "GUMELAR", type: "daftar", paket: "PAKET_2 (30 Mbps)", time: "8 menit yang lalu" },
+  { id: "f10", name: "Dani T.", desa: "CIHONJE", type: "lihat", paket: "PAKET_1 (20 Mbps)", time: "2 menit yang lalu" },
   { id: "f11", name: "Eko S.", desa: "GUMELAR", type: "konsultasi", time: "Baru saja" },
-  { id: "f12", name: "Maya D.", desa: "CIHONJE", type: "daftar", paket: "GUYUB_4 (70 Mbps)", time: "15 menit yang lalu" },
-  { id: "f13", name: "Putri N.", desa: "GUMELAR", type: "lihat", paket: "GUYUB_3 (50 Mbps)", time: "Baru saja" },
+  { id: "f12", name: "Maya D.", desa: "CIHONJE", type: "daftar", paket: "PAKET_4 (70 Mbps)", time: "15 menit yang lalu" },
+  { id: "f13", name: "Putri N.", desa: "GUMELAR", type: "lihat", paket: "PAKET_3 (50 Mbps)", time: "Baru saja" },
   { id: "f14", name: "Agus R.", desa: "CIHONJE", type: "konsultasi", time: "20 menit yang lalu" },
-  { id: "f15", name: "Bambang M.", desa: "GUMELAR", type: "daftar", paket: "GUYUB_1 (20 Mbps)", time: "1 jam yang lalu" },
-  { id: "f16", name: "Siska P.", desa: "CIHONJE", type: "lihat", paket: "GUYUB_2 (30 Mbps)", time: "5 menit yang lalu" }
+  { id: "f15", name: "Bambang M.", desa: "GUMELAR", type: "daftar", paket: "PAKET_1 (20 Mbps)", time: "1 jam yang lalu" },
+  { id: "f16", name: "Siska P.", desa: "CIHONJE", type: "lihat", paket: "PAKET_2 (30 Mbps)", time: "5 menit yang lalu" }
 ];
 
 export const FomoNotifications: React.FC = () => {
@@ -68,12 +68,12 @@ export const FomoNotifications: React.FC = () => {
           // Add consultations and views to keep it dynamic
           const blendedTypes: FomoEvent[] = [
             { id: "mix-1", name: "Hendra K.", desa: "GUMELAR", type: "konsultasi", time: "Baru saja" },
-            { id: "mix-2", name: "Siti M.", desa: "CIHONJE", type: "lihat", paket: "GUYUB_2 (30 Mbps)", time: "1 menit yang lalu" },
+            { id: "mix-2", name: "Siti M.", desa: "CIHONJE", type: "lihat", paket: "PAKET_2 (30 Mbps)", time: "1 menit yang lalu" },
             { id: "mix-3", name: "Novi A.", desa: "CIHONJE", type: "konsultasi", time: "4 menit yang lalu" },
-            { id: "mix-4", name: "Taufik H.", desa: "GUMELAR", type: "lihat", paket: "GUYUB_1 (20 Mbps)", time: "Baru saja" },
+            { id: "mix-4", name: "Taufik H.", desa: "GUMELAR", type: "lihat", paket: "PAKET_1 (20 Mbps)", time: "Baru saja" },
             { id: "mix-5", name: "Ratna D.", desa: "CIHONJE", type: "konsultasi", time: "2 menit yang lalu" },
-            { id: "mix-6", name: "Rizky F.", desa: "GUMELAR", type: "daftar", paket: "GUYUB_3 (50 Mbps)", time: "10 menit yang lalu" },
-            { id: "mix-7", name: "Dina L.", desa: "CIHONJE", type: "lihat", paket: "GUYUB_1 (20 Mbps)", time: "Baru saja" },
+            { id: "mix-6", name: "Rizky F.", desa: "GUMELAR", type: "daftar", paket: "PAKET_3 (50 Mbps)", time: "10 menit yang lalu" },
+            { id: "mix-7", name: "Dina L.", desa: "CIHONJE", type: "lihat", paket: "PAKET_1 (20 Mbps)", time: "Baru saja" },
             { id: "mix-8", name: "Aris S.", desa: "GUMELAR", type: "konsultasi", time: "7 menit yang lalu" }
           ];
 

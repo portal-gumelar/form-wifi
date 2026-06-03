@@ -28,7 +28,7 @@ const CustomPaketDropdown = ({ value, onChange, options }: { value: string, onCh
   const getPaketStyle = (name: string) => {
     const lower = name.toLowerCase();
     if (lower.includes('30.mbps')) return { color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', icon: Lucide.Zap };
-    if (lower.includes('guyub')) return { color: 'text-[#F47920]', bg: 'bg-orange-50', border: 'border-orange-100', icon: Lucide.Users };
+    if (lower.includes('paket')) return { color: 'text-[#F47920]', bg: 'bg-orange-50', border: 'border-orange-100', icon: Lucide.Users };
     if (lower.includes('20.mbps')) return { color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', icon: Lucide.Activity };
     if (lower.includes('50.mbps')) return { color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', icon: Lucide.Rocket };
     return { color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-100', icon: Lucide.Box };
@@ -469,7 +469,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       timestamp: "baru-" + Date.now(),
       nama_lengkap: "", no_hp_wa: "", alamat_pemasangan: "",
       provider_saat_ini: "Belum Pernah Pasang", sumber_info: "Rekomendasi Teman",
-      paket: "GUYUB_1 (20 Mbps) - Rp 115.000/Bln", status: "PENGAJUAN", kecamatan: "GUMELAR", desa: "GUMELAR",
+      paket: "PAKET_1 (20 Mbps) - Rp 115.000/Bln", status: "PENGAJUAN", kecamatan: "GUMELAR", desa: "GUMELAR",
       persetujuan_sk: "SETUJU (Manual Admin)",
       catatan: ""
     };
