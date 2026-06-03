@@ -218,7 +218,7 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
       </div>
 
       {/* ACTION: Pilihan Paket Berdasarkan Hasil */}
-      <div className="mb-4 text-center sm:text-left">
+      <div id="paket-grid" className="mb-4 text-center sm:text-left scroll-mt-24">
         <h4 className="text-white font-black uppercase tracking-widest text-sm mb-1">Pilih Paket Anda</h4>
         <p className="text-white/60 text-xs font-medium">Berdasarkan kalkulasi, kami merekomendasikan opsi yang ditandai bintang.</p>
       </div>

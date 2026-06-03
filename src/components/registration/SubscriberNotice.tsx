@@ -264,63 +264,6 @@ export const SubscriberNotice: React.FC<SubscriberNoticeProps> = ({ isAccepted, 
                     </table>
                   </div>
 
-                  {/* Tabel Gabungan HP (2 Kolom - Tanpa Scroll Samping) */}
-                  <div className="block md:hidden w-full rounded-2xl border-2 border-blue-200 bg-blue-50/40 overflow-hidden shadow-sm">
-                    <p className="text-[10px] font-black text-blue-800 uppercase tracking-widest px-4 py-2.5 border-b border-blue-200">
-                      💡 Contoh Bayar Gabungan (Tgl 28–30)
-                    </p>
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-blue-700 text-white text-[10px] font-black uppercase">
-                          <th className="px-4 py-2.5 text-center w-1/3 border-r border-white/10">Tanggal On</th>
-                          <th className="px-4 py-2.5 text-yellow-300 w-2/3">Biaya Gabungan ({activeSpeedTab === "p1" ? "20 Mbps" : activeSpeedTab === "p2" ? "30 Mbps" : activeSpeedTab === "p3" ? "50 Mbps" : activeSpeedTab === "p4" ? "75 Mbps" : "100 Mbps"})</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-blue-100 font-black text-blue-900">
-                        {tarifGabungan.map((row, idx) => (
-                          <tr key={idx} className="hover:bg-blue-100/50">
-                            <td className="px-4 py-2 text-center font-black bg-blue-100/60 border-r border-blue-200">{row.tgl}</td>
-                            <td className="px-4 py-2 text-orange-600 font-black">Rp {row[activeSpeedTab]}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Tabel Gabungan Desktop (5 Kolom - Tampang Lebar Asli) */}
-                  <div className="hidden md:block w-full overflow-x-auto rounded-xl border-2 border-blue-200 bg-blue-50/40 custom-scrollbar">
-                    <p className="text-[10px] font-black text-blue-800 uppercase tracking-widest px-3 pt-2.5 pb-1.5 border-b border-blue-200">
-                      💡 Contoh Bayar Gabungan (Tgl 28–30): Bisa digabung ke bulan depan
-                    </p>
-                    <table className="w-full text-left text-xs border-collapse min-w-[480px]">
-                      <thead>
-                        <tr className="bg-blue-700 text-white text-[10px] font-black uppercase">
-                          <th className="px-3 py-2 sticky left-0 bg-blue-700 border-r border-white/10 text-center">Tgl On</th>
-                          <th className="px-3 py-2 text-yellow-300">20 Mbps</th>
-                          <th className="px-3 py-2">30 Mbps</th>
-                          <th className="px-3 py-2">50 Mbps</th>
-                          <th className="px-3 py-2">75 Mbps</th>
-                          <th className="px-3 py-2">100 Mbps</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-blue-100 font-black text-blue-900">
-                        {tarifGabungan.map((row, idx) => (
-                          <tr key={idx} className="hover:bg-blue-100/50">
-                            <td className="px-3 py-2 text-center font-black bg-blue-100/60 border-r border-blue-200 sticky left-0">{row.tgl}</td>
-                            <td className="px-3 py-2 text-orange-600">{row.p1}</td>
-                            <td className="px-3 py-2">{row.p2}</td>
-                            <td className="px-3 py-2">{row.p3}</td>
-                            <td className="px-3 py-2">{row.p4}</td>
-                            <td className="px-3 py-2">{row.p5}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <p className="text-[11px] text-slate-500 font-bold">
-                    Pembayaran rutin setiap tanggal 1. Pelanggan dengan internet aktif tgl 25–30 boleh menggabungkan tagihan ke bulan berikutnya (hemat transfer).
-                  </p>
-
                   {/* Rekening Bank */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3.5 mt-1">
                     <div>

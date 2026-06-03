@@ -501,7 +501,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
               </div>
               <button 
                 type="button" 
-                onClick={() => document.getElementById('sec-paket')?.scrollIntoView({ behavior: 'smooth' })} 
+                onClick={() => document.getElementById('paket-grid')?.scrollIntoView({ behavior: 'smooth' })} 
                 className="text-xs font-black bg-white border-2 border-blue-200 text-blue-700 px-3 py-2 rounded-xl hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors shadow-sm whitespace-nowrap"
               >
                 Ubah
