@@ -256,6 +256,16 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     else if (name === "paket") {
       scrollTo("sec-lokasi");
     }
+    else if (name === "desa") {
+      scrollTo("sec-rwrt");
+    }
+    else if (name === "rt") {
+      scrollTo("inp-alamat");
+      setTimeout(() => {
+        const alamatInput = document.querySelector('textarea[name="alamat"]') as HTMLTextAreaElement;
+        alamatInput?.focus();
+      }, 500);
+    }
     else if (name === "tanggalPasang") {
       scrollTo("sec-lokasi");
       // Auto-advance to lokasi section
@@ -527,6 +537,21 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                 <span>⚠️</span> {error}
               </div>
             )}
+
+            {/* Indikator Paket Terpilih */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-sm">
+              <div>
+                <p className="text-[10px] sm:text-xs font-black text-blue-800 uppercase tracking-widest mb-1">Paket Terpilih (Kapasitas MB)</p>
+                <p className="text-sm sm:text-base font-black text-slate-800">{form.paket || "Belum ada paket yang dipilih"}</p>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => document.getElementById('sec-paket')?.scrollIntoView({ behavior: 'smooth' })} 
+                className="text-xs font-black bg-white border-2 border-blue-200 text-blue-700 px-3 py-2 rounded-xl hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors shadow-sm whitespace-nowrap"
+              >
+                Ubah
+              </button>
+            </div>
 
             <Section title="APAKAH SAAT INI ANDA SUDAH LANGGANAN INTERNET?" icon="📡" required>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
