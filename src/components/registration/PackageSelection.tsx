@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { PACKAGES } from "../../constants/packages";
 import * as Lucide from "lucide-react";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 
 interface PackageSelectionProps {
   selectedPackage: string;
@@ -53,7 +54,16 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
   // Atau kita biarkan tombol pilih di paket sebagai manual override.
   // Untuk action pre-select, kita sorot paket yang direkomendasikan.
 
+  const count = useMotionValue(8);
+  const roundedCount = useTransform(count, Math.round);
+
+  useEffect(() => {
+    const animation = animate(count, totalMbps, { duration: 0.6, ease: "easeOut" });
+    return animation.stop;
+  }, [totalMbps, count]);
+
   const getRecommendedPackage = () => {
+
     // Karena paket 10 Mbps mungkin belum ada di list, kita fallback ke 20 Mbps
     const targetSpeed = recommendedSpeed === 10 ? 20 : recommendedSpeed;
     const pkg = PACKAGES.find(p => p.speed.includes(`${targetSpeed} Mbps`));
@@ -86,7 +96,7 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
             {/* Input HP */}
             <div className="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
                   <Lucide.Smartphone size={16} />
                 </div>
                 <div>
@@ -94,14 +104,23 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
                   <div className="text-[10px] text-slate-500 font-medium">Aktif bersamaan</div>
                 </div>
               </div>
-              <input 
-                type="number" 
-                min="0" 
-                max="50"
-                value={gadgetCount}
-                onChange={(e) => setGadgetCount(parseInt(e.target.value) || 0)}
-                className="w-16 p-2 text-center font-black text-slate-800 bg-white border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-              />
+              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+                <button 
+                  onClick={() => setGadgetCount(Math.max(0, gadgetCount - 1))}
+                  className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-colors"
+                >
+                  <Lucide.Minus size={14} strokeWidth={3} />
+                </button>
+                <div className="w-6 text-center font-black text-slate-800 text-sm">
+                  {gadgetCount}
+                </div>
+                <button 
+                  onClick={() => setGadgetCount(gadgetCount + 1)}
+                  className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 flex items-center justify-center text-blue-600 transition-colors"
+                >
+                  <Lucide.Plus size={14} strokeWidth={3} />
+                </button>
+              </div>
             </div>
 
             {/* Toggle Smart TV */}
@@ -124,17 +143,22 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
               </label>
 
               {hasTv && (
-                <div className="mt-4 pt-3 border-t border-slate-200 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                  <div className="text-xs font-bold text-slate-600 whitespace-nowrap">Ukuran TV:</div>
-                  <select 
-                    value={tvSize} 
-                    onChange={(e) => setTvSize(e.target.value)}
-                    className="w-full p-2 text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded-lg outline-none focus:border-orange-500"
-                  >
-                    <option value="32">Sekitar 32 Inch</option>
-                    <option value="43">Sekitar 40-43 Inch</option>
-                    <option value="50">50 Inch ke Atas (4K)</option>
-                  </select>
+                <div className="mt-4 pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="text-xs font-bold text-slate-600 whitespace-nowrap">Resolusi / Ukuran:</div>
+                  <div className="relative w-full">
+                    <select 
+                      value={tvSize} 
+                      onChange={(e) => setTvSize(e.target.value)}
+                      className="w-full p-2.5 text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded-xl outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 appearance-none shadow-sm transition-all pr-8"
+                    >
+                      <option value="32">Standar / Sekitar 32 Inch</option>
+                      <option value="43">Medium / 40-43 Inch</option>
+                      <option value="50">Besar (4K) / 50 Inch ke Atas</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <Lucide.ChevronDown size={14} strokeWidth={3} />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -169,19 +193,23 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
               <div className="relative z-10 text-center">
                 <p className="text-xs text-blue-200 font-bold uppercase tracking-widest mb-2">Estimasi Beban Bandwidth</p>
                 <div className="flex items-center justify-center gap-2 mb-6">
-                  <span className="text-5xl sm:text-6xl font-black tracking-tighter">{totalMbps}</span>
-                  <span className="text-lg text-blue-200 font-bold">Mbps</span>
+                  <motion.span className="text-6xl sm:text-7xl font-black tracking-tighter drop-shadow-lg text-white">
+                    {roundedCount}
+                  </motion.span>
+                  <span className="text-lg text-blue-200 font-bold mt-4">Mbps</span>
                 </div>
 
                 <div className="w-full h-px bg-white/20 mb-6"></div>
 
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                  <p className="text-[10px] sm:text-xs text-blue-100 font-medium uppercase tracking-widest mb-1">Rekomendasi Paket Ideal Anda</p>
-                  <p className="text-xl sm:text-2xl font-black text-[#FDB913] tracking-tight">{recommendedSpeed} Mbps</p>
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10 shadow-inner">
+                  <p className="text-[10px] sm:text-xs text-blue-100 font-medium uppercase tracking-widest mb-1.5">Rekomendasi Paket Ideal</p>
+                  <p className="text-2xl sm:text-3xl font-black text-[#FDB913] tracking-tight drop-shadow-[0_0_15px_rgba(253,185,19,0.5)]">
+                    {recommendedSpeed} Mbps
+                  </p>
                 </div>
                 
-                <p className="text-[10px] sm:text-xs text-blue-100/80 mt-4 leading-relaxed font-medium">
-                  Paket {recommendedSpeed} Mbps menjamin streaming TV dan aktivitas digital Anda berjalan lancar tanpa interupsi atau buffering.
+                <p className="text-[10px] sm:text-xs text-blue-100/80 mt-5 leading-relaxed font-medium px-2">
+                  Paket <strong className="text-white">{recommendedSpeed} Mbps</strong> menjamin streaming TV dan aktivitas digital Anda berjalan mulus tanpa gangguan buffering.
                 </p>
               </div>
             </div>
