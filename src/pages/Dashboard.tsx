@@ -98,24 +98,24 @@ const CustomPaketDropdown = ({ value, onChange, options }: { value: string, onCh
 
 // --- Normalisasi Field dari Google Sheets (di luar komponen agar selalu tersedia) ---
 const normalizeRow = (row: any): RegistrationData => ({
-  timestamp: String(row.timestamp || ""),
-  nik: String(row.nik || ""),
-  nama_lengkap: String(row.nama_lengkap || ""),
-  no_hp_wa: String(row.no_hp_wa || ""),
-  paket: String(row.paket || ""),
-  alamat_pemasangan: String(row.alamat_pemasangan || row["alamat pemasangan"] || ""),
-  provider_saat_ini: String(row.provider_saat_ini || ""),
-  sumber_info: String(row.sumber_info || ""),
-  kecamatan: String(row.kecamatan || row.kecamatan || "GUMELAR"),
-  desa: String(row.desa || row.desa || ""),
-  rw: String(row.rw || row.rw || ""),
-  rt: String(row.rt || row.rt || ""),
-  tanggal_rencana_pasang: String(row.tanggal_rencana_pasang || ""),
-  link_google_maps: String(row.link_google_maps || ""),
-  status: String(row.status || row.Status || "PENGAJUAN"),
-  foto_ktp: String(row.foto_ktp || row.fotoKtp || ""),
-  persetujuan_sk: String(row.persetujuan_sk || row.persetujuanSnk || ""),
-  catatan: String(row.catatan || row.catatan || ""),
+  timestamp: String(row.timestamp || row.Timestamp || ""),
+  nik: String(row.nik || row.NIK || ""),
+  nama_lengkap: String(row.nama_lengkap || row["Nama Lengkap"] || ""),
+  no_hp_wa: String(row.no_hp_wa || row["No HP / WA"] || ""),
+  paket: String(row.paket || row.Paket || ""),
+  alamat_pemasangan: String(row.alamat_pemasangan || row["alamat pemasangan"] || row["Alamat Pemasangan"] || ""),
+  provider_saat_ini: String(row.provider_saat_ini || row["Provider Saat Ini"] || ""),
+  sumber_info: String(row.sumber_info || row["Sumber Info"] || ""),
+  kecamatan: String(row.kecamatan || row.Kecamatan || "GUMELAR"),
+  desa: String(row.desa || row.Desa || ""),
+  rw: String(row.rw || row.RW || ""),
+  rt: String(row.rt || row.RT || ""),
+  tanggal_rencana_pasang: String(row.tanggal_rencana_pasang || row["Tanggal Rencana Pasang"] || ""),
+  link_google_maps: String(row.link_google_maps || row["Link Google Maps"] || ""),
+  status: String(row.status || row.Status || row.status || "PENGAJUAN"),
+  foto_ktp: String(row.foto_ktp || row.fotoKtp || row["Foto KTP"] || ""),
+  persetujuan_sk: String(row.persetujuan_sk || row.persetujuanSnk || row["Persetujuan S&K"] || ""),
+  catatan: String(row.catatan || row.Catatan || ""),
 });
 
 // --- Helper: Extract price from Paket string ---
@@ -185,7 +185,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       try {
         const res = await api.getRegistrations();
         if (res.data && res.data.length > 0) {
-          dbData = res.data;
+          dbData = res.data.map(normalizeRow);
         }
       } catch (err) {
         console.warn("Backend refresh failed", err);
@@ -254,7 +254,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       try {
         const res = await api.getRegistrations();
         if (res.data && res.data.length > 0) {
-          dbData = res.data;
+          dbData = res.data.map(normalizeRow);
         }
       } catch (err) {
         console.warn("Backend fetch failed", err);
