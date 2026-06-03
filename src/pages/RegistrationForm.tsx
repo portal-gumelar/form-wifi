@@ -240,12 +240,10 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     }
   };
 
-const handlePackageSelect = (pkgLabel: string, pkgSpeed: string, pkgPrice: string, autoScroll = true) => {
+  const handlePackageSelect = (pkgLabel: string, pkgSpeed: string, pkgPrice: string, autoScroll = true) => {
     setForm(p => ({ ...p, paket: `${pkgLabel} (${pkgSpeed}) - Rp ${pkgPrice}/Bln` }));
     if (autoScroll) {
-      setTimeout(() => {
-        document.getElementById('registration-form')?.scrollIntoView({ behavior: 'smooth' });
-      }, 150);
+      scrollTo('registration-form');
     }
   };
 
