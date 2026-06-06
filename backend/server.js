@@ -213,7 +213,7 @@ app.post('/api/auth/login',
       }
 
       const { rows } = await pool.query(
-        'SELECT * FROM users WHERE email = $1 AND is_active = TRUE AND deleted_at IS NULL',
+        'SELECT * FROM users WHERE email = $1 AND is_active = TRUE',
         [email]
       );
 
