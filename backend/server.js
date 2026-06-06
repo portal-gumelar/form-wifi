@@ -544,7 +544,7 @@ app.put('/api/customers/:id',
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: 'ID tidak valid.' });
 
-    const { name, address, phone, village_id, package_id, status, joined_at, expired_at, notes } = req.body;
+    const { name, address, phone, village_id, package_id, status, joined_at, expired_at, notes, foto_ktp } = req.body;
 
     try {
       const { rowCount } = await pool.query(
@@ -556,6 +556,26 @@ app.put('/api/customers/:id',
       );
 
       if (rowCount === 0) return res.status(404).json({ error: 'Pelanggan tidak ditemukan.' });
+
+      // Simpan foto_ktp ke tabel photos jika ada
+      if (foto_ktp && typeof foto_ktp === 'string' && foto_ktp.trim() !== '') {
+        // Ekstrak path relatif dari full URL jika perlu
+        let urlPath = foto_ktp.trim();
+        const API_BASE_URL = process.env.API_BASE_URL || '';
+        if (API_BASE_URL && urlPath.startsWith(API_BASE_URL)) {
+          urlPath = urlPath.slice(API_BASE_URL.length);
+        }
+        // Ekstrak filename dari path
+        const filename = urlPath.split('/').pop() || urlPath;
+
+        // Insert ke photos table (type='ktp')
+        await pool.query(
+          `INSERT INTO photos (subscriber_id, type, filename, url_path, created_at)
+           VALUES ($1, 'ktp', $2, $3, NOW())
+           ON CONFLICT DO NOTHING`,
+          [id, filename, urlPath]
+        );
+      }
 
       const ip = req.ip || req.headers['x-forwarded-for']?.split(',')[0]?.trim();
       await writeLog(pool, req.user.id, 'UPDATE', 'subscribers', id, `Update pelanggan: ${name}`, ip);
