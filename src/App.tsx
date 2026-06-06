@@ -1,45 +1,64 @@
-// Last update: 2026-06-03 - Replaced Supabase with localStorage auth
+// AUDIT FIX: App.tsx - JWT-based auth, hapus Google Script URL dari frontend
+// - Tidak ada GOOGLE_SCRIPT_URL di sini
+// - Auth berdasarkan JWT token di localStorage (bukan role string)
+// - Redirect otomatis berdasarkan token validity
 import React, { useState, useEffect } from "react";
 import { RegistrationForm } from "./pages/RegistrationForm";
 import { SuccessPage } from "./components/ui/SuccessPage";
 import { LoginPage } from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
+import { api, tokenStore } from "./utils/apiClient";
 
-// REVISI SOP: Mengembalikan ke URL Database Produksi Asli Anda yang Valid
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztG8z0ob1ULpzkYXIIbaV1PokdR_dO4qj7TSD0rnwz8qb77QlJNrUQM0DHwNwXFC_reQ/exec";
+type AppView = "form" | "login" | "dashboard";
+
+interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
 
 export default function App() {
-  const isDashboardPath = window.location.pathname.includes("/dashboard");
+  const isDashboardPath = window.location.pathname.startsWith("/dashboard");
+  const isLoginPath     = window.location.pathname.startsWith("/login");
 
-  const [view, setView] = useState<"form" | "login" | "admin">("form");
+  const [view,      setView]      = useState<AppView>("form");
   const [submitted, setSubmitted] = useState(false);
-  const [lastReg, setLastReg] = useState({ name: "", desa: "" });
-  const [userRole, setUserRole] = useState<string>("admin"); // default to read-only admin
+  const [lastReg,   setLastReg]   = useState({ name: "", desa: "" });
+  const [user,      setUser]      = useState<AuthUser | null>(null);
 
-  // Initial Auth Check using localStorage
+  // --- Initial Auth Check ---
   useEffect(() => {
-    const savedRole = localStorage.getItem("armedia_admin_role");
-    
-    if (savedRole) {
-      setUserRole(savedRole);
-      setView("admin");
-    } else {
-      if (isDashboardPath) {
-        setView("login");
-      } else {
-        setView("form");
+    const initAuth = async () => {
+      const token = tokenStore.getAccess();
+      if (!token) {
+        if (isDashboardPath) setView("login");
+        else if (isLoginPath) setView("login");
+        else setView("form");
+        return;
       }
-    }
-  }, [isDashboardPath]);
 
-  // Sinkronisasi URL Browser secara dinamis berdasarkan state aktif aplikasi
+      try {
+        const userData = await api.getMe();
+        setUser(userData as AuthUser);
+        localStorage.setItem("armedia_user", JSON.stringify(userData));
+        setView("dashboard");
+      } catch (err) {
+        tokenStore.clear();
+        setView(isDashboardPath || isLoginPath ? "login" : "form");
+      }
+    };
+    initAuth();
+  }, [isDashboardPath, isLoginPath]);
+
+  // --- Sync URL dengan view state ---
   useEffect(() => {
-    if (view === "admin") {
-      if (!window.location.pathname.includes("/dashboard")) {
+    if (view === "dashboard") {
+      if (!window.location.pathname.startsWith("/dashboard")) {
         window.history.pushState({}, "", "/dashboard");
       }
     } else if (view === "login") {
-      if (!window.location.pathname.includes("/login")) {
+      if (!window.location.pathname.startsWith("/login")) {
         window.history.pushState({}, "", "/login");
       }
     } else {
@@ -49,14 +68,22 @@ export default function App() {
     }
   }, [view]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("armedia_admin_role");
-    setUserRole("admin");
+  const handleLogout = async () => {
+    try {
+      await api.logout();
+    } catch { /* ignore */ }
+    tokenStore.clear();
+    setUser(null);
     setView("form");
     window.scrollTo(0, 0);
   };
 
-  // Tampilan Halaman Sukses
+  const handleLoginSuccess = (loggedInUser: AuthUser) => {
+    setUser(loggedInUser);
+    setView("dashboard");
+  };
+
+  // Success Page setelah submit form
   if (submitted && view === "form") {
     return (
       <SuccessPage
@@ -70,33 +97,28 @@ export default function App() {
     );
   }
 
-  // Tampilan Halaman Login Portal
+  // Login Page
   if (view === "login") {
     return (
       <LoginPage
         onBack={() => setView("form")}
-        onFallbackLogin={(email: string, role: string) => {
-          console.log("[App] Login berhasil:", email, role);
-          localStorage.setItem("armedia_admin_role", role);
-          setUserRole(role);
-          setView("admin");
-        }}
+        onLoginSuccess={handleLoginSuccess}
       />
     );
   }
 
-  // Tampilan Dasbor Utama Admin (Full CRUD Mode atau Read-Only berdasarkan userRole)
-  if (view === "admin") {
+  // Dashboard (Admin)
+  if (view === "dashboard" && user) {
     return (
       <Dashboard
-        googleScriptUrl={GOOGLE_SCRIPT_URL}
         onLogout={handleLogout}
-        userRole={userRole}
+        userRole={user.role}
+        user={user}
       />
     );
   }
 
-  // Tampilan Utama Form Pendaftaran Warga
+  // Form Pendaftaran Publik
   return (
     <RegistrationForm
       setSubmitted={(data) => {

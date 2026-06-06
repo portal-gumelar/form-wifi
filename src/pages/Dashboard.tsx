@@ -14,6 +14,7 @@ import { CustomersView } from "../components/dashboard/CustomersView";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { GeographicalView } from "../components/dashboard/GeographicalView";
 import { VillageFundChart } from "../components/dashboard/VillageFundChart";
+import { SettingsView } from "../components/dashboard/SettingsView";
 
 // Utils & Types
 import { RegistrationData, DashboardStats } from "../types";
@@ -118,9 +119,8 @@ const normalizeRow = (row: any): RegistrationData => ({
   catatan: String(row.catatan || row.Catatan || ""),
 });
 
-// --- Helper: Extract price from Paket string ---
+// AUDIT FIX: Google Script URL DIHAPUS - semua data dari PostgreSQL backend
 const extractPrice = (paket: string, packages: typeof PACKAGES): number => {
-  // Try to find matching package
   for (const pkg of packages) {
     const pkgLabel = pkg.label.toLowerCase();
     const pkgSpeed = pkg.speed.toLowerCase();
@@ -128,12 +128,11 @@ const extractPrice = (paket: string, packages: typeof PACKAGES): number => {
       return parseInt(pkg.price.replace(/\./g, ''));
     }
   }
-  // Default fallback to 115000 if no match
   return 115000;
 };
 
 // --- Komponen Utama Dashboard ---
-export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin" }: any) {
+export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
   const [data, setData] = useState<RegistrationData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -153,87 +152,35 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
   const [editingReg, setEditingReg] = useState<RegistrationData | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [filterStatus, setFilterStatus] = useState("");
-  // Filter Mbps dan Desa (permintaan Pak Yusuf)
   const [filterMbps, setFilterMbps] = useState("");
   const [filterDesa, setFilterDesa] = useState("");
-  // B: Filter tanggal
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
-  // D: Notifikasi
   const [notifications, setNotifications] = useState<{ id: string; name: string; time: string }[]>([]);
   const [showNotif, setShowNotif] = useState(false);
   const [lastCount, setLastCount] = useState(0);
-  // H: Auto-refresh status
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [kpiStats, setKpiStats] = useState(null);
 
-  // H: Auto-refresh setiap 5 menit
   useEffect(() => {
     fetchData();
     const interval = setInterval(() => {
       silentRefresh();
-    }, 5 * 60 * 1000); // 5 menit
+    }, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
   const silentRefresh = async () => {
     setIsRefreshing(true);
     try {
-      let dbData: RegistrationData[] = [];
-      let sheetsData: RegistrationData[] = [];
-      
-      try {
-        const res = await api.getRegistrations();
-        if (res.data && res.data.length > 0) {
-          dbData = res.data.map(normalizeRow);
-        }
-      } catch (err) {
-        console.warn("Backend refresh failed", err);
-      }
-
-      if (googleScriptUrl) {
-        try {
-          const response = await fetch(googleScriptUrl);
-          if (response.ok) {
-            const result = await response.json();
-            if (Array.isArray(result) && result.length > 0) {
-              sheetsData = result.map(normalizeRow);
-            } else if (result && Array.isArray(result.data) && result.data.length > 0) {
-              sheetsData = result.data.map(normalizeRow);
-            }
-          }
-        } catch (err) {
-          console.warn("Apps Script refresh failed", err);
-        }
-      }
-
-      const mergedDataMap = new Map();
-      sheetsData.forEach(item => {
-        if (item.timestamp) mergedDataMap.set(item.timestamp, item);
-      });
-      dbData.forEach(item => {
-        if (item.timestamp) mergedDataMap.set(item.timestamp, item);
-      });
-
-      let fetchedData = Array.from(mergedDataMap.values());
-      fetchedData.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-
-      if (fetchedData.length > 0) {
-        // D: Deteksi pendaftar baru
-        setData(prev => {
-          if (fetchedData.length > prev.length) {
-            const newEntries = fetchedData.slice(0, fetchedData.length - prev.length);
-            const notifs = newEntries.map((e: RegistrationData) => ({
-              id: e.timestamp,
-              name: e.nama_lengkap,
-              time: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
-            }));
-            setNotifications(prevNotif => [...notifs, ...prevNotif].slice(0, 10));
-            setLastCount(fetchedData.length);
-          }
-          return fetchedData;
-        });
+      const res = await api.getRegistrations();
+      if (res.data && res.data.length > 0) {
+        const fetchedData = res.data.map(normalizeRow);
+        fetchedData.sort((a: RegistrationData, b: RegistrationData) => 
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+        setData(fetchedData);
         setLastRefresh(new Date());
       }
     } catch (err) {
@@ -246,69 +193,22 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
   const fetchData = async () => {
     try {
       setLoading(true);
-      
-      let dbData: RegistrationData[] = [];
-      let sheetsData: RegistrationData[] = [];
-      
-      // 1. Fetch live data dari Backend
-      try {
-        const res = await api.getRegistrations();
-        if (res.data && res.data.length > 0) {
-          dbData = res.data.map(normalizeRow);
-        }
-      } catch (err) {
-        console.warn("Backend fetch failed", err);
-      }
-      
-      // 2. Fetch dari Google Apps Script
-      if (googleScriptUrl) {
-        try {
-          const response = await fetch(googleScriptUrl);
-          if (response.ok) {
-            const result = await response.json();
-            if (Array.isArray(result) && result.length > 0) {
-              sheetsData = result.map(normalizeRow);
-            } else if (result && Array.isArray(result.data) && result.data.length > 0) {
-              sheetsData = result.data.map(normalizeRow);
-            }
-          }
-        } catch (err) {
-          console.warn("Apps Script fetch failed", err);
-        }
-      }
-
-      // Gabungkan (Merge) data dari Google Sheets dan PostgreSQL Database
-      const mergedDataMap = new Map();
-      sheetsData.forEach(item => {
-        if (item.timestamp) mergedDataMap.set(item.timestamp, item);
-      });
-      // Data Database menimpa Google Sheets (lebih prioritas)
-      dbData.forEach(item => {
-        if (item.timestamp) mergedDataMap.set(item.timestamp, item);
-      });
-
-      let fetchedData = Array.from(mergedDataMap.values());
-      fetchedData.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-
-      if (fetchedData.length > 0) {
+      const res = await api.getRegistrations();
+      if (res.data && res.data.length > 0) {
+        const fetchedData = res.data.map(normalizeRow);
+        fetchedData.sort((a: RegistrationData, b: RegistrationData) => 
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
         setData(fetchedData);
       } else {
-        // 3. Fallback data lokal dummy jika tabel kosong
-        try {
-          const localResponse = await fetch("/data/dummy_data.json");
-          if (localResponse.ok) {
-            const localJson = await localResponse.json();
-            if (Array.isArray(localJson)) {
-              setData(localJson.map(normalizeRow));
-            }
-          }
-        } catch (e) {
-          console.warn("No dummy data found.");
-        }
+        setData([]);
       }
+      
+      // FIX: Fetch kpi stats
+      api.getKpiStats().then(kpiRes => setKpiStats(kpiRes.data)).catch(() => {});
+
     } catch (err) {
-      console.error("Dashboard init failed", err);
+      console.error("Dashboard init failed:", err);
     } finally {
       setLoading(false);
     }
@@ -320,22 +220,12 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       showToast("error", "Akses ditolak: Hanya Superadmin yang bisa mengubah status.");
       return;
     }
-    // 1. Update UI Lokal secara Instan
-    // Find the item to check its "tanggal_aktif"
     const item = data.find(r => r.timestamp === timestamp);
     const finalTanggalAktif = newStatus === "AKTIF" ? new Date().toLocaleDateString("id-ID") : (item ? item.tanggal_aktif : "");
-    
     try {
       setData(prev => prev.map(r => r.timestamp === timestamp ? { ...r, status: newStatus, tanggal_aktif: finalTanggalAktif } : r));
       await api.updateStatus(timestamp, newStatus);
       showToast("success", "Status berhasil diubah!");
-      
-      // Backup asinkron
-      const params = new URLSearchParams();
-      params.append("action", "update");
-      params.append("timestamp", timestamp);
-      params.append("status", newStatus);
-      fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: params }).catch(() => {});
     } catch (err) {
       console.error(err);
       showToast("error", "Gagal mengubah status di database.");
@@ -353,29 +243,24 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       await api.deleteRegistration(timestamp);
       setConfirmDelete(null);
       showToast("success", "Data berhasil dihapus!");
-      
-      // Backup asinkron
-      fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: new URLSearchParams({ action: "delete", timestamp }) }).catch(() => {});
     } catch (err) {
       console.error(err);
       showToast("error", "Terjadi kesalahan saat menghapus data.");
     }
   };
 
-  // --- IMPLEMENTASI SEKUENSAL INPUT FULL CRUD KE POSTGRESQL ---
   const handleSaveEdit = async (updatedItem: RegistrationData) => {
     if (userRole !== "superadmin") {
       showToast("error", "Akses ditolak: Hanya Superadmin yang bisa menyimpan perubahan.");
       return;
     }
     
-    // Penanda unik (Primary Key) riil untuk record baru
     const isNewRecord = !updatedItem.timestamp || updatedItem.timestamp.includes("baru") || !data.some(d => d.timestamp === updatedItem.timestamp);
     const finalTimestamp = isNewRecord ? new Date().toLocaleString("id-ID") : updatedItem.timestamp;
 
     let finalKtpUrl = updatedItem.foto_ktp || "";
 
-    // Upload to Storage if the image is a base64 string
+    // AUDIT FIX: 2026-06-06 - Removed Google Script URL, connected to real backend APIe image is a base64 string
     if (finalKtpUrl && finalKtpUrl.startsWith("data:image/")) {
       try {
         const response = await fetch(finalKtpUrl);
@@ -402,7 +287,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
     setData(prev => isNewRecord ? [finalItem, ...prev] : prev.map(item => item.timestamp === updatedItem.timestamp ? finalItem : item));
 
     try {
-      // 2. Simpan atau Update ke Database PostgreSQL
+      // AUDIT FIX: Simpan ke PostgreSQL saja, tidak ada Google Script backup
       const dbRecord = {
         timestamp: finalTimestamp,
         nik: updatedItem.nik || "",
@@ -430,38 +315,12 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
       setEditingReg(null);
       setIsAddingNew(false);
       showToast("success", "Data pendaftaran berhasil disimpan!");
+      // Background refresh
+      setTimeout(fetchData, 1000);
     } catch (err) {
       console.error(err);
       showToast("error", "Gagal menyimpan ke database.");
     }
-
-    try {
-      // 3. Backup asinkron ke Google Sheets
-      const params = new URLSearchParams();
-      params.append("action", isNewRecord ? "add" : "update");
-      params.append("timestamp", finalTimestamp);
-      params.append("provider_saat_ini", updatedItem.provider_saat_ini || "Belum Pernah Pasang");
-      params.append("nama_lengkap", updatedItem.nama_lengkap || "");
-      params.append("kecamatan", updatedItem.kecamatan || "GUMELAR");
-      params.append("desa", updatedItem.desa || "GUMELAR");
-      if (updatedItem.rw) params.append("rw", updatedItem.rw);
-      if (updatedItem.rt) params.append("rt", updatedItem.rt);
-      params.append("alamat_pemasangan", updatedItem.alamat_pemasangan || "");
-      params.append("no_hp_wa", updatedItem.no_hp_wa || "");
-      params.append("paket", updatedItem.paket || "");
-      params.append("tanggal_rencana_pasang", updatedItem.tanggal_rencana_pasang || "");
-      params.append("waktu_survei", updatedItem.waktu_survei || "");
-      params.append("status", updatedItem.status || "PENGAJUAN");
-      if (updatedItem.link_google_maps) params.append("link_google_maps", updatedItem.link_google_maps);
-      
-      // PERBAIKAN PENTING: Gunakan finalKtpUrl (URL publik dari Backend), bukan base64!
-      if (finalKtpUrl) params.append("foto_ktp", finalKtpUrl);
-
-      fetch(googleScriptUrl, { method: "POST", mode: "no-cors", body: params }).catch(() => {});
-    } catch (err) {}
-
-    // 4. Background refresh senyap untuk memverifikasi struktur baris
-    setTimeout(fetchData, 2000);
   };
 
   const handleAddNew = () => {
@@ -768,7 +627,7 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
             {/* Dashboard Tab */}
             {activeTab === "Dashboard" && (
               <motion.div key="dashboard" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
-                <KPICards totalRegistrants={data.length} statusCounts={stats.statusCounts} isDarkMode={isDarkMode} data={data} />
+                <KPICards totalRegistrants={data.length} statusCounts={stats.statusCounts} isDarkMode={isDarkMode} data={data} kpiStats={kpiStats} />
 
                 {/* 📊 Revenue Summary Cards + Quick Actions */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
@@ -960,8 +819,16 @@ export default function Dashboard({ googleScriptUrl, onLogout, userRole = "admin
               </motion.div>
             )}
 
-
-
+            {/* AUDIT FIX: Settings tab dengan SettingsView real CRUD */}
+            {activeTab === "Settings" && (
+              <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <SettingsView
+                  isDarkMode={isDarkMode}
+                  setIsDarkMode={setIsDarkMode}
+                  userRole={userRole}
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
         </section>
       </main>

@@ -40,10 +40,12 @@ const initialForm = {
 
 
 export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; desa: string }) => void; setShowAdminModal: (v: boolean) => void }> = ({ setSubmitted, setShowAdminModal }) => {
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState({ ...initialForm, village_id: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [coverageWarning, setCoverageWarning] = useState("");
+  const [villages, setVillages] = useState<{id: number, name: string}[]>([]);
+  const [packages, setPackages] = useState<{id: number, name: string}[]>([]);
 
   const [isVillageDropdownOpen, setIsVillageDropdownOpen] = useState(false);
   const [isNoticeAccepted, setIsNoticeAccepted] = useState(false);
@@ -57,6 +59,10 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
   const progress = Math.round((["currentProvider", "namaLengkap", "desa", "alamat", "noHp", "paket", "sumberInfo"].filter(f => form[f as keyof typeof form]).length / 7) * 100);
 
   useEffect(() => {
+    // FIX: Fetch daftar desa & paket dari API saat komponen mount
+    api.getVillages().then(res => setVillages(res.data)).catch(() => {});
+    api.getPackages().then(res => setPackages(res.data)).catch(() => {});
+
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsVillageDropdownOpen(false);
@@ -318,8 +324,18 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     };
 
     try {
-      // 1. Simpan ke database Backend
-      await api.insertRegistration(newRecord);
+      // FIX: Ganti fetch manual dengan api.publicRegister()
+      const selectedPkg = packages.find(p => p.name === form.paket.split(' (')[0]);
+      const package_id = selectedPkg ? selectedPkg.id : 1;
+
+      await api.publicRegister({
+        name: form.namaLengkap,
+        address: form.alamat,
+        phone: form.noHp,
+        village_id: parseInt(form.village_id) || 1,
+        package_id: package_id,
+        notes: form.catatan
+      });
 
       // 2. Backup ke localData untuk indikator lokal
       const localData = JSON.parse(localStorage.getItem('adminData') || '[]');
@@ -570,15 +586,16 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
 
                       {isVillageDropdownOpen && (
                         <div className="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-slate-100 z-50 p-1.5 max-h-[250px] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-250">
-                          {VILLAGES.map((v) => {
-                            const isCovered = COVERED_VILLAGES.includes(v);
-                            const isSelected = form.desa === v;
+                          {villages.map((village) => {
+                            const isCovered = COVERED_VILLAGES.includes(village.name);
+                            const isSelected = form.village_id === village.id.toString();
                             return (
                               <button
-                                key={v}
+                                key={village.id}
                                 type="button"
                                 onClick={() => {
-                                  handleChange({ target: { name: 'desa', value: v } });
+                                  // FIX: Ubah select desa dengan value=village.id, label=village.name
+                                  setForm(prev => ({ ...prev, village_id: village.id.toString(), desa: village.name, rw: "", rt: "" }));
                                   setIsVillageDropdownOpen(false);
                                 }}
                                 className={`w-full flex items-center justify-between p-3 rounded-xl transition-all mb-0.5 text-left border ${
@@ -598,7 +615,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                                     ? isCovered ? 'text-emerald-700' : 'text-amber-700'
                                     : 'text-slate-700 font-bold'
                                 }`}>
-                                  {v}
+                                  {village.name}
                                 </span>
                                 <span className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border transition-all ${
                                   isCovered

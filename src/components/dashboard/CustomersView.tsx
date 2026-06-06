@@ -6,6 +6,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { PDFPreviewModal } from "./Modals";
 import * as XLSX from "xlsx";
+import { api } from "../../utils/apiClient";
 
 interface CustomersViewProps {
   data: RegistrationData[];
@@ -183,6 +184,38 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [pdfDoc, setPdfDoc] = useState<jsPDF | null>(null);
+
+  // FIX: Tambah state pagination & fetch dari API
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [customers, setCustomers] = useState<RegistrationData[]>([]);
+
+  // FIX: Fetch data dari API
+  const fetchCustomers = async () => {
+    setIsLoading(true);
+    try {
+      const res = await api.getCustomers({
+        page,
+        limit: 10,
+        search: searchQuery,
+        status: filterStatus === "Active" ? "AKTIF" : filterStatus === "Inactive" ? "NON AKTIF" : undefined,
+      });
+      setCustomers(res.data.customers);
+      setTotalPages(res.data.totalPages);
+    } catch (err) {
+      console.error("Gagal fetch pelanggan", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCustomers();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [page, searchQuery, filterStatus]);
 
   // Hanya tampilkan pelanggan AKTIF dan NON AKTIF
   const activeAndInactiveData = React.useMemo(() => {
@@ -505,34 +538,64 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
         </div>
       </div>
 
-      {/* ── Empty state ───────────────────────────────────────── */}
-      {activeAndInactiveData.length === 0 && (
+      {/* ── Table ─────────────────────────────────────────────── */}
+      {customers.length > 0 ? (
+        <>
+          <div className="relative">
+            {isLoading && (
+              <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
+                <Lucide.Loader2 className="w-8 h-8 text-[#0d1655] animate-spin" />
+              </div>
+            )}
+            <RegistrationTable
+              data={customers}
+              isDarkMode={isDarkMode}
+              onViewDetails={onViewDetails}
+              onEdit={onEdit ?? (() => {})}
+              onDelete={async (ts) => {
+                await onDelete(ts);
+                fetchCustomers();
+              }}
+              onUpdateStatus={async (ts, st) => {
+                await onUpdateStatus(ts, st);
+                fetchCustomers();
+              }}
+              hideHeader={true}
+              allowedStatuses={["AKTIF", "NON AKTIF"]}
+              userRole={userRole}
+            />
+          </div>
+
+          {/* FIX: Pagination Buttons */}
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+            <span className="text-[10px] font-bold text-slate-400">
+              Halaman {page} dari {totalPages}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={page <= 1 || isLoading}
+                onClick={() => setPage(p => p - 1)}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-[10px] font-black uppercase disabled:opacity-50 hover:bg-slate-50 transition-all"
+              >
+                Prev
+              </button>
+              <button
+                disabled={page >= totalPages || isLoading}
+                onClick={() => setPage(p => p + 1)}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-[10px] font-black uppercase disabled:opacity-50 hover:bg-slate-50 transition-all"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </>
+      ) : !isLoading && (
         <div className="flex flex-col items-center justify-center py-16 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50">
           <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
             <Lucide.Users size={28} className="text-slate-300" />
           </div>
           <p className="text-sm font-black text-slate-400">Belum ada data pelanggan</p>
-          <p className="text-xs text-slate-400 mt-1 text-center max-w-xs">
-            Data muncul otomatis saat status pesanan diubah menjadi{" "}
-            <span className="font-bold text-emerald-600">Aktif</span> atau{" "}
-            <span className="font-bold text-slate-600">Non-Aktif</span> di menu Kelola Pesanan
-          </p>
         </div>
-      )}
-
-      {/* ── Table ─────────────────────────────────────────────── */}
-      {activeAndInactiveData.length > 0 && (
-        <RegistrationTable
-          data={subFilteredData}
-          isDarkMode={isDarkMode}
-          onViewDetails={onViewDetails}
-          onEdit={onEdit ?? (() => {})}
-          onDelete={onDelete}
-          onUpdateStatus={onUpdateStatus}
-          hideHeader={true}
-          allowedStatuses={["AKTIF", "NON AKTIF"]}
-          userRole={userRole}
-        />
       )}
       
       {/* ── PDF Preview Modal ─────────────────────────────────── */}

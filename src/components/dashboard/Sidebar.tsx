@@ -150,6 +150,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: "Analytics", icon: Lucide.BarChart2, label: "Grafik Analitik" },
         { id: "Map View", icon: Lucide.MapPin, label: "Peta Distribusi" },
       ]
+    },
+    {
+      section: "SISTEM", items: [
+        { id: "Settings", icon: Lucide.Settings, label: "Pengaturan" },
+      ]
     }
   ];
 

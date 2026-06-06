@@ -8,6 +8,7 @@ interface KPICardsProps {
   statusCounts: Record<string, number>;
   isDarkMode: boolean;
   data?: RegistrationData[]; // Add data prop for package breakdown
+  kpiStats?: any;
 }
 
 // Extract Mbps speed from paket string
@@ -41,13 +42,13 @@ const getMbpsColor = (mbps: string): { text: string; bg: string; border: string 
   }
 };
 
-export const KPICards: React.FC<KPICardsProps> = ({ totalRegistrants, statusCounts, data = [] }) => {
+export const KPICards: React.FC<KPICardsProps> = ({ totalRegistrants, statusCounts, data = [], kpiStats }) => {
   // Calculate package breakdown from data
   const packageBreakdown = useMemo(() => {
     const packageMap = new Map<string, number>();
     
     // Only count AKTIF customers for revenue
-    const activeData = data.filter(item => (item.status || "").toUpperCase() === "AKTIF");
+    const activeData = data.filter(item => (item.status || "").toUpperCase() === "AKTIF" || (item.status || "") === "active");
     
     activeData.forEach(item => {
       const mbps = extractMbps(item.paket);
@@ -62,7 +63,12 @@ export const KPICards: React.FC<KPICardsProps> = ({ totalRegistrants, statusCoun
       .map(([mbps, count]) => ({ mbps, count }));
   }, [data]);
 
-  const kpiData = [
+  const kpiData = kpiStats ? [
+    { label: "Total Pesanan",    value: kpiStats.total,                                                                                          icon: Lucide.ClipboardList, color: "text-[#0d1655]",   bg: "bg-blue-50 border-blue-100" },
+    { label: "Pelanggan Aktif",  value: kpiStats.active,                                                                              icon: Lucide.UserCheck,     color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-100" },
+    { label: "Survei / Proses",  value: kpiStats.pending,                                            icon: Lucide.Search,        color: "text-[#F47920]",   bg: "bg-orange-50 border-orange-100" },
+    { label: "Belum Aktif",      value: kpiStats.suspended,                         icon: Lucide.PauseCircle,   color: "text-slate-500",   bg: "bg-slate-50 border-slate-100" },
+  ] : [
     { label: "Total Pesanan",    value: totalRegistrants,                                                                                          icon: Lucide.ClipboardList, color: "text-[#0d1655]",   bg: "bg-blue-50 border-blue-100" },
     { label: "Pelanggan Aktif",  value: statusCounts["AKTIF"]  || 0,                                                                              icon: Lucide.UserCheck,     color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-100" },
     { label: "Survei / Proses",  value: (statusCounts["SURVEY"] || 0) + (statusCounts["PROSES"] || 0),                                            icon: Lucide.Search,        color: "text-[#F47920]",   bg: "bg-orange-50 border-orange-100" },
