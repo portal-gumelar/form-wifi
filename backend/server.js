@@ -31,9 +31,14 @@ const PORT = process.env.PORT || 3000;
 // AUDIT FIX: Gunakan DATABASE_URL tunggal (bukan DB_USER/DB_HOST)
 // ============================================================
 const { Pool } = pg;
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  console.error('[Server] Warning: DATABASE_URL is not set!');
+}
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  connectionString: DATABASE_URL,
+  ssl: false, // AUDIT FIX: Coolify internal network tidak menggunakan SSL
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
@@ -42,15 +47,24 @@ const pool = new Pool({
 // Expose pool ke middleware via app.locals
 app.locals.pool = pool;
 
-pool.connect()
-  .then(client => {
-    console.log('[DB] PostgreSQL connected successfully.');
-    client.release();
-  })
-  .catch(err => {
-    console.error('[DB] Connection failed:', err.message);
-    process.exit(1);
-  });
+const connectDBWithRetry = async (retries = 5, delay = 5000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const client = await pool.connect();
+      console.log('[DB] PostgreSQL connected successfully.');
+      client.release();
+      return;
+    } catch (err) {
+      console.error(`[DB] Failed to connect (Attempt ${i + 1}/${retries}):`, err.message);
+      if (i < retries - 1) {
+        await new Promise(res => setTimeout(res, delay));
+      }
+    }
+  }
+  console.error('[DB] All retry attempts failed. Server will continue but DB requests may fail.');
+};
+
+connectDBWithRetry();
 
 // ============================================================
 // SECURITY MIDDLEWARE
@@ -63,9 +77,9 @@ app.use(helmet({
 }));
 
 // CORS - AUDIT FIX: Whitelist origin saja, bukan wildcard
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173')
-  .split(',')
-  .map(o => o.trim());
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : ['http://localhost:5173'];
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -148,19 +162,27 @@ app.get('/health', (req, res) => {
 
 // Helper: Generate token pair
 const generateTokens = (user) => {
-  const payload = { id: user.id, email: user.email, role: user.role, name: user.name };
-  
-  const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '1h',
-  });
-  
-  const refreshToken = jwt.sign(
-    { id: user.id },
-    process.env.JWT_REFRESH_SECRET,
-    { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
-  );
-  
-  return { accessToken, refreshToken };
+  try {
+    if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not set");
+    if (!process.env.JWT_REFRESH_SECRET) throw new Error("JWT_REFRESH_SECRET is not set");
+
+    const payload = { id: user.id, email: user.email, role: user.role, name: user.name };
+    
+    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || '1h',
+    });
+    
+    const refreshToken = jwt.sign(
+      { id: user.id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+    );
+    
+    return { accessToken, refreshToken };
+  } catch (err) {
+    console.error('[Auth] Token generation failed:', err.message);
+    throw err;
+  }
 };
 
 // POST /api/auth/login
@@ -1218,7 +1240,8 @@ app.use((req, res) => {
 // START SERVER
 // ============================================================
 app.listen(PORT, () => {
-  console.log(`[Server] Running on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
+  const envName = process.env.NODE_ENV || 'development';
+  console.log(`[Server] Running on port ${PORT} (${envName})`);
   console.log(`[Server] CORS allowed origins: ${allowedOrigins.join(', ')}`);
   console.log(`[Server] Upload dir: ${UPLOAD_DIR}`);
 });

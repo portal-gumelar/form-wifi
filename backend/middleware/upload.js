@@ -14,8 +14,12 @@ const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE_MB || '2') * 1024 * 102
 
 const getUploadDir = () => {
   const dir = process.env.UPLOAD_DIR || './uploads';
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (err) {
+    console.warn('[Upload] Could not create upload dir:', err.message);
   }
   return dir;
 };

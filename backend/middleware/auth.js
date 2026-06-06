@@ -18,6 +18,7 @@ export const verifyToken = (req, res, next) => {
   }
 
   try {
+    if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not set");
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded; // { id, email, role, name }
     next();
