@@ -18,7 +18,7 @@ import { SettingsView } from "../components/dashboard/SettingsView";
 
 // Utils & Types
 import { RegistrationData, DashboardStats } from "../types";
-import { calculateStats, exportToExcel, generatePDFBlobUrl, downloadPDF } from "../utils/dashboardUtils";
+import { normalizeRow, calculateStats, exportToExcel, generatePDFBlobUrl, downloadPDF } from "../utils/dashboardUtils";
 import { api } from "../utils/apiClient";
 
 // --- Komponen Custom Dropdown ---
@@ -97,29 +97,8 @@ const CustomPaketDropdown = ({ value, onChange, options }: { value: string, onCh
   );
 };
 
-// --- Normalisasi Field dari Google Sheets (di luar komponen agar selalu tersedia) ---
-const normalizeRow = (row: any): RegistrationData => ({
-  timestamp: String(row.timestamp || row.Timestamp || ""),
-  nik: String(row.nik || row.NIK || ""),
-  nama_lengkap: String(row.nama_lengkap || row["Nama Lengkap"] || ""),
-  no_hp_wa: String(row.no_hp_wa || row["No HP / WA"] || ""),
-  paket: String(row.paket || row.Paket || ""),
-  alamat_pemasangan: String(row.alamat_pemasangan || row["alamat pemasangan"] || row["Alamat Pemasangan"] || ""),
-  provider_saat_ini: String(row.provider_saat_ini || row["Provider Saat Ini"] || ""),
-  sumber_info: String(row.sumber_info || row["Sumber Info"] || ""),
-  kecamatan: String(row.kecamatan || row.Kecamatan || "GUMELAR"),
-  desa: String(row.desa || row.Desa || ""),
-  rw: String(row.rw || row.RW || ""),
-  rt: String(row.rt || row.RT || ""),
-  tanggal_rencana_pasang: String(row.tanggal_rencana_pasang || row["Tanggal Rencana Pasang"] || ""),
-  link_google_maps: String(row.link_google_maps || row["Link Google Maps"] || ""),
-  status: String(row.status || row.Status || row.status || "PENGAJUAN"),
-  foto_ktp: String(row.foto_ktp || row.fotoKtp || row["Foto KTP"] || ""),
-  persetujuan_sk: String(row.persetujuan_sk || row.persetujuanSnk || row["Persetujuan S&K"] || ""),
-  catatan: String(row.catatan || row.Catatan || ""),
-});
-
 // AUDIT FIX: Google Script URL DIHAPUS - semua data dari PostgreSQL backend
+// normalizeRow diimpor dari dashboardUtils.ts
 const extractPrice = (paket: string, packages: typeof PACKAGES): number => {
   for (const pkg of packages) {
     const pkgLabel = pkg.label.toLowerCase();
@@ -192,7 +171,7 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
       const res = await api.getRegistrations();
       if (res.data && res.data.length > 0) {
         const fetchedData = res.data.map(normalizeRow);
-        fetchedData.sort((a: RegistrationData, b: RegistrationData) => 
+        fetchedData.sort((a: RegistrationData, b: RegistrationData) =>
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         setData(fetchedData);
@@ -208,7 +187,7 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
   const handleImportLegacyData = async () => {
     if (userRole !== "superadmin") return;
     if (isImporting) return;
-    
+
     const localDataString = localStorage.getItem('adminData');
     if (!localDataString) {
       showToast("error", "Tidak ada data lama di Local Storage.");
@@ -252,7 +231,7 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
             const cleanName = (item.nama || "legacy").trim().toUpperCase().replace(/[^A-Z0-9]/g, "_");
             const timestamp = Math.floor(Date.now() / 1000);
             const fileName = `KTP_IMPORT_${cleanName}_${timestamp}.jpg`;
-            
+
             finalKtpUrl = await api.uploadKtp(blob, fileName);
           } catch (uploadErr) {
             console.error("Gagal upload KTP base64 untuk", item.nama, uploadErr);
@@ -278,10 +257,10 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
           fotoKtp: finalKtpUrl,
           tanggalPasang: item.tanggal || item.tanggal_rencana_pasang || ""
         });
-        
+
         // Wait a little bit to avoid rate limiting or overloading
         await new Promise(resolve => setTimeout(resolve, 300)); // slightly faster
-        
+
         successCount++;
       } catch (err) {
         console.error("Gagal import item:", item, err);
@@ -291,7 +270,7 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
 
     setIsImporting(false);
     showToast("success", `Impor selesai! Berhasil: ${successCount}, Gagal: ${failCount}`);
-    
+
     fetchData(); // Refresh data from backend
   };
 
@@ -301,16 +280,16 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
       const res = await api.getRegistrations();
       if (res.data && res.data.length > 0) {
         const fetchedData = res.data.map(normalizeRow);
-        fetchedData.sort((a: RegistrationData, b: RegistrationData) => 
+        fetchedData.sort((a: RegistrationData, b: RegistrationData) =>
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         setData(fetchedData);
       } else {
         setData([]);
       }
-      
+
       // FIX: Fetch kpi stats
-      api.getKpiStats().then(kpiRes => setKpiStats(kpiRes.data)).catch(() => {});
+      api.getKpiStats().then(kpiRes => setKpiStats(kpiRes.data)).catch(() => { });
 
     } catch (err) {
       console.error("Dashboard init failed:", err);
@@ -320,6 +299,11 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
   };
 
 
+  /**
+   * Update status pelanggan menggunakan ID (integer PK dari PostgreSQL).
+   * Signature lama (timestamp) dipertahankan agar RegistrationTable tidak perlu diubah
+   * sekaligus — kita resolve ID dari state `data` terlebih dahulu.
+   */
   const handleUpdateStatus = async (timestamp: string, newStatus: string) => {
     if (userRole !== "superadmin") {
       showToast("error", "Akses ditolak: Hanya Superadmin yang bisa mengubah status.");
@@ -327,9 +311,21 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
     }
     const item = data.find(r => r.timestamp === timestamp);
     const finalTanggalAktif = newStatus === "AKTIF" ? new Date().toLocaleDateString("id-ID") : (item ? item.tanggal_aktif : "");
+
+    // Optimistic update
+    setData(prev => prev.map(r =>
+      r.timestamp === timestamp ? { ...r, status: newStatus, tanggal_aktif: finalTanggalAktif } : r
+    ));
+
     try {
-      setData(prev => prev.map(r => r.timestamp === timestamp ? { ...r, status: newStatus, tanggal_aktif: finalTanggalAktif } : r));
-      await api.updateStatus(timestamp, newStatus);
+      if (item?.id !== undefined) {
+        // Gunakan endpoint baru berbasis ID
+        await api.updateCustomerStatus(item.id, newStatus);
+      } else {
+        // Fallback: deprecated stub (no-op) — data lama tanpa ID
+        console.warn("handleUpdateStatus: item tidak memiliki id, menggunakan deprecated stub.");
+        await api.updateStatus(timestamp, newStatus);
+      }
       showToast("success", "Status berhasil diubah!");
     } catch (err) {
       console.error(err);
@@ -337,15 +333,29 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
     }
   };
 
+  /**
+   * Hapus data pelanggan menggunakan ID (integer PK dari PostgreSQL).
+   * Signature lama (timestamp string) dipertahankan untuk kompatibilitas
+   * dengan ConfirmDeleteModal dan RegistrationTable.
+   */
   const handleDelete = async (timestamp: string) => {
     if (userRole !== "superadmin") {
       showToast("error", "Akses ditolak: Hanya Superadmin yang bisa menghapus data.");
       setConfirmDelete(null);
       return;
     }
+    const item = data.find(r => r.timestamp === timestamp);
     try {
+      // Optimistic update
       setData(prev => prev.filter(r => r.timestamp !== timestamp));
-      await api.deleteRegistration(timestamp);
+      if (item?.id !== undefined) {
+        // Gunakan endpoint baru berbasis ID
+        await api.deleteCustomer(item.id);
+      } else {
+        // Fallback: deprecated stub (no-op) — data lama tanpa ID
+        console.warn("handleDelete: item tidak memiliki id, menggunakan deprecated stub.");
+        await api.deleteRegistration(timestamp);
+      }
       setConfirmDelete(null);
       showToast("success", "Data berhasil dihapus!");
     } catch (err) {
@@ -359,7 +369,7 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
       showToast("error", "Akses ditolak: Hanya Superadmin yang bisa menyimpan perubahan.");
       return;
     }
-    
+
     const isNewRecord = !updatedItem.timestamp || updatedItem.timestamp.includes("baru") || !data.some(d => d.timestamp === updatedItem.timestamp);
     const finalTimestamp = isNewRecord ? new Date().toLocaleString("id-ID") : updatedItem.timestamp;
 
@@ -373,7 +383,7 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
         const cleanName = (updatedItem.nama_lengkap || "admin-upload").trim().toUpperCase().replace(/[^A-Z0-9]/g, "_");
         const timestamp = Math.floor(Date.now() / 1000); // Shorter timestamp
         const fileName = `KTP_${cleanName}_${timestamp}.jpg`;
-        
+
         finalKtpUrl = await api.uploadKtp(blob, fileName);
         console.log("📸 KTP successfully uploaded from admin panel:", finalKtpUrl);
       } catch (uploadErr) {
@@ -392,35 +402,57 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
     setData(prev => isNewRecord ? [finalItem, ...prev] : prev.map(item => item.timestamp === updatedItem.timestamp ? finalItem : item));
 
     try {
-      // AUDIT FIX: Simpan ke PostgreSQL saja, tidak ada Google Script backup
-      const dbRecord = {
-        timestamp: finalTimestamp,
+      // AUDIT FIX: Simpan ke PostgreSQL via createCustomer / updateCustomer
+      // Map frontend field names ke format yang diterima backend
+      const dbRecord: Record<string, unknown> = {
+        name: updatedItem.nama_lengkap || "",
+        phone: updatedItem.no_hp_wa || "",
+        address: updatedItem.alamat_pemasangan || "",
         nik: updatedItem.nik || "",
-        nama_lengkap: updatedItem.nama_lengkap || "",
-        no_hp_wa: updatedItem.no_hp_wa || "",
-        alamat_pemasangan: updatedItem.alamat_pemasangan || "",
         kecamatan: updatedItem.kecamatan || "GUMELAR",
-        desa: updatedItem.desa || "GUMELAR",
         rw: updatedItem.rw || "",
         rt: updatedItem.rt || "",
-        paket: updatedItem.paket || "",
-        "status": updatedItem.status || "PENGAJUAN",
-        provider_saat_ini: updatedItem.provider_saat_ini || "Belum Pernah Pasang",
-        sumber_info: updatedItem.sumber_info || "",
+        status: updatedItem.status || "PENGAJUAN",
+        current_provider: updatedItem.provider_saat_ini || "Belum Pernah Pasang",
+        source_info: updatedItem.sumber_info || "",
         link_google_maps: updatedItem.link_google_maps || "",
         foto_ktp: finalKtpUrl,
-        persetujuan_sk: updatedItem.persetujuan_sk || "SETUJU (Manual Admin)",
-        catatan: updatedItem.catatan || "",
+        notes: updatedItem.catatan || "",
         tanggal_aktif: updatedItem.tanggal_aktif || "",
-        tanggal_rencana_pasang: updatedItem.tanggal_rencana_pasang || ""
+        tanggal_rencana_pasang: updatedItem.tanggal_rencana_pasang || "",
       };
 
-      await api.insertRegistration(dbRecord);
-      
+      if (isNewRecord) {
+        // Buat data baru via publicRegister agar village_id & package_id di-resolve oleh backend
+        await api.publicRegister({
+          name: updatedItem.nama_lengkap || "",
+          address: updatedItem.alamat_pemasangan || "",
+          phone: updatedItem.no_hp_wa || "",
+          village_id: 1,
+          package_id: 1,
+          notes: updatedItem.catatan || "",
+          nik: updatedItem.nik || "",
+          kecamatan: updatedItem.kecamatan || "GUMELAR",
+          rw: updatedItem.rw || "",
+          rt: updatedItem.rt || "",
+          currentProvider: updatedItem.provider_saat_ini || "Belum Pernah Pasang",
+          sumberInfo: updatedItem.sumber_info || "",
+          linkGoogleMaps: updatedItem.link_google_maps || "",
+          fotoKtp: finalKtpUrl,
+          tanggalPasang: updatedItem.tanggal_rencana_pasang || "",
+        });
+      } else if (updatedItem.id !== undefined) {
+        // Update data yang sudah ada via updateCustomer
+        await api.updateCustomer(updatedItem.id, dbRecord);
+      } else {
+        // Fallback: data lama tanpa ID — tidak bisa di-update via REST, skip
+        console.warn("handleSaveEdit: item tidak memiliki id, tidak bisa update via REST API.");
+      }
+
       setEditingReg(null);
       setIsAddingNew(false);
       showToast("success", "Data pendaftaran berhasil disimpan!");
-      // Background refresh
+      // Background refresh untuk mendapatkan ID yang baru di-assign
       setTimeout(fetchData, 1000);
     } catch (err) {
       console.error(err);
@@ -491,31 +523,30 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
 
   return (
     <div className={`flex h-screen ${isDarkMode ? 'bg-[#0f172a] text-white' : 'bg-slate-50 text-slate-800'}`}>
-        
-        {/* Toast Notification */}
-        <AnimatePresence>
-          {toast && (
-            <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className={`fixed top-6 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-xl border backdrop-blur-lg ${
-                toast.type === 'success' 
-                  ? 'bg-emerald-500/90 border-emerald-400 text-white' 
-                  : 'bg-red-500/90 border-red-400 text-white'
-              }`}
-            >
-              {toast.type === 'success' ? (
-                <Lucide.CheckCircle className="w-5 h-5 text-emerald-100" />
-              ) : (
-                <Lucide.AlertCircle className="w-5 h-5 text-red-100" />
-              )}
-              <span className="font-semibold text-sm tracking-wide">{toast.message}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
-        {/* --- Sidebar Desktop --- */}
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className={`fixed top-6 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-xl border backdrop-blur-lg ${toast.type === 'success'
+              ? 'bg-emerald-500/90 border-emerald-400 text-white'
+              : 'bg-red-500/90 border-red-400 text-white'
+              }`}
+          >
+            {toast.type === 'success' ? (
+              <Lucide.CheckCircle className="w-5 h-5 text-emerald-100" />
+            ) : (
+              <Lucide.AlertCircle className="w-5 h-5 text-red-100" />
+            )}
+            <span className="font-semibold text-sm tracking-wide">{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* --- Sidebar Desktop --- */}
       <div className="hidden md:block">
         <Sidebar
           activeTab={activeTab}
@@ -543,11 +574,11 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl md:text-3xl font-black text-[#0d1655] tracking-tight">
-                {activeTab === "Map View" ? "Peta Distribusi" : 
-                 activeTab === "Dashboard" ? "Beranda" :
-                 activeTab === "Registrations" ? "Data Pendaftaran" :
-                 activeTab === "Analytics" ? "Grafik Analitik" :
-                 activeTab === "Customers" ? "Data Pelanggan" : activeTab}
+                {activeTab === "Map View" ? "Peta Distribusi" :
+                  activeTab === "Dashboard" ? "Beranda" :
+                    activeTab === "Registrations" ? "Data Pendaftaran" :
+                      activeTab === "Analytics" ? "Grafik Analitik" :
+                        activeTab === "Customers" ? "Data Pelanggan" : activeTab}
               </h1>
               <p className="text-xs md:text-sm text-slate-500 mt-1 font-bold">Pemantauan & Ringkasan Aktivitas</p>
             </div>

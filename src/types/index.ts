@@ -26,6 +26,7 @@ export interface VillageFundSummary {
 }
 
 export interface RegistrationData {
+  id?: number; // PostgreSQL primary key (integer auto-increment)
   timestamp: string;
   nik?: string;
   nama_lengkap: string;

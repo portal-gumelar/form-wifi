@@ -7,6 +7,7 @@ import autoTable from "jspdf-autotable";
 import { PDFPreviewModal } from "./Modals";
 import * as XLSX from "xlsx";
 import { api } from "../../utils/apiClient";
+import { normalizeRow } from "../../utils/dashboardUtils";
 
 interface CustomersViewProps {
   data: RegistrationData[];
@@ -31,7 +32,7 @@ const getCustomerNo = (timestamp: string) => {
 const standardizePackageName = (rawPaket: string): string => {
   if (!rawPaket) return "Tanpa Paket";
   const clean = rawPaket.toUpperCase().replace(/\s/g, "");
-  
+
   if (clean.includes("20MBPS") || clean.includes("20.MBPS") || clean.includes("PAKET_1") || clean === "20") {
     return "20 Mbps";
   }
@@ -47,7 +48,7 @@ const standardizePackageName = (rawPaket: string): string => {
   if (clean.includes("100MBPS") || clean.includes("100.MBPS") || clean.includes("PAKET_5") || clean === "100") {
     return "100 Mbps";
   }
-  
+
   return rawPaket; // fallback
 };
 
@@ -174,7 +175,7 @@ const exportCustomersExcel = (data: RegistrationData[], filterLabel: string) => 
   XLSX.writeFile(wb, `Armedia_DataPelanggan_${filterLabel}_${new Date().toLocaleDateString("id-ID").replace(/\//g, "-")}.xlsx`);
 };
 
-export const CustomersView: React.FC<CustomersViewProps> = ({ 
+export const CustomersView: React.FC<CustomersViewProps> = ({
   data, isDarkMode, onViewDetails, onEdit, onDelete, onUpdateStatus, userRole = "admin"
 }) => {
   const [filterStatus, setFilterStatus] = useState("All");
@@ -191,7 +192,9 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [customers, setCustomers] = useState<RegistrationData[]>([]);
 
-  // FIX: Fetch data dari API
+  // FIX: Fetch data dari API dengan normalizeRow agar kolom PostgreSQL
+  // (name, phone, address, village_name, package_name, created_at, notes)
+  // dipetakan ke format RegistrationData yang diharapkan UI.
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
@@ -201,7 +204,10 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
         search: searchQuery,
         status: filterStatus === "Active" ? "AKTIF" : filterStatus === "Inactive" ? "NON AKTIF" : undefined,
       });
-      setCustomers(res.data || []);
+      // Normalisasi setiap baris agar properti seperti nama_lengkap, no_hp_wa,
+      // paket, desa, dll. terisi dengan benar dari kolom PostgreSQL.
+      const normalized = (res.data || []).map(normalizeRow);
+      setCustomers(normalized);
       setTotalPages(res.pagination?.totalPages || 1);
     } catch (err) {
       console.error("Gagal fetch pelanggan", err);
@@ -227,7 +233,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
 
   const subFilteredData = React.useMemo(() => {
     let result = activeAndInactiveData;
-    
+
     // Status Filter
     if (filterStatus !== "All") {
       result = result.filter(item => {
@@ -269,42 +275,11 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
     return result;
   }, [activeAndInactiveData, filterStatus, searchQuery, filterPackage, filterDesa]);
 
-  const countAktif    = activeAndInactiveData.filter(d => String(d.status || "").toUpperCase() === "AKTIF").length;
+  const countAktif = activeAndInactiveData.filter(d => String(d.status || "").toUpperCase() === "AKTIF").length;
   const countNonAktif = activeAndInactiveData.filter(d => {
     const s = String(d.status || "").toUpperCase();
     return s === "NON AKTIF" || s === "BERHENTI BERLANGGANAN";
   }).length;
-
-  const uniqueVillages = React.useMemo(() => {
-    const vSet = new Set<string>([
-      "GUMELAR",
-      "CIHONJE",
-      "TLAGA",
-      "SAMUDRA KULON",
-      "SAMUDRA",
-      "CILANGKAP",
-      "PANINGKABAN",
-      "KARANG KEMOJING",
-      "GANCANG",
-      "KEDUNG URANG"
-    ]);
-    activeAndInactiveData.forEach(item => {
-      if (item.desa) {
-        vSet.add(item.desa.toUpperCase().trim());
-      }
-    });
-    return Array.from(vSet).sort();
-  }, [activeAndInactiveData]);
-
-  const uniquePackages = React.useMemo(() => {
-    return [
-      "20 Mbps",
-      "30 Mbps",
-      "50 Mbps",
-      "75 Mbps",
-      "100 Mbps"
-    ];
-  }, []);
 
   const packageStats = React.useMemo(() => {
     const activeData = activeAndInactiveData.filter(d => String(d.status || "").toUpperCase() === "AKTIF");
@@ -319,10 +294,10 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
       const pkg = standardizePackageName(item.paket || "");
       counts[pkg] = (counts[pkg] || 0) + 1;
     });
-    
+
     const standardPackages = ["20 Mbps", "30 Mbps", "50 Mbps", "75 Mbps", "100 Mbps"];
     const allPackages = Array.from(new Set([...standardPackages, ...Object.keys(counts)]));
-    
+
     return allPackages.map(pkg => [pkg, counts[pkg] || 0] as [string, number]);
   }, [activeAndInactiveData]);
 
@@ -345,9 +320,9 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   ].join(" - ");
 
   const tabs = [
-    { id: "All",      label: "Semua",     count: activeAndInactiveData.length, icon: Lucide.Users,        activeClass: "bg-[#1a2d8f] text-white shadow-lg shadow-blue-500/20" },
-    { id: "Active",   label: "Aktif",     count: countAktif,                   icon: Lucide.CheckCircle2,  activeClass: "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20" },
-    { id: "Inactive", label: "Non-Aktif", count: countNonAktif,                icon: Lucide.PauseCircle,   activeClass: "bg-slate-500 text-white shadow-lg shadow-slate-500/20" },
+    { id: "All", label: "Semua", count: activeAndInactiveData.length, icon: Lucide.Users, activeClass: "bg-[#1a2d8f] text-white shadow-lg shadow-blue-500/20" },
+    { id: "Active", label: "Aktif", count: countAktif, icon: Lucide.CheckCircle2, activeClass: "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20" },
+    { id: "Inactive", label: "Non-Aktif", count: countNonAktif, icon: Lucide.PauseCircle, activeClass: "bg-slate-500 text-white shadow-lg shadow-slate-500/20" },
   ];
 
   const handlePreviewPdf = async () => {
@@ -397,13 +372,12 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setFilterStatus(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    isActive
-                      ? tab.activeClass
-                      : isDarkMode
-                        ? "bg-slate-800 text-slate-400"
-                        : "bg-white text-slate-500 border border-slate-200 hover:border-[#0d1655]/30 shadow-sm"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isActive
+                    ? tab.activeClass
+                    : isDarkMode
+                      ? "bg-slate-800 text-slate-400"
+                      : "bg-white text-slate-500 border border-slate-200 hover:border-[#0d1655]/30 shadow-sm"
+                    }`}
                 >
                   <Icon size={13} />
                   {tab.label}
@@ -419,20 +393,18 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
           <div className="relative w-full md:w-48 shrink-0">
             <Lucide.Search
               size={14}
-              className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${
-                searchQuery.trim() ? "text-blue-500" : "text-slate-400"
-              }`}
+              className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${searchQuery.trim() ? "text-blue-500" : "text-slate-400"
+                }`}
             />
             <input
               type="text"
               placeholder="Cari nama, ID, WA..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full pl-9 pr-4 py-2 border rounded-xl text-xs font-bold outline-none transition-all shadow-sm ${
-                searchQuery.trim()
-                  ? "bg-blue-50/40 border-blue-400 text-[#0d1655] font-black"
-                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 focus:border-[#0d1655]"
-              }`}
+              className={`w-full pl-9 pr-4 py-2 border rounded-xl text-xs font-bold outline-none transition-all shadow-sm ${searchQuery.trim()
+                ? "bg-blue-50/40 border-blue-400 text-[#0d1655] font-black"
+                : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 focus:border-[#0d1655]"
+                }`}
             />
           </div>
 
@@ -468,11 +440,10 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
           <button
             onClick={handlePreviewPdf}
             disabled={isExportingPdf}
-            className={`flex items-center justify-center flex-1 md:flex-initial gap-2 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95 ${
-              isExportingPdf
-                ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                : "bg-[#F47920] hover:bg-[#d86617] text-white shadow-orange-400/40 hover:shadow-orange-500/50 hover:shadow-lg"
-            }`}
+            className={`flex items-center justify-center flex-1 md:flex-initial gap-2 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95 ${isExportingPdf
+              ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+              : "bg-[#F47920] hover:bg-[#d86617] text-white shadow-orange-400/40 hover:shadow-orange-500/50 hover:shadow-lg"
+              }`}
           >
             {isExportingPdf ? (
               <Lucide.Loader2 size={15} className="animate-spin" />
@@ -551,7 +522,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
               data={customers}
               isDarkMode={isDarkMode}
               onViewDetails={onViewDetails}
-              onEdit={onEdit ?? (() => {})}
+              onEdit={onEdit ?? (() => { })}
               onDelete={async (ts) => {
                 await onDelete(ts);
                 fetchCustomers();
@@ -597,12 +568,12 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
           <p className="text-sm font-black text-slate-400">Belum ada data pelanggan</p>
         </div>
       )}
-      
+
       {/* ── PDF Preview Modal ─────────────────────────────────── */}
-      <PDFPreviewModal 
-        url={pdfPreviewUrl} 
-        onClose={() => { setPdfPreviewUrl(null); setPdfDoc(null); }} 
-        onDownload={handleDownloadPdf} 
+      <PDFPreviewModal
+        url={pdfPreviewUrl}
+        onClose={() => { setPdfPreviewUrl(null); setPdfDoc(null); }}
+        onDownload={handleDownloadPdf}
       />
     </div>
   );
