@@ -125,8 +125,12 @@ app.use(globalLimiter);
 // AUDIT FIX: Serve dari UPLOAD_DIR env var, bukan path hardcoded
 // ============================================================
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  }
+} catch (err) {
+  console.warn('[Server] Could not create upload dir:', err.message);
 }
 app.use('/uploads', express.static(UPLOAD_DIR));
 
