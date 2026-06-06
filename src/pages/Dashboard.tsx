@@ -239,11 +239,21 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
           }
         }
 
+        // Clean fields to ensure they pass backend validation
+        const cleanName = String(item.nama || item.nama_lengkap || "Tanpa Nama").trim().slice(0, 150) || "Tanpa Nama";
+        const cleanAddress = String(item.alamat || item.alamat_pemasangan || "-").trim() || "-";
+
+        let rawPhone = String(item.hp || item.no_hp_wa || "").trim();
+        let cleanPhone = rawPhone.replace(/[^0-9+\-\s]/g, "").trim();
+        if (cleanPhone.length < 8 || cleanPhone.length > 20) {
+          cleanPhone = "080000000000"; // Fallback dummy phone
+        }
+
         // Import the record via publicRegister
         await api.publicRegister({
-          name: item.nama || item.nama_lengkap || "Tanpa Nama",
-          address: item.alamat || item.alamat_pemasangan || "-",
-          phone: item.hp || item.no_hp_wa || "-",
+          name: cleanName,
+          address: cleanAddress,
+          phone: cleanPhone,
           village_id: 1, // Defaulting to GUMELAR (1) for imported data
           package_id: 1, // Defaulting to 1 for imported data
           notes: item.catatan || "",
