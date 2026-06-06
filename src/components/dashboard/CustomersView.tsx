@@ -201,8 +201,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
         search: searchQuery,
         status: filterStatus === "Active" ? "AKTIF" : filterStatus === "Inactive" ? "NON AKTIF" : undefined,
       });
-      setCustomers(res.data.customers);
-      setTotalPages(res.data.totalPages);
+      setCustomers(res.data || []);
+      setTotalPages(res.pagination?.totalPages || 1);
     } catch (err) {
       console.error("Gagal fetch pelanggan", err);
     } finally {
