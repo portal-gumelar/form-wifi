@@ -319,15 +319,62 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({ item, isDarkMode, on
             {/* Foto KTP */}
             {item.foto_ktp && (
               <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/30">
-                <div className="flex items-center gap-2 mb-2">
-                  <Lucide.CreditCard size={14} className="text-slate-500" />
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Foto KTP / ID Card</p>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Lucide.CreditCard size={14} className="text-slate-500" />
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Foto KTP / ID Card</p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {/* Tombol Preview */}
+                    <button
+                      onClick={() => window.open(item.foto_ktp, '_blank')}
+                      title="Buka di tab baru"
+                      className="p-1.5 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-100 transition-all"
+                    >
+                      <Lucide.ExternalLink size={13} />
+                    </button>
+                    {/* Tombol Download */}
+                    <button
+                      onClick={async () => {
+                        try {
+                          const response = await fetch(item.foto_ktp!);
+                          const blob = await response.blob();
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          const ext = item.foto_ktp!.split('.').pop()?.split('?')[0] || 'jpg';
+                          a.download = `KTP_${item.nama_lengkap?.replace(/\s+/g,'_') || 'pelanggan'}.${ext}`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                        } catch {
+                          window.open(item.foto_ktp, '_blank');
+                        }
+                      }}
+                      title="Download foto KTP"
+                      className="p-1.5 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600 hover:bg-emerald-100 transition-all"
+                    >
+                      <Lucide.Download size={13} />
+                    </button>
+                  </div>
                 </div>
                 <div className="w-full h-48 bg-slate-100 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200">
-                  <img src={item.foto_ktp} alt="KTP Pelanggan" className="w-full h-full object-contain cursor-zoom-in hover:scale-105 transition-transform duration-300" onClick={() => window.open(item.foto_ktp, '_blank')} />
+                  <img
+                    src={item.foto_ktp}
+                    alt="KTP Pelanggan"
+                    className="w-full h-full object-contain cursor-zoom-in hover:scale-105 transition-transform duration-300"
+                    onClick={() => window.open(item.foto_ktp, '_blank')}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      (e.target as HTMLImageElement).parentElement!.innerHTML = '<div class="flex flex-col items-center gap-2 text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><p class="text-xs font-bold">Gagal memuat foto</p></div>';
+                    }}
+                  />
                 </div>
+                <p className="text-[10px] text-slate-400 font-bold mt-1.5 text-center">Klik gambar untuk zoom • Gunakan tombol untuk download</p>
               </div>
             )}
+
 
             {/* Link Google Maps */}
             {item.link_google_maps && (
