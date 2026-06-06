@@ -382,10 +382,17 @@ app.get('/api/customers', verifyToken, async (req, res) => {
         v.name AS village_name,
         p.name AS package_name,
         p.speed_mbps,
-        p.price
+        p.price,
+        ph.url_path AS foto_ktp
       FROM subscribers s
       LEFT JOIN villages v ON s.village_id = v.id
       LEFT JOIN packages p ON s.package_id = p.id
+      LEFT JOIN LATERAL (
+        SELECT url_path FROM photos
+        WHERE subscriber_id = s.id AND type = 'ktp'
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) ph ON true
       ${whereClause}
       ORDER BY s.created_at DESC
       LIMIT $${paramIdx} OFFSET $${paramIdx + 1}
@@ -398,8 +405,17 @@ app.get('/api/customers', verifyToken, async (req, res) => {
 
     const total = parseInt(countResult.rows[0].count);
 
+    // Prepend API_BASE to foto_ktp URL if it's a relative path
+    const API_BASE_URL = process.env.API_BASE_URL || '';
+    const rows = dataResult.rows.map(row => ({
+      ...row,
+      foto_ktp: row.foto_ktp
+        ? (row.foto_ktp.startsWith('http') ? row.foto_ktp : `${API_BASE_URL}${row.foto_ktp}`)
+        : ''
+    }));
+
     res.json({
-      data: dataResult.rows,
+      data: rows,
       pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
     });
   } catch (err) {
