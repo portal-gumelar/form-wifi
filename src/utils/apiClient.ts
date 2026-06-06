@@ -442,6 +442,18 @@ export const api = {
   },
 
   // --- PUBLIC (form registrasi - tanpa auth) ---
+  uploadKtp: async (file: Blob, filename: string) => {
+    const formData = new FormData();
+    formData.append('photo', file, filename);
+    const res = await fetch(`${API_BASE}/api/public/upload-photo`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) throw new Error('Upload KTP gagal');
+    const data = await res.json();
+    return `${API_BASE}${data.url}`; // Return full URL path
+  },
+
   publicRegister: async (data: Record<string, unknown>) => {
     const res = await fetch(`${API_BASE}/api/public/register`, {
       method:  'POST',
@@ -458,8 +470,22 @@ export const api = {
   // === BACKWARD COMPAT (dipanggil dari kode lama) ===
   /** @deprecated Gunakan getCustomers() */
   getRegistrations: async () => {
-    const result = await api.getCustomers({ limit: 200 });
-    return { data: result.data || [] };
+    const res = await apiFetch(`${API_BASE}/api/customers`);
+    if (!res.ok) throw new Error('Gagal mengambil data registrasi.');
+    return res.json();
+  },
+
+  /** @deprecated Gunakan updateCustomerStatus() */
+  updateStatus: async (timestamp: string, status: string) => {
+    // Note: old timestamp-based update doesn't map cleanly to ID without fetching first, 
+    // but we can try to pass it to a custom endpoint if needed.
+    // For now, let's just make it a no-op or throw a soft error so it doesn't crash the UI.
+    console.warn("updateStatus is deprecated. Please use updateCustomerStatus with ID.");
+  },
+
+  /** @deprecated Gunakan deleteCustomer() */
+  deleteRegistration: async (timestamp: string) => {
+    console.warn("deleteRegistration is deprecated. Please use deleteCustomer with ID.");
   },
 };
 

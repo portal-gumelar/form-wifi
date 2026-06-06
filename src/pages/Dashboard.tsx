@@ -146,6 +146,19 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
   };
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [filterPaket, setFilterPaket] = useState("");
+  const [hasLegacyData, setHasLegacyData] = useState(false);
+
+  useEffect(() => {
+    // Check local storage only once on mount to avoid memory issues on render
+    try {
+      const legacyData = localStorage.getItem('adminData');
+      if (legacyData && legacyData !== "[]" && JSON.parse(legacyData).length > 0) {
+        setHasLegacyData(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
@@ -162,6 +175,8 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [kpiStats, setKpiStats] = useState(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
 
   useEffect(() => {
     fetchData();
@@ -188,6 +203,96 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
     } finally {
       setIsRefreshing(false);
     }
+  };
+
+  const handleImportLegacyData = async () => {
+    if (userRole !== "superadmin") return;
+    if (isImporting) return;
+    
+    const localDataString = localStorage.getItem('adminData');
+    if (!localDataString) {
+      showToast("error", "Tidak ada data lama di Local Storage.");
+      return;
+    }
+
+    let localData: any[] = [];
+    try {
+      localData = JSON.parse(localDataString);
+    } catch {
+      showToast("error", "Format data Local Storage tidak valid.");
+      return;
+    }
+
+    if (localData.length === 0) {
+      showToast("error", "Local Storage kosong.");
+      return;
+    }
+
+    if (!window.confirm(`Ditemukan ${localData.length} data lama. Apakah Anda yakin ingin mengimpornya ke database baru? Proses ini mungkin memakan waktu.`)) {
+      return;
+    }
+
+    setIsImporting(true);
+    setImportProgress({ current: 0, total: localData.length });
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < localData.length; i++) {
+      const item = localData[i];
+      setImportProgress({ current: i + 1, total: localData.length });
+      try {
+        let finalKtpUrl = item.fotoKtp || "";
+
+        // If it's a base64 string, upload it first to avoid crashing the DB with massive strings
+        if (finalKtpUrl.startsWith("data:image/")) {
+          try {
+            // Convert base64 to Blob
+            const response = await fetch(finalKtpUrl);
+            const blob = await response.blob();
+            const cleanName = (item.nama || "legacy").trim().toUpperCase().replace(/[^A-Z0-9]/g, "_");
+            const timestamp = Math.floor(Date.now() / 1000);
+            const fileName = `KTP_IMPORT_${cleanName}_${timestamp}.jpg`;
+            
+            finalKtpUrl = await api.uploadKtp(blob, fileName);
+          } catch (uploadErr) {
+            console.error("Gagal upload KTP base64 untuk", item.nama, uploadErr);
+            finalKtpUrl = ""; // Skip photo if it fails to prevent crashing the whole row
+          }
+        }
+
+        // Import the record via publicRegister
+        await api.publicRegister({
+          name: item.nama || item.nama_lengkap || "Tanpa Nama",
+          address: item.alamat || item.alamat_pemasangan || "-",
+          phone: item.hp || item.no_hp_wa || "-",
+          village_id: 1, // Defaulting to GUMELAR (1) for imported data
+          package_id: 1, // Defaulting to 1 for imported data
+          notes: item.catatan || "",
+          nik: item.nik || "",
+          kecamatan: item.kecamatan || "GUMELAR",
+          rw: item.rw || "",
+          rt: item.rt || "",
+          currentProvider: item.provider || "Belum Pernah Pasang",
+          sumberInfo: item.sumber || "Rekomendasi Teman",
+          linkGoogleMaps: item.link || item.link_google_maps || "",
+          fotoKtp: finalKtpUrl,
+          tanggalPasang: item.tanggal || item.tanggal_rencana_pasang || ""
+        });
+        
+        // Wait a little bit to avoid rate limiting or overloading
+        await new Promise(resolve => setTimeout(resolve, 300)); // slightly faster
+        
+        successCount++;
+      } catch (err) {
+        console.error("Gagal import item:", item, err);
+        failCount++;
+      }
+    }
+
+    setIsImporting(false);
+    showToast("success", `Impor selesai! Berhasil: ${successCount}, Gagal: ${failCount}`);
+    
+    fetchData(); // Refresh data from backend
   };
 
   const fetchData = async () => {
@@ -499,6 +604,27 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
                   </div>
                 )}
               </div>
+
+              {/* Tombol Impor Data Lama (Superadmin Only) */}
+              {userRole === "superadmin" && hasLegacyData && (
+                <button
+                  onClick={handleImportLegacyData}
+                  disabled={loading || isImporting}
+                  title="Impor Data Lama dari Local Storage ke Database"
+                  className="hidden md:flex items-center gap-1.5 px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-xl text-[10px] font-black uppercase tracking-wider border border-purple-200 transition-all disabled:opacity-50"
+                >
+                  {isImporting ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-purple-600/30 border-t-purple-600 rounded-full animate-spin"></div>
+                      MENGIMPOR... {importProgress.current}/{importProgress.total}
+                    </>
+                  ) : (
+                    <>
+                      <Lucide.Download size={14} /> Impor Data Lama
+                    </>
+                  )}
+                </button>
+              )}
 
               {/* Tombol Keluar HP */}
               <button

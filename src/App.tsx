@@ -26,6 +26,7 @@ export default function App() {
   const [submitted, setSubmitted] = useState(false);
   const [lastReg,   setLastReg]   = useState({ name: "", desa: "" });
   const [user,      setUser]      = useState<AuthUser | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Added loading state
 
   // --- Initial Auth Check ---
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function App() {
         if (isDashboardPath) setView("login");
         else if (isLoginPath) setView("login");
         else setView("form");
+        setIsCheckingAuth(false);
         return;
       }
 
@@ -46,6 +48,8 @@ export default function App() {
       } catch (err) {
         tokenStore.clear();
         setView(isDashboardPath || isLoginPath ? "login" : "form");
+      } finally {
+        setIsCheckingAuth(false);
       }
     };
     initAuth();
@@ -82,6 +86,17 @@ export default function App() {
     setUser(loggedInUser);
     setView("dashboard");
   };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-[#0d1655] flex flex-col items-center justify-center p-4">
+        <div className="relative">
+          <div className="w-20 h-20 border-4 border-[#F47920]/30 border-t-[#F47920] rounded-full animate-spin"></div>
+        </div>
+        <h2 className="text-xl font-bold text-white mt-8 tracking-widest uppercase">Memuat Sistem...</h2>
+      </div>
+    );
+  }
 
   // Success Page setelah submit form
   if (submitted && view === "form") {

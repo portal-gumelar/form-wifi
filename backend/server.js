@@ -72,6 +72,10 @@ connectDBWithRetry();
 // AUDIT FIX: Pasang semua security headers dan CORS yang ketat
 // ============================================================
 
+// Enable trust proxy because the app is behind Traefik/Cloudflare
+app.set('trust proxy', 1);
+
+
 // Helmet - security headers
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }, // izinkan /uploads dari frontend
@@ -1152,6 +1156,30 @@ app.get('/api/stats/activity', verifyToken, requireRole('superadmin'), async (re
 });
 
 // ============================================================
+// PUBLIC ENDPOINT - Upload Foto (tanpa auth)
+// AUDIT FIX: Endpoint publik untuk upload KTP saat daftar
+// ============================================================
+app.post('/api/public/upload-photo',
+  globalLimiter,
+  upload.single('photo'),
+  async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: 'Tidak ada foto yang diunggah.' });
+      
+      const filename = req.file.filename;
+      const urlPath  = `/uploads/${filename}`;
+
+      // Karena belum ada subscriber_id (pendaftaran belum disubmit), 
+      // kita hanya mereturn URL path nya saja. Frontend akan menyertakan url ini saat submit pendaftaran.
+      res.status(201).json({ success: true, url: urlPath, filename });
+    } catch (err) {
+      console.error('[POST /api/public/upload-photo]', err.message);
+      res.status(500).json({ error: 'Gagal mengunggah foto.' });
+    }
+  }
+);
+
+// ============================================================
 // PUBLIC ENDPOINT - Form Registrasi Publik (tanpa auth)
 // AUDIT FIX: Rate limited, validasi ketat
 // ============================================================
@@ -1189,6 +1217,26 @@ app.post('/api/public/register',
       const villageName = villageRow?.name || '-';
       const packageName = packageRow?.name || '-';
 
+      // ============================================================
+      // GOOGLE SHEETS BACKUP (Fire-and-forget)
+      // ============================================================
+      const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbztG8z0ob1ULpzkYXIIbaV1PokdR_dO4qj7TSD0rnwz8qb77QlJNrUQM0DHwNwXFC_reQ/exec';
+      const { 
+        nik = '', kecamatan = '', rw = '', rt = '', 
+        currentProvider = 'Belum Pernah Pasang', sumberInfo = 'Rekomendasi Teman',
+        linkGoogleMaps = '', fotoKtp = '', tanggalPasang = '' 
+      } = req.body;
+
+      // Save KTP Photo to database if provided
+      if (fotoKtp) {
+        const filename = fotoKtp.split('/').pop() || 'ktp_upload.jpg';
+        await client.query(
+          `INSERT INTO photos (subscriber_id, type, filename, url_path, created_at)
+           VALUES ($1, 'ktp', $2, $3, NOW())`,
+          [subscriberId, filename, fotoKtp]
+        );
+      }
+
       // Auto notifikasi
       const notifMessage = `Pelanggan baru: ${name} | Paket: ${packageName} | Desa: ${villageName}`;
       await client.query(
@@ -1196,6 +1244,35 @@ app.post('/api/public/register',
          VALUES ('new_registration', 'Pendaftaran Baru', $1, $2, false, NOW())`,
         [notifMessage, subscriberId]
       );
+
+      const payload = new URLSearchParams({
+        timestamp: new Date().toLocaleString("id-ID"),
+        nik: nik,
+        nama_lengkap: name,
+        no_hp_wa: phone,
+        alamat_pemasangan: address,
+        kecamatan: kecamatan,
+        desa: villageName,
+        rw: rw,
+        rt: rt,
+        paket: packageName,
+        status: "PENGAJUAN",
+        provider_saat_ini: currentProvider,
+        sumber_info: sumberInfo,
+        link_google_maps: linkGoogleMaps,
+        foto_ktp: fotoKtp,
+        persetujuan_sk: "SETUJU (Sudah Dibaca & Disetujui)",
+        catatan: notes || "",
+        tanggal_rencana_pasang: tanggalPasang,
+        tanggal_aktif: ""
+      });
+
+      // Lakukan fetch ke Google Script tanpa menunggu response (fire-and-forget)
+      fetch(GOOGLE_SCRIPT_URL, { 
+        method: "POST", 
+        body: payload, 
+        // node-fetch doesn't strictly need mode: "no-cors", but we catch any error silently
+      }).catch(err => console.warn('[Google Sheets Backup] Failed:', err.message));
 
       await client.query('COMMIT');
 
@@ -1240,7 +1317,7 @@ app.use((req, res) => {
 // ============================================================
 // START SERVER
 // ============================================================
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   const envName = process.env.NODE_ENV || 'development';
   console.log(`[Server] Running on port ${PORT} (${envName})`);
   console.log(`[Server] CORS allowed origins: ${allowedOrigins.join(', ')}`);

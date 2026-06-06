@@ -12,9 +12,7 @@ import { SubscriberNotice } from "../components/registration/SubscriberNotice";
 import { FomoNotifications, FloatingWhatsAppButton } from "../components/registration/FomoWidgets";
 import { DESA_RW_RT, VILLAGES, COVERED_VILLAGES } from "../constants/villages";
 
-
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztG8z0ob1ULpzkYXIIbaV1PokdR_dO4qj7TSD0rnwz8qb77QlJNrUQM0DHwNwXFC_reQ/exec";
-
+// Google Apps Script URL removed from frontend for security (moved to backend)
 const initialForm = {
   currentProvider: "",
   nik: "",
@@ -359,13 +357,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
       };
       localStorage.setItem('adminData', JSON.stringify([newEntry, ...localData]));
 
-      // 3. Backup sekunder ke Google Sheets secara asinkron (fire-and-forget)
-      const payload = new URLSearchParams();
-      Object.entries(newRecord).forEach(([key, val]) => {
-        payload.append(key, val);
-      });
-      fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: payload, mode: "no-cors" }).catch(() => {});
-
+      // Google Sheets backup is now handled safely by the backend API.
       setSubmitted({ name: form.namaLengkap, desa: form.desa });
       window.scrollTo(0, 0);
     } catch (err: any) {
