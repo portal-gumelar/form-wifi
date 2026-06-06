@@ -18,7 +18,6 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
   const [totalMbps, setTotalMbps] = useState<number>(8);
   const [recommendedSpeed, setRecommendedSpeed] = useState<number>(20);
 
-  // Kalkulasi sekuensial berdasarkan input
   useEffect(() => {
     let total = 0;
     
@@ -57,6 +56,21 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
       }
     }
 
+  }, [gadgetCount, hasTv, tvSize, hasLive, hasInteracted]);
+
+  // Debounce auto-scroll to recommendation box after user interaction
+  useEffect(() => {
+    if (hasInteracted) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById("rekomendasi-hasil");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("ring-4", "ring-[#FDB913]/50", "rounded-2xl", "transition-all", "duration-500");
+          setTimeout(() => el.classList.remove("ring-4", "ring-[#FDB913]/50"), 1500);
+        }
+      }, 1200); // Tunggu 1.2 detik setelah interaksi terakhir (agar saat user klik + berkali-kali tidak langsung lompat)
+      return () => clearTimeout(timer);
+    }
   }, [gadgetCount, hasTv, tvSize, hasLive, hasInteracted]);
 
   // Handle Auto-Select saat rekomendasi berubah, HANYA JIKA user belum memilih manual?
@@ -210,11 +224,18 @@ export const PackageSelection: React.FC<PackageSelectionProps> = ({ selectedPack
 
                 <div className="w-full h-px bg-white/20 mb-6"></div>
 
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10 shadow-inner">
-                  <p className="text-[10px] sm:text-xs text-blue-100 font-medium uppercase tracking-widest mb-1.5">Rekomendasi Paket Ideal</p>
-                  <p className="text-2xl sm:text-3xl font-black text-[#FDB913] tracking-tight drop-shadow-[0_0_15px_rgba(253,185,19,0.5)]">
-                    {recommendedSpeed} Mbps
-                  </p>
+                <div id="rekomendasi-hasil" className="relative group mt-2 scroll-mt-24">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#F47920] to-[#FDB913] rounded-2xl blur-lg opacity-40 group-hover:opacity-70 transition duration-500 animate-pulse"></div>
+                  <div className="relative bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transform transition hover:-translate-y-1">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Lucide.Zap size={16} className="text-[#FDB913] fill-[#FDB913]" />
+                      <p className="text-[10px] sm:text-xs text-blue-100 font-black uppercase tracking-[0.2em]">Rekomendasi Ideal</p>
+                      <Lucide.Zap size={16} className="text-[#FDB913] fill-[#FDB913]" />
+                    </div>
+                    <p className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#FDB913] to-[#F47920] tracking-tight drop-shadow-md">
+                      {recommendedSpeed} Mbps
+                    </p>
+                  </div>
                 </div>
                 
                 <p className="text-[10px] sm:text-xs text-blue-100/80 mt-5 leading-relaxed font-medium px-2">
