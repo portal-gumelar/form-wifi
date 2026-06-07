@@ -426,7 +426,7 @@ app.get('/api/customers', verifyToken, async (req, res) => {
 
 // POST /api/customers - tambah pelanggan baru + auto notifikasi
 app.post('/api/customers',
-  formLimiter,
+  requireRole(['superadmin', 'admin']),
   [
     body('name').trim().notEmpty().withMessage('Nama wajib diisi').isLength({ max: 150 }),
     body('phone').trim().notEmpty().withMessage('No HP wajib diisi').isLength({ max: 30 }),
