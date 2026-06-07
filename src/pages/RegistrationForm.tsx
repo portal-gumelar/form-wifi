@@ -61,6 +61,25 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     api.getVillages().then(res => setVillages(res.data)).catch(() => {});
     api.getPackages().then(res => setPackages(res.data)).catch(() => {});
 
+    const params = new URLSearchParams(window.location.search);
+    const paketParam = params.get("paket");
+    if (paketParam) {
+      import("../constants/packages").then(({ PACKAGES }) => {
+        const pkg = PACKAGES.find(p => p.label === paketParam);
+        if (pkg) {
+          setForm(prev => ({ ...prev, paket: `${pkg.label} (${pkg.speed}) - Rp ${pkg.price}/Bln` }));
+          setTimeout(() => {
+            const formEl = document.getElementById("sec-datadiri");
+            if (formEl) {
+              formEl.scrollIntoView({ behavior: "smooth", block: "start" });
+              formEl.classList.add("ring-4", "ring-[#F47920]/30", "rounded-3xl", "transition-all", "duration-1000");
+              setTimeout(() => formEl.classList.remove("ring-4", "ring-[#F47920]/30"), 2000);
+            }
+          }, 800);
+        }
+      });
+    }
+
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsVillageDropdownOpen(false);
