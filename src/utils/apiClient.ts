@@ -44,7 +44,6 @@ const refreshAccessToken = async (): Promise<string | null> => {
 
     if (!res.ok) {
       tokenStore.clear();
-      window.location.href = '/login';
       return null;
     }
 
@@ -54,7 +53,6 @@ const refreshAccessToken = async (): Promise<string | null> => {
     return data.accessToken;
   } catch {
     tokenStore.clear();
-    window.location.href = '/login';
     return null;
   }
 };
