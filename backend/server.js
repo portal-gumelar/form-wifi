@@ -331,6 +331,54 @@ app.get('/api/auth/me', verifyToken, async (req, res) => {
   }
 });
 
+// Helper for Google Sheets Backup
+const backupToGoogleSheets = async (subscriberId, action = "UPDATE") => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT s.*, v.name AS village_name, p.name AS package_name
+      FROM subscribers s
+      LEFT JOIN villages v ON s.village_id = v.id
+      LEFT JOIN packages p ON s.package_id = p.id
+      WHERE s.id = $1
+    `, [subscriberId]);
+    
+    if (rows.length === 0) return;
+    const sub = rows[0];
+    
+    const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbztG8z0ob1ULpzkYXIIbaV1PokdR_dO4qj7TSD0rnwz8qb77QlJNrUQM0DHwNwXFC_reQ/exec';
+    
+    let statusText = sub.status === "active" ? "AKTIF" : (sub.status === "suspended" ? "SUSPENDED" : "PENGAJUAN");
+    if (action === "DELETE" || sub.status === "deleted") statusText = "DELETED";
+
+    const payload = new URLSearchParams({
+      timestamp: new Date().toLocaleString("id-ID"),
+      nik: "",
+      nama_lengkap: sub.name || "",
+      no_hp_wa: sub.phone || "",
+      alamat_pemasangan: sub.address || "",
+      kecamatan: "",
+      desa: sub.village_name || "",
+      rw: "",
+      rt: "",
+      paket: sub.package_name || "",
+      status: statusText,
+      provider_saat_ini: "Update Admin",
+      sumber_info: "Update Admin",
+      link_google_maps: "",
+      foto_ktp: "",
+      persetujuan_sk: "Diupdate oleh Admin",
+      catatan: sub.notes || "",
+      tanggal_rencana_pasang: "",
+      tanggal_aktif: sub.joined_at ? new Date(sub.joined_at).toLocaleString("id-ID") : ""
+    });
+
+    fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: payload })
+      .catch(err => console.warn('[Google Sheets Backup] Failed:', err.message));
+  } catch (err) {
+    console.warn('[Google Sheets Backup] Query Failed:', err.message);
+  }
+};
+
 // ============================================================
 // SUBSCRIBERS (CUSTOMERS) ENDPOINTS
 // AUDIT FIX: Parameterized queries, pagination, soft delete
@@ -490,6 +538,9 @@ app.post('/api/customers',
 
       await client.query('COMMIT');
 
+      // Backup ke Google Sheets (Fire-and-forget)
+      backupToGoogleSheets(subscriberId, "CREATE");
+
       res.status(201).json({ success: true, id: subscriberId });
     } catch (err) {
       await client.query('ROLLBACK');
@@ -580,6 +631,9 @@ app.put('/api/customers/:id',
       const ip = req.ip || req.headers['x-forwarded-for']?.split(',')[0]?.trim();
       await writeLog(pool, req.user.id, 'UPDATE', 'subscribers', id, `Update pelanggan: ${name}`, ip);
 
+      // Backup ke Google Sheets
+      backupToGoogleSheets(id, "UPDATE");
+
       res.json({ success: true });
     } catch (err) {
       console.error('[PUT /api/customers/:id]', err.message);
@@ -604,6 +658,9 @@ app.delete('/api/customers/:id', verifyToken, requireRole('superadmin'), async (
 
     const ip = req.ip || req.headers['x-forwarded-for']?.split(',')[0]?.trim();
     await writeLog(pool, req.user.id, 'DELETE', 'subscribers', id, `Soft delete pelanggan ID: ${id}`, ip);
+
+    // Backup ke Google Sheets
+    backupToGoogleSheets(id, "DELETE");
 
     res.json({ success: true });
   } catch (err) {
@@ -633,6 +690,9 @@ app.patch('/api/customers/:id/status', verifyToken, async (req, res) => {
 
     const ip = req.ip || req.headers['x-forwarded-for']?.split(',')[0]?.trim();
     await writeLog(pool, req.user.id, 'UPDATE', 'subscribers', id, `Status diubah ke: ${status}`, ip);
+
+    // Backup ke Google Sheets
+    backupToGoogleSheets(id, "UPDATE");
 
     res.json({ success: true });
   } catch (err) {
