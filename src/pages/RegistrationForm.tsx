@@ -57,9 +57,9 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
   const progress = Math.round((["currentProvider", "namaLengkap", "desa", "alamat", "noHp", "paket", "sumberInfo"].filter(f => form[f as keyof typeof form]).length / 7) * 100);
 
   useEffect(() => {
-    // FIX: Fetch daftar desa & paket dari API saat komponen mount
-    api.getVillages().then(res => setVillages(res.data)).catch(() => {});
-    api.getPackages().then(res => setPackages(res.data)).catch(() => {});
+    // FIX: Fetch daftar desa & paket dari API publik saat komponen mount
+    api.getPublicVillages().then(res => setVillages(res)).catch(() => {});
+    api.getPublicPackages().then(res => setPackages(res)).catch(() => {});
 
     const params = new URLSearchParams(window.location.search);
     const paketParam = params.get("paket");
@@ -202,7 +202,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     const { name, value } = e.target;
     // Reset RW/RT when desa changes
     if (name === "desa") {
-      setForm(prev => ({ ...prev, desa: value, rw: "", rt: "" }));
+      setForm(prev => ({ ...prev, desa: value.toUpperCase(), rw: "", rt: "" }));
     } else if (name === "rw") {
       setForm(prev => ({ ...prev, rw: value, rt: "" }));
     } else {
@@ -211,7 +211,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
     setError("");
 
     if (name === "desa") {
-      if (value && !COVERED_VILLAGES.includes(value)) {
+      if (value && !COVERED_VILLAGES.includes(value.toUpperCase())) {
         setCoverageWarning("mohon maaf desa anda belum terkafer oleh jaringan kami. mohon menunggu");
       } else {
         setCoverageWarning("");
@@ -351,7 +351,9 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
         phone: form.noHp,
         village_id: parseInt(form.village_id) || 1,
         package_id: package_id,
-        notes: form.catatan
+        notes: form.catatan,
+        rt: form.rt,
+        rw: form.rw
       });
 
       // 2. Backup ke localData untuk indikator lokal
@@ -598,7 +600,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                       {isVillageDropdownOpen && (
                         <div className="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-slate-100 z-50 p-1.5 max-h-[250px] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-250">
                           {villages.map((village) => {
-                            const isCovered = COVERED_VILLAGES.includes(village.name);
+                            const isCovered = COVERED_VILLAGES.includes(village.name.toUpperCase());
                             const isSelected = form.village_id === village.id.toString();
                             return (
                               <button
@@ -606,7 +608,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
                                 type="button"
                                 onClick={() => {
                                   // FIX: Ubah select desa dengan value=village.id, label=village.name
-                                  setForm(prev => ({ ...prev, village_id: village.id.toString(), desa: village.name, rw: "", rt: "" }));
+                                  setForm(prev => ({ ...prev, village_id: village.id.toString(), desa: village.name.toUpperCase(), rw: "", rt: "" }));
                                   setIsVillageDropdownOpen(false);
                                 }}
                                 className={`w-full flex items-center justify-between p-3 rounded-xl transition-all mb-0.5 text-left border ${

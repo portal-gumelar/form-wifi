@@ -440,6 +440,19 @@ export const api = {
   },
 
   // --- PUBLIC (form registrasi - tanpa auth) ---
+  getPublicVillages: async () => {
+    const res = await fetch(`${API_BASE}/api/public/villages`);
+    if (!res.ok) throw new Error('Gagal mengambil data desa.');
+    return res.json();
+  },
+
+  getPublicPackages: async () => {
+    const res = await fetch(`${API_BASE}/api/public/packages`);
+    if (!res.ok) throw new Error('Gagal mengambil data paket.');
+    return res.json();
+  },
+
+
   uploadKtp: async (file: Blob, filename: string) => {
     const formData = new FormData();
     formData.append('photo', file, filename);

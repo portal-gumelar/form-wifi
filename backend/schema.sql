@@ -58,6 +58,8 @@ CREATE TABLE IF NOT EXISTS subscribers (
   phone       VARCHAR(30),
   village_id  INTEGER REFERENCES villages(id) ON DELETE SET NULL,
   package_id  INTEGER REFERENCES packages(id) ON DELETE SET NULL,
+  rt          VARCHAR(10),
+  rw          VARCHAR(10),
   status      VARCHAR(20) NOT NULL DEFAULT 'pending'
                 CHECK (status IN ('pending', 'active', 'suspended', 'deleted')),
   joined_at   TIMESTAMP,

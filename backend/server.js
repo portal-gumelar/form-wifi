@@ -53,6 +53,12 @@ const connectDBWithRetry = async (retries = 5, delay = 5000) => {
     try {
       const client = await pool.connect();
       console.log('[DB] PostgreSQL connected successfully.');
+      try {
+        await pool.query('ALTER TABLE subscribers ADD COLUMN IF NOT EXISTS rt VARCHAR(10), ADD COLUMN IF NOT EXISTS rw VARCHAR(10)');
+        console.log('[DB] subscribers table auto-migrated for rt/rw.');
+      } catch (e) {
+        console.error('[DB] subscribers auto-migrate failed:', e.message);
+      }
       client.release();
       return;
     } catch (err) {
@@ -1252,6 +1258,27 @@ app.get('/api/stats/activity', verifyToken, requireRole('superadmin'), async (re
 });
 
 // ============================================================
+// PUBLIC ENDPOINT - Villages & Packages (tanpa auth)
+// ============================================================
+app.get('/api/public/villages', globalLimiter, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM villages ORDER BY name ASC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Gagal mengambil data desa.' });
+  }
+});
+
+app.get('/api/public/packages', globalLimiter, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM packages WHERE is_active = true ORDER BY price ASC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Gagal mengambil data paket.' });
+  }
+});
+
+// ============================================================
 // PUBLIC ENDPOINT - Upload Foto (tanpa auth)
 // AUDIT FIX: Endpoint publik untuk upload KTP saat daftar
 // ============================================================
@@ -1292,17 +1319,17 @@ app.post('/api/public/register',
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { name, address, phone, village_id, package_id, notes } = req.body;
+    const { name, address, phone, village_id, package_id, notes, rt, rw } = req.body;
 
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
       const { rows: [newSubscriber] } = await client.query(
-        `INSERT INTO subscribers (name, address, phone, village_id, package_id, status, notes, created_at)
-         VALUES ($1, $2, $3, $4, $5, 'pending', $6, NOW())
+        `INSERT INTO subscribers (name, address, phone, village_id, package_id, rt, rw, status, notes, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8, NOW())
          RETURNING id`,
-        [name, address, phone, village_id, package_id, notes || '']
+        [name, address, phone, village_id, package_id, rt || '', rw || '', notes || '']
       );
 
       const subscriberId = newSubscriber.id;
