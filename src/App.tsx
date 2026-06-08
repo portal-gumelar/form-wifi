@@ -24,7 +24,7 @@ export default function App() {
 
   const [view,      setView]      = useState<AppView>("form");
   const [submitted, setSubmitted] = useState(false);
-  const [lastReg,   setLastReg]   = useState({ name: "", desa: "" });
+  const [lastReg,   setLastReg]   = useState<any>(null);
   const [user,      setUser]      = useState<AuthUser | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Added loading state
 
@@ -102,8 +102,7 @@ export default function App() {
   if (submitted && view === "form") {
     return (
       <SuccessPage
-        userName={lastReg.name}
-        userDesa={lastReg.desa}
+        data={lastReg}
         onBack={() => {
           setSubmitted(false);
           window.scrollTo(0, 0);

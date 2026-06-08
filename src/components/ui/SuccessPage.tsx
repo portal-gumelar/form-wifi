@@ -3,12 +3,11 @@ import React, { useEffect, useState } from "react";
 import * as Lucide from "lucide-react";
 
 interface SuccessPageProps {
-  userName: string;
-  userDesa: string;
+  data: any;
   onBack: () => void;
 }
 
-export const SuccessPage: React.FC<SuccessPageProps> = ({ userName, userDesa, onBack }) => {
+export const SuccessPage: React.FC<SuccessPageProps> = ({ data, onBack }) => {
   const WHATSAPP_NUMBER = "6289646415444"; // Kode Internasional Indonesia (62) murni tanpa angka 0
   const [mounted, setMounted] = useState(false);
 
@@ -18,7 +17,7 @@ export const SuccessPage: React.FC<SuccessPageProps> = ({ userName, userDesa, on
 
   // Template Otomatisasi Pesan Konfirmasi CS Armedia
   const messageTemplate = encodeURIComponent(
-    `Halo CS ARMEDIA,\n\nSaya telah melakukan pengisian formulir pendaftaran pemasangan internet baru secara online.\n\n*Detail Registrasi:*\n• Nama: ${userName}\n• Domisili desa: ${userDesa}\n\nMohon dibantu konfirmasi untuk jadwal survei lokasi dan instalasi perangkat teknisi lapangan. Terima kasih!`
+    `Halo CS ARMEDIA,\n\nSaya telah melakukan pengisian formulir pendaftaran pemasangan internet baru secara online.\n\n*Detail Registrasi:*\n• NIK: ${data.nik || '-'}\n• Nama Lengkap: ${data.namaLengkap || '-'}\n• No WhatsApp: ${data.noHp || '-'}\n• Alamat Pemasangan: ${data.alamat || '-'}\n• RT/RW: ${data.rt || '-'} / ${data.rw || '-'}\n• Desa/Kecamatan: ${data.desa || '-'} / ${data.kecamatan || '-'}\n• Pilihan Paket: ${data.paket || '-'}\n• Provider Sebelumnya: ${data.currentProvider || 'Belum Ada'}\n• Rencana Tanggal Pasang: ${data.tanggalPasang || '-'}\n• Link Maps: ${data.linkGoogleMaps || '-'}\n• Catatan: ${data.catatan || '-'}\n\nMohon dibantu konfirmasi untuk jadwal survei lokasi dan instalasi perangkat teknisi lapangan. Terima kasih!`
   );
 
   const handleWhatsAppRedirect = () => {
@@ -57,11 +56,11 @@ export const SuccessPage: React.FC<SuccessPageProps> = ({ userName, userDesa, on
         <div className="bg-gradient-to-br from-slate-50 to-white p-5 rounded-2xl border border-slate-200 shadow-sm text-left space-y-4">
           <div className="flex justify-between items-center text-sm">
             <span className="text-slate-400 font-bold uppercase tracking-wide">Nama Pendaftar</span>
-            <span className="text-[#0d1655] font-black">{userName}</span>
+            <span className="text-[#0d1655] font-black">{data?.namaLengkap || 'Pelanggan'}</span>
           </div>
           <div className="flex justify-between items-center text-sm border-t border-slate-100 pt-4">
             <span className="text-slate-400 font-bold uppercase tracking-wide">Zona Wilayah</span>
-            <span className="text-[#F47920] font-black uppercase bg-orange-50 px-3 py-1 rounded-lg">Desa {userDesa}</span>
+            <span className="text-[#F47920] font-black uppercase bg-orange-50 px-3 py-1 rounded-lg">Desa {data?.desa || '-'}</span>
           </div>
         </div>
 

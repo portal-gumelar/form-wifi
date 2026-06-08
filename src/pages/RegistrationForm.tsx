@@ -37,7 +37,7 @@ const initialForm = {
 // constants are now imported
 
 
-export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; desa: string }) => void; setShowAdminModal: (v: boolean) => void }> = ({ setSubmitted, setShowAdminModal }) => {
+export const RegistrationForm: React.FC<{ setSubmitted: (data: any) => void; setShowAdminModal: (v: boolean) => void }> = ({ setSubmitted, setShowAdminModal }) => {
   const [form, setForm] = useState({ ...initialForm, village_id: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -379,7 +379,7 @@ export const RegistrationForm: React.FC<{ setSubmitted: (data: { name: string; d
       localStorage.setItem('adminData', JSON.stringify([newEntry, ...localData]));
 
       // Google Sheets backup is now handled safely by the backend API.
-      setSubmitted({ name: form.namaLengkap, desa: form.desa });
+      setSubmitted(form);
       window.scrollTo(0, 0);
     } catch (err: any) {
       console.error("Gagal mengirim ke Supabase:", err);
