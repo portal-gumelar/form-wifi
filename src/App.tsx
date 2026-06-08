@@ -40,10 +40,17 @@ export default function App() {
         return;
       }
 
+      if (!isDashboardPath && !isLoginPath) {
+        tokenStore.clear();
+        setView("form");
+        setIsCheckingAuth(false);
+        return;
+      }
+
       try {
         const userData = await api.getMe();
         setUser(userData as AuthUser);
-        localStorage.setItem("armedia_user", JSON.stringify(userData));
+        sessionStorage.setItem("armedia_user", JSON.stringify(userData));
         setView("dashboard");
       } catch (err) {
         tokenStore.clear();

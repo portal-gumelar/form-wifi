@@ -14,14 +14,14 @@ const TOKEN_KEY         = 'armedia_access_token';
 const REFRESH_TOKEN_KEY = 'armedia_refresh_token';
 
 export const tokenStore = {
-  getAccess:     () => localStorage.getItem(TOKEN_KEY) || '',
-  getRefresh:    () => localStorage.getItem(REFRESH_TOKEN_KEY) || '',
-  setAccess:     (t: string) => localStorage.setItem(TOKEN_KEY, t),
-  setRefresh:    (t: string) => localStorage.setItem(REFRESH_TOKEN_KEY, t),
+  getAccess:     () => sessionStorage.getItem(TOKEN_KEY) || '',
+  getRefresh:    () => sessionStorage.getItem(REFRESH_TOKEN_KEY) || '',
+  setAccess:     (t: string) => sessionStorage.setItem(TOKEN_KEY, t),
+  setRefresh:    (t: string) => sessionStorage.setItem(REFRESH_TOKEN_KEY, t),
   clear:         () => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-    localStorage.removeItem('armedia_user');
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+    sessionStorage.removeItem('armedia_user');
   },
 };
 
@@ -129,7 +129,7 @@ export const api = {
     const data = await res.json();
     tokenStore.setAccess(data.accessToken);
     tokenStore.setRefresh(data.refreshToken);
-    localStorage.setItem('armedia_user', JSON.stringify(data.user));
+    sessionStorage.setItem('armedia_user', JSON.stringify(data.user));
     return data;
   },
 
