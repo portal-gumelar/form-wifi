@@ -481,7 +481,7 @@ export const api = {
   // === BACKWARD COMPAT (dipanggil dari kode lama) ===
   /** @deprecated Gunakan getCustomers() */
   getRegistrations: async () => {
-    const res = await apiFetch(`${API_BASE}/api/customers`);
+    const res = await apiFetch(`${API_BASE}/api/customers?limit=1000`);
     if (!res.ok) throw new Error('Gagal mengambil data registrasi.');
     return res.json();
   },

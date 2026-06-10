@@ -394,7 +394,7 @@ const backupToGoogleSheets = async (subscriberId, action = "UPDATE") => {
 app.get('/api/customers', verifyToken, async (req, res) => {
   try {
     const page      = Math.max(1, parseInt(req.query.page) || 1);
-    const limit     = Math.min(100, parseInt(req.query.limit) || 20);
+    const limit     = Math.min(1000, parseInt(req.query.limit) || 20);
     const offset    = (page - 1) * limit;
     const search    = req.query.search || '';
     const status    = req.query.status || '';
