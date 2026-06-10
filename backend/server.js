@@ -1335,8 +1335,8 @@ app.post('/api/public/register',
       await client.query('BEGIN');
 
       const { 
-        nik = '', kecamatan = '', currentProvider = '', sumberInfo = '', 
-        linkGoogleMaps = '', tanggalPasang = '' 
+        nik = '', kecamatan = '', currentProvider = 'Belum Pernah Pasang', sumberInfo = 'Rekomendasi Teman', 
+        linkGoogleMaps = '', tanggalPasang = '', fotoKtp = ''
       } = req.body;
 
       const { rows: [newSubscriber] } = await client.query(
@@ -1358,11 +1358,7 @@ app.post('/api/public/register',
       // GOOGLE SHEETS BACKUP (Fire-and-forget)
       // ============================================================
       const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbztG8z0ob1ULpzkYXIIbaV1PokdR_dO4qj7TSD0rnwz8qb77QlJNrUQM0DHwNwXFC_reQ/exec';
-      const { 
-        nik = '', kecamatan = '', rw = '', rt = '', 
-        currentProvider = 'Belum Pernah Pasang', sumberInfo = 'Rekomendasi Teman',
-        linkGoogleMaps = '', fotoKtp = '', tanggalPasang = '' 
-      } = req.body;
+      // Variables are already destructured above
 
       // Save KTP Photo to database if provided
       if (fotoKtp) {
