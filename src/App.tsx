@@ -26,7 +26,8 @@ export default function App() {
   const [submitted, setSubmitted] = useState(false);
   const [lastReg,   setLastReg]   = useState<any>(null);
   const [user,      setUser]      = useState<AuthUser | null>(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Added loading state
+  // Hanya tampilkan loading 'Memuat Sistem...' jika mengakses /dashboard atau /login
+  const [isCheckingAuth, setIsCheckingAuth] = useState(isDashboardPath || isLoginPath);
 
   // --- Initial Auth Check ---
   useEffect(() => {
