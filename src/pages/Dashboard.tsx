@@ -465,24 +465,8 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
       };
 
       if (isNewRecord) {
-        // Buat data baru via publicRegister agar village_id & package_id di-resolve oleh backend
-        await api.publicRegister({
-          name: updatedItem.nama_lengkap || "",
-          address: updatedItem.alamat_pemasangan || "",
-          phone: updatedItem.no_hp_wa || "",
-          village_id: backendVillageId,
-          package_id: backendPackageId,
-          notes: updatedItem.catatan || "",
-          nik: updatedItem.nik || "",
-          kecamatan: updatedItem.kecamatan || "GUMELAR",
-          rw: updatedItem.rw || "",
-          rt: updatedItem.rt || "",
-          currentProvider: updatedItem.provider_saat_ini || "Belum Pernah Pasang",
-          sumberInfo: updatedItem.sumber_info || "",
-          linkGoogleMaps: updatedItem.link_google_maps || "",
-          fotoKtp: finalKtpUrl,
-          tanggalPasang: updatedItem.tanggal_rencana_pasang || "",
-        });
+        // Buat data baru via createCustomer agar bisa set status dan data lain secara bebas (khusus admin)
+        await api.createCustomer(dbRecord);
       } else if (updatedItem.id !== undefined) {
         // Update data yang sudah ada via updateCustomer
         await api.updateCustomer(updatedItem.id, dbRecord);

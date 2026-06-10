@@ -497,7 +497,7 @@ app.post('/api/customers',
 
     const {
       name, address, phone, village_id, package_id,
-      status = 'pending', joined_at, expired_at, notes,
+      status = 'pending', joined_at, expired_at, notes, foto_ktp,
       nik = '', kecamatan = '', current_provider = '', source_info = '',
       link_google_maps = '', tanggal_rencana_pasang = '', rt = '', rw = ''
     } = req.body;
@@ -519,6 +519,23 @@ app.post('/api/customers',
       );
 
       const subscriberId = newSubscriber.id;
+
+      // Simpan foto_ktp ke tabel photos jika ada
+      if (foto_ktp && typeof foto_ktp === 'string' && foto_ktp.trim() !== '') {
+        let urlPath = foto_ktp.trim();
+        const API_BASE_URL = process.env.API_BASE_URL || '';
+        if (API_BASE_URL && urlPath.startsWith(API_BASE_URL)) {
+          urlPath = urlPath.slice(API_BASE_URL.length);
+        }
+        const filename = urlPath.split('/').pop() || urlPath;
+
+        await client.query(
+          `INSERT INTO photos (subscriber_id, type, filename, url_path, created_at)
+           VALUES ($1, 'ktp', $2, $3, NOW())
+           ON CONFLICT DO NOTHING`,
+          [subscriberId, filename, urlPath]
+        );
+      }
 
       // Ambil nama village dan package untuk notifikasi
       const { rows: [villageRow] } = await client.query(
