@@ -205,9 +205,15 @@ export const api = {
   },
 
   updateCustomerStatus: async (id: number, status: string) => {
+    let backendStatus = status.toLowerCase();
+    if (status.toUpperCase() === "AKTIF") backendStatus = "active";
+    if (status.toUpperCase() === "NON AKTIF" || status.toUpperCase() === "BERHENTI BERLANGGANAN") backendStatus = "suspended";
+    if (status.toUpperCase() === "PENGAJUAN" || status.toUpperCase() === "SURVEI" || status.toUpperCase() === "PROSES PASANG") backendStatus = "pending";
+    if (status.toUpperCase() === "BATAL") backendStatus = "deleted";
+
     const res = await apiFetch(`${API_BASE}/api/customers/${id}/status`, {
       method: 'PATCH',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status: backendStatus }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));

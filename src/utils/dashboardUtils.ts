@@ -53,7 +53,14 @@ export const normalizeRow = (row: any): RegistrationData => ({
   link_google_maps: String(row.link_google_maps || row["Link Google Maps"] || ""),
 
   // Status & Dokumen
-  status: String(row.status || row.Status || "PENGAJUAN"),
+  status: (() => {
+    let s = String(row.status || row.Status || "PENGAJUAN");
+    if (s.toLowerCase() === "pending") return "PENGAJUAN";
+    if (s.toLowerCase() === "active") return "AKTIF";
+    if (s.toLowerCase() === "suspended") return "NON AKTIF";
+    if (s.toLowerCase() === "deleted") return "BATAL";
+    return s.toUpperCase();
+  })(),
   foto_ktp: String(row.foto_ktp || row.fotoKtp || row["Foto KTP"] || ""),
   persetujuan_sk: String(row.persetujuan_sk || row.persetujuanSnk || row["Persetujuan S&K"] || ""),
 
