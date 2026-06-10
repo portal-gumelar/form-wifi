@@ -60,6 +60,12 @@ CREATE TABLE IF NOT EXISTS subscribers (
   package_id  INTEGER REFERENCES packages(id) ON DELETE SET NULL,
   rt          VARCHAR(10),
   rw          VARCHAR(10),
+  nik         VARCHAR(50),
+  kecamatan   VARCHAR(100),
+  current_provider VARCHAR(100),
+  source_info VARCHAR(150),
+  link_google_maps TEXT,
+  tanggal_rencana_pasang VARCHAR(50),
   status      VARCHAR(20) NOT NULL DEFAULT 'pending'
                 CHECK (status IN ('pending', 'active', 'suspended', 'deleted')),
   joined_at   TIMESTAMP,

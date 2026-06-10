@@ -54,8 +54,8 @@ const connectDBWithRetry = async (retries = 5, delay = 5000) => {
       const client = await pool.connect();
       console.log('[DB] PostgreSQL connected successfully.');
       try {
-        await pool.query('ALTER TABLE subscribers ADD COLUMN IF NOT EXISTS rt VARCHAR(10), ADD COLUMN IF NOT EXISTS rw VARCHAR(10)');
-        console.log('[DB] subscribers table auto-migrated for rt/rw.');
+        await pool.query('ALTER TABLE subscribers ADD COLUMN IF NOT EXISTS rt VARCHAR(10), ADD COLUMN IF NOT EXISTS rw VARCHAR(10), ADD COLUMN IF NOT EXISTS nik VARCHAR(50), ADD COLUMN IF NOT EXISTS kecamatan VARCHAR(100), ADD COLUMN IF NOT EXISTS current_provider VARCHAR(100), ADD COLUMN IF NOT EXISTS source_info VARCHAR(150), ADD COLUMN IF NOT EXISTS link_google_maps TEXT, ADD COLUMN IF NOT EXISTS tanggal_rencana_pasang VARCHAR(50)');
+        console.log('[DB] subscribers table auto-migrated for missing columns.');
       } catch (e) {
         console.error('[DB] subscribers auto-migrate failed:', e.message);
       }
@@ -358,23 +358,23 @@ const backupToGoogleSheets = async (subscriberId, action = "UPDATE") => {
 
     const payload = new URLSearchParams({
       timestamp: new Date().toLocaleString("id-ID"),
-      nik: "",
+      nik: sub.nik || "",
       nama_lengkap: sub.name || "",
       no_hp_wa: sub.phone || "",
       alamat_pemasangan: sub.address || "",
-      kecamatan: "",
+      kecamatan: sub.kecamatan || "",
       desa: sub.village_name || "",
-      rw: "",
-      rt: "",
+      rw: sub.rw || "",
+      rt: sub.rt || "",
       paket: sub.package_name || "",
       status: statusText,
-      provider_saat_ini: "Update Admin",
-      sumber_info: "Update Admin",
-      link_google_maps: "",
+      provider_saat_ini: sub.current_provider || "Update Admin",
+      sumber_info: sub.source_info || "Update Admin",
+      link_google_maps: sub.link_google_maps || "",
       foto_ktp: "",
       persetujuan_sk: "Diupdate oleh Admin",
       catatan: sub.notes || "",
-      tanggal_rencana_pasang: "",
+      tanggal_rencana_pasang: sub.tanggal_rencana_pasang || "",
       tanggal_aktif: sub.joined_at ? new Date(sub.joined_at).toLocaleString("id-ID") : ""
     });
 
@@ -495,7 +495,9 @@ app.post('/api/customers',
 
     const {
       name, address, phone, village_id, package_id,
-      status = 'pending', joined_at, expired_at, notes
+      status = 'pending', joined_at, expired_at, notes,
+      nik = '', kecamatan = '', current_provider = '', source_info = '',
+      link_google_maps = '', tanggal_rencana_pasang = '', rt = '', rw = ''
     } = req.body;
 
     const client = await pool.connect();
@@ -505,11 +507,12 @@ app.post('/api/customers',
       // Insert subscriber - AUDIT FIX: parameterized
       const { rows: [newSubscriber] } = await client.query(
         `INSERT INTO subscribers 
-         (name, address, phone, village_id, package_id, status, joined_at, expired_at, notes, created_by, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+         (name, address, phone, village_id, package_id, status, joined_at, expired_at, notes, nik, kecamatan, current_provider, source_info, link_google_maps, tanggal_rencana_pasang, rt, rw, created_by, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW())
          RETURNING id`,
         [name, address || '', phone, village_id, package_id,
          status, joined_at || null, expired_at || null, notes || '',
+         nik, kecamatan, current_provider, source_info, link_google_maps, tanggal_rencana_pasang, rt, rw,
          req.user?.id || null]
       );
 
@@ -601,15 +604,21 @@ app.put('/api/customers/:id',
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: 'ID tidak valid.' });
 
-    const { name, address, phone, village_id, package_id, status, joined_at, expired_at, notes, foto_ktp } = req.body;
+    const { 
+      name, address, phone, village_id, package_id, status, joined_at, expired_at, notes, foto_ktp,
+      nik = '', kecamatan = '', current_provider = '', source_info = '',
+      link_google_maps = '', tanggal_rencana_pasang = '', rt = '', rw = ''
+    } = req.body;
 
     try {
       const { rowCount } = await pool.query(
         `UPDATE subscribers SET
            name=$1, address=$2, phone=$3, village_id=$4, package_id=$5,
-           status=$6, joined_at=$7, expired_at=$8, notes=$9
-         WHERE id=$10 AND deleted_at IS NULL`,
-        [name, address, phone, village_id, package_id, status, joined_at || null, expired_at || null, notes, id]
+           status=$6, joined_at=$7, expired_at=$8, notes=$9,
+           nik=$10, kecamatan=$11, current_provider=$12, source_info=$13, link_google_maps=$14, tanggal_rencana_pasang=$15, rt=$16, rw=$17
+         WHERE id=$18 AND deleted_at IS NULL`,
+        [name, address, phone, village_id, package_id, status, joined_at || null, expired_at || null, notes,
+         nik, kecamatan, current_provider, source_info, link_google_maps, tanggal_rencana_pasang, rt, rw, id]
       );
 
       if (rowCount === 0) return res.status(404).json({ error: 'Pelanggan tidak ditemukan.' });
@@ -1325,11 +1334,16 @@ app.post('/api/public/register',
     try {
       await client.query('BEGIN');
 
+      const { 
+        nik = '', kecamatan = '', currentProvider = '', sumberInfo = '', 
+        linkGoogleMaps = '', tanggalPasang = '' 
+      } = req.body;
+
       const { rows: [newSubscriber] } = await client.query(
-        `INSERT INTO subscribers (name, address, phone, village_id, package_id, rt, rw, status, notes, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8, NOW())
+        `INSERT INTO subscribers (name, address, phone, village_id, package_id, rt, rw, status, notes, nik, kecamatan, current_provider, source_info, link_google_maps, tanggal_rencana_pasang, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8, $9, $10, $11, $12, $13, $14, NOW())
          RETURNING id`,
-        [name, address, phone, village_id, package_id, rt || '', rw || '', notes || '']
+        [name, address, phone, village_id, package_id, rt || '', rw || '', notes || '', nik, kecamatan, currentProvider, sumberInfo, linkGoogleMaps, tanggalPasang]
       );
 
       const subscriberId = newSubscriber.id;
