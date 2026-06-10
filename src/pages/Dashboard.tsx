@@ -412,17 +412,49 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
     setData(prev => isNewRecord ? [finalItem, ...prev] : prev.map(item => item.timestamp === updatedItem.timestamp ? finalItem : item));
 
     try {
+      // Map frontend string ke ID database PostgreSQL (Hardcoded fallback map untuk keamanan)
+      const villageMap: Record<string, number> = {
+        'GUMELAR': 1, 'CIHONJE': 2, 'TLAGA': 3, 'SAMUDRA': 4, 'SAMUDRA KULON': 5,
+        'CILANGKAP': 6, 'PANINGKABAN': 7, 'KARANG KEMOJING': 8, 'GANCANG': 9, 'KEDUNG URANG': 10
+      };
+      
+      const packageMap: Record<string, number> = {
+        'PAKET STARTER': 1, 'PAKET BASIC': 2, 'PAKET STANDARD': 3, 'PAKET PREMIUM': 4, 'PAKET ULTRA': 5
+      };
+
+      const getVillageId = (desa: string) => villageMap[(desa || "").toUpperCase()] || updatedItem.village_id || 1;
+      const getPackageId = (paket: string) => {
+        const p = (paket || "").toUpperCase();
+        for (const [key, id] of Object.entries(packageMap)) {
+          if (p.includes(key)) return id;
+        }
+        return updatedItem.package_id || 1;
+      };
+
+      const backendVillageId = getVillageId(updatedItem.desa || "");
+      const backendPackageId = getPackageId(updatedItem.paket || "");
+
+      // Map frontend status (AKTIF) ke backend status (active)
+      let backendStatus = (updatedItem.status || "PENGAJUAN").toLowerCase();
+      const statusUpper = (updatedItem.status || "PENGAJUAN").toUpperCase();
+      if (statusUpper === "AKTIF") backendStatus = "active";
+      if (statusUpper === "NON AKTIF" || statusUpper === "BERHENTI BERLANGGANAN") backendStatus = "suspended";
+      if (statusUpper === "PENGAJUAN" || statusUpper === "SURVEI" || statusUpper === "PROSES PASANG") backendStatus = "pending";
+      if (statusUpper === "BATAL") backendStatus = "deleted";
+
       // AUDIT FIX: Simpan ke PostgreSQL via createCustomer / updateCustomer
       // Map frontend field names ke format yang diterima backend
       const dbRecord: Record<string, unknown> = {
         name: updatedItem.nama_lengkap || "",
         phone: updatedItem.no_hp_wa || "",
         address: updatedItem.alamat_pemasangan || "",
+        village_id: backendVillageId,
+        package_id: backendPackageId,
         nik: updatedItem.nik || "",
         kecamatan: updatedItem.kecamatan || "GUMELAR",
         rw: updatedItem.rw || "",
         rt: updatedItem.rt || "",
-        status: updatedItem.status || "PENGAJUAN",
+        status: backendStatus,
         current_provider: updatedItem.provider_saat_ini || "Belum Pernah Pasang",
         source_info: updatedItem.sumber_info || "",
         link_google_maps: updatedItem.link_google_maps || "",
@@ -438,8 +470,8 @@ export default function Dashboard({ onLogout, userRole = "admin", user }: any) {
           name: updatedItem.nama_lengkap || "",
           address: updatedItem.alamat_pemasangan || "",
           phone: updatedItem.no_hp_wa || "",
-          village_id: 1,
-          package_id: 1,
+          village_id: backendVillageId,
+          package_id: backendPackageId,
           notes: updatedItem.catatan || "",
           nik: updatedItem.nik || "",
           kecamatan: updatedItem.kecamatan || "GUMELAR",

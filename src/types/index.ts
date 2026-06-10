@@ -39,6 +39,9 @@ export interface RegistrationData {
   // REVISI SOP: Menyinkronkan properti wilayah untuk eliminasi error dasbor
   kecamatan: string;
   desa: string;
+  village_id?: number;
+  package_id?: number;
+  
   // Dana Desa fields
   rw?: string;
   rt?: string;

@@ -15,6 +15,8 @@ import autoTable from "jspdf-autotable";
 export const normalizeRow = (row: any): RegistrationData => ({
   // PostgreSQL integer primary key — opsional, tidak ada di data lama
   id: row.id !== undefined ? Number(row.id) : undefined,
+  village_id: row.village_id !== undefined ? Number(row.village_id) : undefined,
+  package_id: row.package_id !== undefined ? Number(row.package_id) : undefined,
 
   // Timestamp: gunakan created_at dari PostgreSQL sebagai fallback
   timestamp: String(row.timestamp || row.Timestamp || row.created_at || ""),
