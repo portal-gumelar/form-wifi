@@ -353,8 +353,10 @@ const backupToGoogleSheets = async (subscriberId, action = "UPDATE") => {
     
     const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbztG8z0ob1ULpzkYXIIbaV1PokdR_dO4qj7TSD0rnwz8qb77QlJNrUQM0DHwNwXFC_reQ/exec';
     
-    let statusText = sub.status === "active" ? "AKTIF" : (sub.status === "suspended" ? "SUSPENDED" : "PENGAJUAN");
-    if (action === "DELETE" || sub.status === "deleted") statusText = "DELETED";
+    let statusText = "PENGAJUAN";
+    if (sub.status === "active") statusText = "AKTIF";
+    if (sub.status === "suspended") statusText = "NON AKTIF";
+    if (action === "DELETE" || sub.status === "deleted") statusText = "BATAL";
 
     const payload = new URLSearchParams({
       timestamp: new Date().toLocaleString("id-ID"),
